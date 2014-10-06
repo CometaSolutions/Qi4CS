@@ -32,7 +32,7 @@
     <MSBuild Projects="$(Qi4CSBaseDir)/CommonBuildTools/CLR/Build/CommonBuildTools.build" />
     
     <!-- Restore all NuGet packages -->
-    <!-- <CallTarget Targets="RestoreNuGetPackages" /> -->
+    <CallTarget Targets="RestoreNuGetPackages" />
     
     <!-- Build Qi4CS Core projects -->
     <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
