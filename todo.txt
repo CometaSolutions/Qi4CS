@@ -1,0 +1,12 @@
+Qi4CS:
+ - Refactor Model/Validation: make ValidationResultType the same way as CompositeModelType, and store all errors in a single list.
+ - Fragment order specification at bootstrap level.
+ - More than one class per assembly per composite
+ - Architecture-global concerns, side-effects (no mixins nor constraints(?))
+  - Fragment search order: composite declaration -> architecture-global -> the ones via DefaultXXX attributes
+ - CompositeEvent: Add 'Boolean oneTime = false' to addition/removal methods. Modify code generation as needed.
+ 
+IDE plugin / MSBuild:
+ - Manage code-generation and strong names via UI
+ - Manage bootstrapper object
+ - MSBuild task to support private bin paths specified in .csproj file

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Qi4CSBaseDir Condition=" '$(Qi4CSBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSBaseDir>
+    <Qi4CSConfiguration Condition=" '$(Qi4CSConfiguration)' == '' ">Debug</Qi4CSConfiguration>
+    <Qi4CSPlatform Condition=" '$(Qi4CSPlatform)' == '' ">AnyCPU</Qi4CSPlatform>
+    <Qi4CSBuildTargets Condition=" '$(Qi4CSBuildTargets)' == '' ">Build</Qi4CSBuildTargets>
+    <Qi4CSBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSBuildTargets)</Qi4CSBuildTargets>
+    <Qi4CSFinalAssemblyTargets Condition=" '$(Qi4CSFinalAssemblyTargets)' == '' ">GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSBuildTargets)</Qi4CSFinalAssemblyTargets>
+    
+    <!-- NuGet stuff -->
+    <NuGetRestore_RepositoriesFile>$(Qi4CSBaseDir)/packages/repositories.config</NuGetRestore_RepositoriesFile>
+  </PropertyGroup>
+  
+  <!-- Projects to build, each item kind in build order -->
+  <ItemGroup>
+    <Qi4CSCoreProject Include="$(Qi4CSBaseDir)/Source/Qi4CS.Core.Architectures/Qi4CS.Core.Architectures.csproj" />
+    
+    <Qi4CSSDKProject Include="$(Qi4CSBaseDir)/Source/Qi4CS.CodeGeneration.DotNET/Qi4CS.CodeGeneration.DotNET.csproj" />
+    <Qi4CSSDKProject Include="$(Qi4CSBaseDir)/Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.csproj" />
+    
+    <Qi4CSNonCoreProject Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
+    <Qi4CSNonCoreProject Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
+    <Qi4CSNonCoreProject Condition=" '$(Qi4CSConfiguration)' != 'Debug_WP' and '$(Qi4CSConfiguration)' != 'Release_WP' " Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
+  </ItemGroup>
+  
+  <!-- Import target for restoring NuGet packages -->
+  <Import Project="$(Qi4CSBaseDir)/CommonBuildTools/CLR/MSBuild/RestoreNuGetPackages.targets" />
+
+  <Target Name="Build">
+    <!-- Build build tools -->
+    <MSBuild Projects="$(Qi4CSBaseDir)/CommonBuildTools/CLR/Build/CommonBuildTools.build" />
+    
+    <!-- Restore all NuGet packages -->
+    <!-- <CallTarget Targets="RestoreNuGetPackages" /> -->
+    
+    <!-- Build Qi4CS Core projects -->
+    <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
+
+    <!-- Build Qi4CS Core merged DLL -->
+    <MSBuild Projects="$(Qi4CSBaseDir)/Source/Qi4CS.Core.OneDLL/Qi4CS.Core.OneDLL.csproj" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
+
+    <!-- Build Qi4CS SDK, if needed -->
+    <MSBuild Condition=" '$(Qi4CSConfiguration.EndsWith(`_SDK`))' == 'true' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
+    
+    <!-- Build Qi4CS other projects -->
+    <MSBuild Projects="@(Qi4CSNonCoreProject)" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
+  </Target>
+</Project>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DatabaseConfiguration>
+  <DatabaseSetups>
+    <Local>
+      <DatabaseConnectionInformation>
+        <Address>127.0.0.1</Address>
+        <Port>1000</Port>
+      </DatabaseConnectionInformation>
+      <DatabaseName>SomeDB</DatabaseName>
+    </Local>
+  </DatabaseSetups>
+</DatabaseConfiguration>

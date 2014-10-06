@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="DeleteTargetFrameworkFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9A6623F3-5FFC-4A63-8C98-163A4302A5EA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Qi4CS.Core.API</RootNamespace>
+    <AssemblyName>Qi4CS.Core.API</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">Profile328</TargetFrameworkProfile>
+    <TargetFrameworkProfile Condition="'$(TargetFrameworkProfile)' == ''">Profile5</TargetFrameworkProfile>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Qi4CSSDKBuild Condition=" '$(Configuration.EndsWith(`_SDK`))' == 'true' ">True</Qi4CSSDKBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
+    <OutputPath>..\..\Output\Release\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Model\CompositeMethods.cs" />
+    <Compile Include="Model\DefaultAppliesToAttribute.cs" />
+    <Compile Include="Model\AppliesToFilter.cs" />
+    <Compile Include="Model\DefaultFragmentsAttribute.cs" />
+    <Compile Include="Model\FragmentModelType.cs" />
+    <Compile Include="Common\Activatable.cs" />
+    <Compile Include="Instance\GenericInvocator.cs" />
+    <Compile Include="Model\Qi4CSGeneratedAssemblyAttribute.cs" />
+    <Compile Include="Model\InjectionException.cs" />
+    <Compile Include="Instance\Identity.cs" />
+    <Compile Include="Common\InternalException.cs" />
+    <Compile Include="Model\OptionalAttribute.cs" />
+    <Compile Include="Model\UseDefaultsAttribute.cs" />
+    <Compile Include="Common\UsesProvider.cs" />
+    <Compile Include="Instance\AmbiguousTypeException.cs" />
+    <Compile Include="Instance\CompositeEvent.cs" />
+    <Compile Include="Instance\CompositeProperty.cs" />
+    <Compile Include="Instance\CompositeState.cs" />
+    <Compile Include="Instance\CompositeStateParticipant.cs" />
+    <Compile Include="Model\ConcernForAttribute.cs" />
+    <Compile Include="Model\DefaultConcernsAttribute.cs" />
+    <Compile Include="Instance\Concerns.cs" />
+    <Compile Include="Instance\Constraint.cs" />
+    <Compile Include="Model\ConstraintDeclarationAttribute.cs" />
+    <Compile Include="Instance\ConstraintViolationException.cs" />
+    <Compile Include="Instance\ConstraintViolationInfo.cs" />
+    <Compile Include="Model\DefaultConstraintsAttribute.cs" />
+    <Compile Include="Model\NameAttribute.cs" />
+    <Compile Include="Model\EventStorageStyleAttribute.cs" />
+    <Compile Include="Model\InvocationStyleAttribute.cs" />
+    <Compile Include="Model\InjectionScopeAttribute.cs" />
+    <Compile Include="Model\FragmentDependentInjection.cs" />
+    <Compile Include="Model\InvocationAttribute.cs" />
+    <Compile Include="Model\ServiceAttribute.cs" />
+    <Compile Include="Model\StateAttribute.cs" />
+    <Compile Include="Model\StructureAttribute.cs" />
+    <Compile Include="Model\ThisAttribute.cs" />
+    <Compile Include="Model\UsesAttribute.cs" />
+    <Compile Include="Instance\Application.cs" />
+    <Compile Include="Instance\ApplicationNotActiveException.cs" />
+    <Compile Include="Instance\ApplicationPassivationException.cs" />
+    <Compile Include="Model\ActivateAttribute.cs" />
+    <Compile Include="Model\InitializeAttribute.cs" />
+    <Compile Include="Model\PassivateAttribute.cs" />
+    <Compile Include="Model\PrototypeAttribute.cs" />
+    <Compile Include="Model\SpecialScopeAttribute.cs" />
+    <Compile Include="Model\DefaultMixinsAttribute.cs" />
+    <Compile Include="Instance\NoOpMixin.cs" />
+    <Compile Include="Model\ImmutableAttribute.cs" />
+    <Compile Include="Instance\QualifiedName.cs" />
+    <Compile Include="Model\DefaultSideEffectsAttribute.cs" />
+    <Compile Include="Instance\CompositeBuilder.cs" />
+    <Compile Include="Instance\CompositeInstantiationException.cs" />
+    <Compile Include="Instance\CompositeModelType.cs" />
+    <Compile Include="Instance\InvalidCompositeModelTypeException.cs" />
+    <Compile Include="Instance\InvalidCompositeTypeException.cs" />
+    <Compile Include="Instance\NoSuchCompositeTypeException.cs" />
+    <Compile Include="Instance\StructureServiceProvider.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Instance\ServiceReference.cs" />
+    <Compile Include="Instance\SideEffects.cs" />
+    <Compile Include="Model\SideEffectForAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UtilPack">
+      <HintPath>..\..\packages\UtilPack.0.9.6.0\lib\portable-net4+windows8\UtilPack.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+  <PropertyGroup>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
+</Project>
