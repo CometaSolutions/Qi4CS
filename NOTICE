@@ -1,0 +1,32 @@
+Qi4CS
+Copyright 2011-2014, Stanislav Muhametsin, Cometa Solutions Ltd
+( http://www.cometasolutions.fi )
+
+Also see each file for additional information of Copyright claims.
+
+This project contains software originating in Qi4j (http://www.qi4j.org) that
+has been ported from Java to C#. Copyright of Qi4j is held by individuals on a
+file by file basis. Qi4j is licensed to Qi4CS under the Apache License version
+2.0 by its copyright owners.
+
+Below follows a list of binary dependencies and their licenses;
+----------------------------------------------------------------
+
+END OF THIS NOTICE
+
+BEGIN OF ORIGINAL QI4J NOTICE
+
+Qi4j SDK
+Copyright 2007-2009, The Qi4j Development Team of individuals.
+
+See http://www.qi4j.org/contributors.html for list of of individuals.
+Also see each file for additional information of Copyright claims.
+
+Qi4j is a community aggregated works under Copyright law.
+All parts of the original works at Qi4j is licensed under the
+Apache License ver 2.0 http://www.apache.org/licenses
+
+See NOTICE files in core/, libraries/ and extensions/ for further
+notices.
+
+END OF ORIGINAL QI4J NOTICE
