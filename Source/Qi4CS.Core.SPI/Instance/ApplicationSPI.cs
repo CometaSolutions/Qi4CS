@@ -31,7 +31,7 @@ namespace Qi4CS.Core.SPI.Instance
    /// <typeparam name="T">The type of instances.</typeparam>
    public sealed class InstancePool<T>
    {
-#if WP8_BUILD
+#if SILVERLIGHT
       private readonly LocklessInstancePoolGeneric<T> _pool;
 #else
       private readonly System.Collections.Concurrent.ConcurrentBag<T> _pool;
@@ -42,7 +42,7 @@ namespace Qi4CS.Core.SPI.Instance
       /// </summary>
       public InstancePool()
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          this._pool = new LocklessInstancePoolGeneric<T>();
 #else
          this._pool = new System.Collections.Concurrent.ConcurrentBag<T>();
@@ -75,7 +75,7 @@ namespace Qi4CS.Core.SPI.Instance
       /// <param name="item">The instance to return.</param>
       public void Return( T item )
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          this._pool.ReturnInstance( item );
 #else
          this._pool.Add( item );

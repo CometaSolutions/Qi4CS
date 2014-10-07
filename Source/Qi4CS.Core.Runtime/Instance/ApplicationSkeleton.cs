@@ -39,7 +39,7 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly ApplicationModel<ApplicationSPI> _model;
 
       private readonly CollectionsFactory _collectionsFactory;
-#if WP8_BUILD
+#if SILVERLIGHT
       private readonly IDictionary<Type, InstancePool<Object>> _constraintInstancePools;
 #else
       private readonly System.Collections.Concurrent.ConcurrentDictionary<Type, InstancePool<Object>> _constraintInstancePools;
@@ -73,7 +73,7 @@ namespace Qi4CS.Core.Runtime.Instance
          this._mode = mode;
          this._version = version;
          this._constraintInstancePools = new
-#if WP8_BUILD
+#if SILVERLIGHT
  Dictionary<Type, InstancePool<Object>>();
 #else
  System.Collections.Concurrent.ConcurrentDictionary<Type, InstancePool<Object>>();
@@ -219,18 +219,18 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public InstancePool<Object> GetConstraintInstancePool( Type resolvedConstraintType )
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          lock ( this._constraintInstancePools )
          {
 #endif
          return this._constraintInstancePools.
-#if WP8_BUILD
+#if SILVERLIGHT
 GetOrAdd_NotThreadSafe(
 #else
 GetOrAdd(
 #endif
  resolvedConstraintType, ( rType ) => new InstancePool<Object>() );
-#if WP8_BUILD
+#if SILVERLIGHT
          }
 #endif
       }
@@ -304,7 +304,7 @@ GetOrAdd(
          else if ( final != oldValue && !Thread.CurrentThread.Equals( inProgressTracker ) )
          {
             // We are entering mid-transition from another thread
-#if WP8_BUILD
+#if SILVERLIGHT
             using ( var evt = new ManualResetEvent( false ) )
 #else
             using ( var evt = new ManualResetEventSlim( false ) )
@@ -313,7 +313,7 @@ GetOrAdd(
                while ( inProgressTracker != null )
                {
                   // Wait
-#if WP8_BUILD
+#if SILVERLIGHT
                   evt.WaitOne( waitTime );
 #else
                   evt.Wait( waitTime );
@@ -336,7 +336,7 @@ GetOrAdd(
          Boolean result;
          Int32 prevState;
          Boolean tryAgain;
-#if WP8_BUILD
+#if SILVERLIGHT
          using ( var waitEvt = new ManualResetEvent( false ) )
 #else
          using ( var waitEvt = new ManualResetEventSlim( false ) )
@@ -351,7 +351,7 @@ GetOrAdd(
                tryAgain = !result && prevState == (Int32) ActivationState.DURING_PASSIVATION && !passivationInProgressBool;
                if ( tryAgain )
                {
-#if WP8_BUILD
+#if SILVERLIGHT
                   waitEvt.WaitOne( waitTime );
 #else
                   waitEvt.Wait( waitTime );
@@ -369,7 +369,7 @@ GetOrAdd(
          Int32 prevState;
          Boolean actionInvoked;
          Boolean tryAgain;
-#if WP8_BUILD
+#if SILVERLIGHT
          using ( var waitEvt = new ManualResetEvent( false ) )
 #else
          using ( var waitEvt = new ManualResetEventSlim( false ) )
@@ -385,7 +385,7 @@ GetOrAdd(
                {
                   // Wait if we are not inside activation action,
                   // and if transition state change failed because activation is in progress.
-#if WP8_BUILD
+#if SILVERLIGHT
                   waitEvt.WaitOne( waitTime );
 #else
                   waitEvt.Wait( waitTime );

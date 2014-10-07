@@ -44,19 +44,19 @@ namespace Qi4CS.Extensions.Functional.Instance
 
       public virtual void RegisterFunction( TKey key, Lazy<TComposite> composite )
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          lock ( this._state.Functions )
          {
 #endif
          this._state.Functions[key] = composite;
-#if WP8_BUILD
+#if SILVERLIGHT
          }
 #endif
       }
 
       public virtual void UnregisterFunction( TKey key )
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          lock ( this._state.Functions )
          {
             this._state.Functions.Remove( key );

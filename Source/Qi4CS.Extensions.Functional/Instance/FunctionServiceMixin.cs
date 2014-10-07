@@ -26,7 +26,7 @@ using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Extensions.Functional.Assembling;
 using Qi4CS.Extensions.Functional.Model;
-#if WP8_BUILD
+#if SILVERLIGHT
 using Qi4CS.Core.Runtime.Instance;
 #endif
 
@@ -74,7 +74,7 @@ namespace Qi4CS.Extensions.Functional.Instance
 
          var map = this.BeforeFunction( method, args );
          var funcs = this._state.Functions;
-#if WP8_BUILD
+#if SILVERLIGHT
          // Create temp copy of functions
          lock ( this._state.Functions )
          {
@@ -109,7 +109,7 @@ namespace Qi4CS.Extensions.Functional.Instance
                   {
                      var lazeh = new Lazy<TComposite>( () => functionComposite, LazyThreadSafetyMode.ExecutionAndPublication );
                      funcs[key] = lazeh;
-#if WP8_BUILD
+#if SILVERLIGHT
                      lock ( this._state.Functions )
                      {
                         this._state.Functions[key] = lazeh;
@@ -213,7 +213,7 @@ namespace Qi4CS.Extensions.Functional.Instance
       where TComposite : class
    {
       [Immutable, UseDefaults]
-#if WP8_BUILD
+#if SILVERLIGHT
       IDictionary<TKey, Lazy<TComposite>> Functions { get; set; }
 #else
       System.Collections.Concurrent.ConcurrentDictionary<TKey, Lazy<TComposite>> Functions { get; set; }

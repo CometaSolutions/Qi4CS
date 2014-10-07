@@ -25,13 +25,13 @@ using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 
-#if WP8_BUILD
+#if SILVERLIGHT
 using System.Linq;
 #endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
-#if WP8_BUILD
+#if SILVERLIGHT
    public class ThreadLocal<T>
    {
       // TODO cleanup e.g. on every 100th access time...

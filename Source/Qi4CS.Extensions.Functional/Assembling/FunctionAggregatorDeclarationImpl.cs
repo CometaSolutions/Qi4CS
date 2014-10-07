@@ -189,7 +189,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
          this._assemblyDeclaration.WithDefaultFor(
             typeof( FunctionServiceState<TKey, TComposite> ).LoadPropertyOrThrow( "Functions" ),
             ( pInfo, app ) =>
-#if WP8_BUILD
+#if SILVERLIGHT
  new Dictionary<TKey, Lazy<TComposite>>( equalityComparer )
 #else
  new System.Collections.Concurrent.ConcurrentDictionary<TKey, Lazy<TComposite>>( equalityComparer )

@@ -38,7 +38,7 @@ namespace Qi4CS.Core.Architectures.Instance
       private readonly StructureServiceProviderSPI _serviceProvider;
       private readonly ModelInfoContainer _modelInfoContainer;
       private readonly ModuleModel _moduleModel;
-#if WP8_BUILD
+#if SILVERLIGHT
       private readonly IDictionary<CompositeModelType, IDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>> _compositeTypeLookupCache;
 #else
       private readonly System.Collections.Concurrent.ConcurrentDictionary<CompositeModelType, System.Collections.Concurrent.ConcurrentDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>> _compositeTypeLookupCache;
@@ -61,7 +61,7 @@ namespace Qi4CS.Core.Architectures.Instance
             model.LayerModel.ApplicationModel.GenericPropertyMixinType,
             model.LayerModel.ApplicationModel.GenericEventMixinType
             );
-#if WP8_BUILD
+#if SILVERLIGHT
          this._compositeTypeLookupCache = new Dictionary<CompositeModelType, IDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>>();
 #else
          this._compositeTypeLookupCache = new System.Collections.Concurrent.ConcurrentDictionary<CompositeModelType, System.Collections.Concurrent.ConcurrentDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>>();
@@ -126,7 +126,7 @@ namespace Qi4CS.Core.Architectures.Instance
       internal Tuple<CompositeInstanceStructureOwner, CompositeModel> FindModelForBuilder( CompositeModelType compositeModelType, Type[] compositeTypes )
       {
          // TODO might get rid of tuple? if lookup is done by target module
-#if WP8_BUILD
+#if SILVERLIGHT
          IDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>> cache;
          lock ( this._compositeTypeLookupCache )
          {
@@ -135,16 +135,16 @@ namespace Qi4CS.Core.Architectures.Instance
          var cache = this._compositeTypeLookupCache.GetOrAdd( compositeModelType, key => new System.Collections.Concurrent.ConcurrentDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>( ArrayEqualityComparer<Type>.DefaultArrayEqualityComparer ) );
 #endif
 
-#if WP8_BUILD
+#if SILVERLIGHT
          }
 #endif
 
-#if WP8_BUILD
+#if SILVERLIGHT
          lock ( cache )
          {
 #endif
          return cache.
-#if WP8_BUILD
+#if SILVERLIGHT
 GetOrAdd_NotThreadSafe(
 #else
 GetOrAdd(
@@ -187,7 +187,7 @@ GetOrAdd(
                   }
                }
             } );
-#if WP8_BUILD
+#if SILVERLIGHT
          }
 #endif
       }

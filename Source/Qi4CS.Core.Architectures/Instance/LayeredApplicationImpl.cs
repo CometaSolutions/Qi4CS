@@ -104,7 +104,7 @@ namespace Qi4CS.Core.Architectures.Instance
          else
          {
             result = layer.LayerModel.ModuleModels
-#if !WP8_BUILD
+#if !SILVERLIGHT
 .AsParallel() // TODO - is this really necessary?
 #endif
 .Where( moduleModel => String.Equals( moduleModel.Name, moduleName ) )
@@ -119,7 +119,7 @@ namespace Qi4CS.Core.Architectures.Instance
       internal Module FindModule( LayeredCompositeAssemblerImpl assembler )
       {
          return this._allLayers
-#if !WP8_BUILD
+#if !SILVERLIGHT
 .AsParallel() // TODO - is this really necessary?
 #endif
 .SelectMany( layer => layer.Key.ModuleModels.Select( muudel => Tuple.Create( muudel, layer.Value.GetInstanceForModel( muudel ) ) ) )

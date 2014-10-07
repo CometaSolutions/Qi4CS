@@ -33,7 +33,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
    public class ThreadsafeServiceContainer : ServiceContainer
    {
-#if WP8_BUILD
+#if SILVERLIGHT
       private readonly System.Collections.Generic.IDictionary<String, ServiceCompositeInstance> _services;
 #else
       private readonly System.Collections.Concurrent.ConcurrentDictionary<String, ServiceCompositeInstance> _services;
@@ -41,7 +41,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public ThreadsafeServiceContainer()
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          this._services = new System.Collections.Generic.Dictionary<String, ServiceCompositeInstance>();
 #else
          this._services = new System.Collections.Concurrent.ConcurrentDictionary<String, ServiceCompositeInstance>();
@@ -52,15 +52,15 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public ServiceCompositeInstance GetService( CompositeInstanceStructureOwner structureOwner, CompositeModel model, IEnumerable<Type> serviceTypes, UsesContainerQuery usesContainer, String serviceID )
       {
-#if WP8_BUILD
+#if SILVERLIGHT
          lock ( this._services )
          {
 #endif
-            return this._services.
-#if WP8_BUILD
+         return this._services.
+#if SILVERLIGHT
 GetOrAdd_NotThreadSafe(
 #else
-         GetOrAdd(
+GetOrAdd(
 #endif
  serviceID,
             id =>
@@ -69,7 +69,7 @@ GetOrAdd_NotThreadSafe(
                var instance = new ServiceCompositeInstanceImpl( structureOwner, model, serviceTypes, builderUses.Query, serviceID );
                return instance;
             } );
-#if WP8_BUILD
+#if SILVERLIGHT
          }
 #endif
       }

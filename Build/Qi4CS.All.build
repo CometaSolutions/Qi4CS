@@ -16,7 +16,7 @@
     
     <Qi4CSProjectFile Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
     <Qi4CSProjectFile Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
-    <Qi4CSProjectFile Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
+    <Qi4CSProjectFile Condition=" '$(Qi4CSConfiguration)' != 'Debug_SL' and '$(Qi4CSConfiguration)' != 'Release_SL' " Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
   </ItemGroup>
    
   <Target Name="Build">
@@ -25,7 +25,7 @@
     <MSBuild Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
     
     <!-- Build SDK version of everything then -->
-    <MSBuild Projects="@(Qi4CSCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSConfiguration_SDK);Qi4CSCorePlatform=$(Qi4CSPlatform)" />
-    <MSBuild Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration_SDK);Platform=$(Qi4CSPlatform)" />
+    <MSBuild Condition=" '$(Qi4CSConfiguration)' == 'Debug' or '$(Qi4CSConfiguration)' == 'Release' " Projects="@(Qi4CSCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSConfiguration_SDK);Qi4CSCorePlatform=$(Qi4CSPlatform)" />
+    <MSBuild Condition=" '$(Qi4CSConfiguration)' == 'Debug' or '$(Qi4CSConfiguration)' == 'Release' " Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration_SDK);Platform=$(Qi4CSPlatform)" />
   </Target>
 </Project>
