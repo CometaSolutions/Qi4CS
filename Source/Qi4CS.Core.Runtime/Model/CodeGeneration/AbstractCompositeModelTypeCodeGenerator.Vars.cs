@@ -223,11 +223,11 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILConstructor REF_INVOKER_CALLBACK_CTOR;
 
       protected readonly CILReflectionContext ctx;
-      protected readonly Boolean wp8Emit;
+      protected readonly Boolean isSilverLight;
 
-      protected AbstractCompositeModelTypeCodeGenerator( Boolean isWP8Emit, CILReflectionContext aCtx )
+      protected AbstractCompositeModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext aCtx )
       {
-         this.wp8Emit = isWP8Emit;
+         this.isSilverLight = isSilverlight;
          this.ctx = aCtx;
 
          this.COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE = COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE_NATIVE.NewWrapperAsType( ctx );

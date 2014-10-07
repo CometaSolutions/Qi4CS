@@ -137,22 +137,22 @@ namespace Qi4CS.Core.SPI.Model
       /// Generates all composite types required for successful application instance creation.
       /// </summary>
       /// <param name="reflectionContext">The <see cref="CILAssemblyManipulator.API.CILReflectionContext"/> to use when generating code.</param>
-      /// <param name="isWP8OrSL5Emit">Whether the code being emitted should be run on WP8 or Silverlight 5. See remarks for more information.</param>
+      /// <param name="isSilverlight">Whether the code being emitted should be run on Silverlight 5. See remarks for more information.</param>
       /// <returns>A dictionary containing mapping from already-existing native assemblies to generated assemblies.</returns>
       /// <remarks>
       /// <para>
       /// Calling this method will cause validation to occur, if it is not already done.
       /// </para>
       /// <para>
-      /// When <paramref name="isWP8OrSL5Emit"/> is <c>true</c>, the following things change in generated code.
+      /// When <paramref name="isSilverlight"/> is <c>true</c>, the following things change in generated code.
       /// <list type="bullet">
-      /// <item><description>Since there is no <see cref="M:System.Threading.Interlocked.Read(System.Int64@)"/> method in either WP8 or SL5, there will be no atomic reads for 64-bit integers within 32-bit process in either of those (I'm not sure if WP8 even exists as 32bit version).</description></item>
+      /// <item><description>Since there is no <see cref="M:System.Threading.Interlocked.Read(System.Int64@)"/> method in SL5, there will be no atomic reads for 64-bit integers within 32-bit process in either of those.</description></item>
       /// <item><description>Quite a lot of <c>Exchange</c> and <c>CompareExchange</c> method overloads are missing from <see cref="System.Threading.Interlocked"/> class. The code generation will modify field types and make appropriate conversions as required.</description></item>
       /// </list>
       /// </para>
       /// </remarks>
       /// <seealso cref="ValidationResult"/>
-      DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILAssemblyManipulator.API.CILReflectionContext reflectionContext, Boolean isWP8OrSL5Emit );
+      DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILAssemblyManipulator.API.CILReflectionContext reflectionContext, Boolean isSilverlight );
 
 #endif
    }

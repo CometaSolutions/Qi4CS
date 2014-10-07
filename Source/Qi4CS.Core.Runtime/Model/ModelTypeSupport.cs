@@ -126,7 +126,7 @@ namespace Qi4CS.Core.Runtime.Model
 
 #if !LOAD_ONLY
 
-      public abstract CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
+      public abstract CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
 
 #endif
    }
@@ -150,9 +150,9 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 #if !LOAD_ONLY
-      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
+      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
-         return new PlainCompositeModelTypeCodeGenerator( isWP8Emit, reflectionContext );
+         return new PlainCompositeModelTypeCodeGenerator( isSilverlight, reflectionContext );
       }
 #endif
    }
@@ -207,9 +207,9 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 #if !LOAD_ONLY
-      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
+      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
-         return new ServiceModelTypeCodeGenerator( isWP8Emit, reflectionContext );
+         return new ServiceModelTypeCodeGenerator( isSilverlight, reflectionContext );
       }
 #endif
    }

@@ -27,8 +27,8 @@ namespace Qi4CS.Core.Runtime.Model
    public class PlainCompositeModelTypeCodeGenerator : AbstractCompositeModelTypeCodeGenerator
    {
 
-      public PlainCompositeModelTypeCodeGenerator( Boolean wp8Emit, CILReflectionContext ctx )
-         : base( wp8Emit, ctx )
+      public PlainCompositeModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext ctx )
+         : base( isSilverlight, ctx )
       {
       }
 

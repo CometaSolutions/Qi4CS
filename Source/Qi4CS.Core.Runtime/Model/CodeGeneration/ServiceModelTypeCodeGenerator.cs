@@ -42,8 +42,8 @@ namespace Qi4CS.Core.Runtime.Model
          //ACTION_CONSTRUCTOR_NATIVE = TypeUtil.TryLoadConstructor( typeof( Action<ServiceCompositeInstanceImpl> ), 2 );
       }
 
-      public ServiceModelTypeCodeGenerator( Boolean wp8Emit, CILReflectionContext ctx )
-         : base( wp8Emit, ctx )
+      public ServiceModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext ctx )
+         : base( isSilverlight, ctx )
       {
          this.SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD = SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE.NewWrapper( this.ctx );
       }

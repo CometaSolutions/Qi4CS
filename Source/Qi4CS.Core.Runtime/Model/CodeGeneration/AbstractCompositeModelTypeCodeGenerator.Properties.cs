@@ -349,18 +349,18 @@ namespace Qi4CS.Core.Runtime.Model
                // TODO if generic parameter has same constraint as Interlocked.Exchange<T>, we can use the Interlocked.Exchange<T> directly.
                if ( propertyType.IsGenericParameter()
                   || ( propertyType.IsValueType() /*&& !propertyType.IsInterface() && !isObject*/
-                     && ( this.wp8Emit || !isIntPtr )
+                     && ( this.isSilverLight || !isIntPtr )
                   ) )
                {
                   // TODO if value type => maybe use placeholder class? (Like System.Lazy<T> does)
                   fieldType = OBJECT_TYPE;
                }
                // WP8 doesn't have IntPtr or Object Interlocked.Exchange methods
-               iExchangeMethod = ( this.wp8Emit || ( !isIntPtr && !isObject ) ) ? INTERLOCKED_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) :
+               iExchangeMethod = ( this.isSilverLight || ( !isIntPtr && !isObject ) ) ? INTERLOCKED_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) :
                   ( isIntPtr ? INTERLOCKED_EXCHANGE_INT_PTR_METHOD : INTERLOCKED_EXCHANGE_OBJECT_METHOD );
                // WP8 doesn't have IntPtr Interlocked.CompareExchange method (but oddly enough has the Object variation)
                iCompareExchangeMethod = isObject ? INTERLOCKED_COMPARE_EXCHANGE_OBJECT_METHOD :
-                  ( ( this.wp8Emit || !isIntPtr ) ? INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) : INTERLOCKED_COMPARE_EXCHANGE_INT_PTR_METHOD );
+                  ( ( this.isSilverLight || !isIntPtr ) ? INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) : INTERLOCKED_COMPARE_EXCHANGE_INT_PTR_METHOD );
                fieldToPropertyCast = ( fType, pType, il ) => il.EmitCastToType( fType, pType );
                propertyToFieldCast = ( fType, pType, il ) => il.EmitCastToType( pType, fType );
                break;
@@ -389,14 +389,22 @@ namespace Qi4CS.Core.Runtime.Model
                iCompareExchangeMethod = INTERLOCKED_COMPARE_EXCHANGE_I32_METHOD;
                break;
             case CILTypeCode.Double:
-               iExchangeMethod = this.wp8Emit ? INTERLOCKED_EXCHANGE_I64_METHOD : INTERLOCKED_EXCHANGE_R64_METHOD;
-               iCompareExchangeMethod = this.wp8Emit ? INTERLOCKED_COMPARE_EXCHANGE_I64_METHOD : INTERLOCKED_COMPARE_EXCHANGE_R64_METHOD;
-               fieldType = this.wp8Emit ? INT64_TYPE : DOUBLE_TYPE;
+               iExchangeMethod = this.isSilverLight ? INTERLOCKED_EXCHANGE_I64_METHOD : INTERLOCKED_EXCHANGE_R64_METHOD;
+               iCompareExchangeMethod = this.isSilverLight ? INTERLOCKED_COMPARE_EXCHANGE_I64_METHOD : INTERLOCKED_COMPARE_EXCHANGE_R64_METHOD;
+               fieldType = this.isSilverLight ? INT64_TYPE : DOUBLE_TYPE;
+               if ( this.isSilverLight )
+               {
+                  // TODO. 'Cast' Double to int64 by getting same bits via CLR method.
+               }
                break;
             case CILTypeCode.Single:
-               iExchangeMethod = this.wp8Emit ? INTERLOCKED_EXCHANGE_I32_METHOD : INTERLOCKED_EXCHANGE_R32_METHOD;
-               iCompareExchangeMethod = this.wp8Emit ? INTERLOCKED_COMPARE_EXCHANGE_I32_METHOD : INTERLOCKED_COMPARE_EXCHANGE_R32_METHOD;
-               fieldType = this.wp8Emit ? INT32_TYPE : SINGLE_TYPE;
+               iExchangeMethod = this.isSilverLight ? INTERLOCKED_EXCHANGE_I32_METHOD : INTERLOCKED_EXCHANGE_R32_METHOD;
+               iCompareExchangeMethod = this.isSilverLight ? INTERLOCKED_COMPARE_EXCHANGE_I32_METHOD : INTERLOCKED_COMPARE_EXCHANGE_R32_METHOD;
+               fieldType = this.isSilverLight ? INT32_TYPE : SINGLE_TYPE;
+               if ( this.isSilverLight )
+               {
+                  // TODO. 'Cast' Single to int32 by using BitConverter method (slow).
+               }
                break;
             default:
                throw new ArgumentException( "Invalid type code: " + tc );
@@ -419,7 +427,7 @@ namespace Qi4CS.Core.Runtime.Model
             il.EmitLoadThisField( field );
             fieldToPropertyCast( fieldTypeActual, propertyType, il );
          } );
-         read32 = !this.wp8Emit && CILTypeCode.Int64 == fieldType.GetTypeCode( CILTypeCode.Empty ) ? new Action<CILField, MethodIL>( ( field, il ) =>
+         read32 = !this.isSilverLight && CILTypeCode.Int64 == fieldType.GetTypeCode( CILTypeCode.Empty ) ? new Action<CILField, MethodIL>( ( field, il ) =>
          {
             // Interlocked.Read(ref this.<field>);
             il

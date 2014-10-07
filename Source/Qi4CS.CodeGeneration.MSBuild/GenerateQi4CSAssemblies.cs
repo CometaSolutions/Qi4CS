@@ -175,19 +175,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
                }
                else
                {
-                  //var ads = new AppDomainSetup();
 
                   // Set application domain application base to this assembly directory in order to capture the reference to
                   // Qi4CS assembly capable of generating code.
                   var thisAssemblyPath = new Uri( System.Reflection.Assembly.GetExecutingAssembly().CodeBase ).LocalPath;
-                  //ads.ApplicationBase = Path.GetDirectoryName( thisAssemblyPath );
 
                   this.Log.LogMessage( Microsoft.Build.Framework.MessageImportance.High, "Generating Qi4CS assemblies for {0}, target directory is {1}, verifying: {2}.", sourceAss, assDir, this.PerformVerify );
 
                   var oldCurDir = Environment.CurrentDirectory;
                   Environment.CurrentDirectory = Path.GetDirectoryName( sourceAss );
 
-                  //var ad = AppDomain.CreateDomain( "Generating Qi4CS assemblies", null, ads );
                   try
                   {
                      var generator = new Qi4CSAssemblyGenerator( sourceAss, this.ModelFactory );// (Qi4CSAssemblyGenerator) ad.CreateInstanceFromAndUnwrap( thisAssemblyPath, typeof( Qi4CSAssemblyGenerator ).FullName, false, System.Reflection.BindingFlags.CreateInstance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, new Object[] { sourceAss, this.ModelFactory }, null, null );
@@ -236,7 +233,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   finally
                   {
                      Environment.CurrentDirectory = oldCurDir;
-                     //AppDomain.Unload( ad );
                   }
                }
             }
@@ -253,7 +249,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
    /// <summary>
    /// This class is responsible for generating Qi4CS assemblies based on <see cref="Qi4CSModelProvider{T}"/> provided in the source code.
    /// </summary>
-   public class Qi4CSAssemblyGenerator // : MarshalByRefObject
+   public class Qi4CSAssemblyGenerator
    {
       private const String VERSION_NAME = "Version";
       private const String PEVERIFY_EXE = "PEVerify.exe";
@@ -263,14 +259,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
       // TODO parametrize this
       private const String PCL_FW_NAME = FrameworkMonikerInfo.DEFAULT_PCL_FW_NAME;
-
-      private static readonly String[] PRELOADABLE_ASSEMBLIES = new[]
-      {
-         "UtilPack",
-         "Qi4CS.Extensions.Configuration",
-         "Qi4CS.Extensions.Configuration.XML",
-         "Qi4CS.Extensions.Functional"
-      };
 
       private delegate Boolean ParsingDelegate<TIn, TOut>( TIn element, out TOut result );
 
@@ -290,14 +278,14 @@ namespace Qi4CS.CodeGeneration.MSBuild
       {
          ArgumentValidator.ValidateNotNull( "Source assembly", sourceAssembly );
 
-         // Load CodeGen version of all extensions
-         foreach ( var extName in PRELOADABLE_ASSEMBLIES )
+         // Load SDK version of all Qi4CS assemblies
+         foreach ( var fn in Directory.EnumerateFiles( Path.GetDirectoryName( new Uri( this.GetType().Assembly.CodeBase ).LocalPath ), "Qi4CS.*.dll" ) )
          {
-            System.Reflection.Assembly.Load( extName );
+            System.Reflection.Assembly.Load( Path.GetFileNameWithoutExtension( fn ) );
          }
 
          // Add to resolve event to load target application assemblies
-         AppDomain.CurrentDomain.AssemblyResolve += this.CurrentDomain_AssemblyResolve;
+         //AppDomain.CurrentDomain.AssemblyResolve += this.CurrentDomain_AssemblyResolve;
 
          var ass = System.Reflection.Assembly.LoadFrom( sourceAssembly );
          var mfNameGiven = !String.IsNullOrEmpty( modelFactoryName );
@@ -327,25 +315,24 @@ namespace Qi4CS.CodeGeneration.MSBuild
          this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>) ctor.Invoke( Type.EmptyTypes );
       }
 
-      private System.Reflection.Assembly CurrentDomain_AssemblyResolve( object sender, ResolveEventArgs args )
-      {
-         // TODO check that this method is really necessary.
-         CILAssemblyName an;
-         System.Reflection.Assembly result = null;
-         if ( CILAssemblyName.TryParse( args.Name, out an ) )
-         {
-            var pathFragment = Path.Combine( Path.GetDirectoryName( new Uri( args.RequestingAssembly.CodeBase ).LocalPath ), an.Name );
-            var suitablePath = File.Exists( pathFragment + ".dll" ) ?
-               ( pathFragment + ".dll" ) :
-               ( File.Exists( pathFragment + ".exe" ) ?
-               ( pathFragment + ".exe" ) : null );
-            if ( suitablePath != null )
-            {
-               result = System.Reflection.Assembly.LoadFrom( suitablePath );
-            }
-         }
-         return result;
-      }
+      //private System.Reflection.Assembly CurrentDomain_AssemblyResolve( object sender, ResolveEventArgs args )
+      //{
+      //   CILAssemblyName an;
+      //   System.Reflection.Assembly result = null;
+      //   if ( CILAssemblyName.TryParse( args.Name, out an ) )
+      //   {
+      //      var pathFragment = Path.Combine( Path.GetDirectoryName( new Uri( args.RequestingAssembly.CodeBase ).LocalPath ), an.Name );
+      //      var suitablePath = File.Exists( pathFragment + ".dll" ) ?
+      //         ( pathFragment + ".dll" ) :
+      //         ( File.Exists( pathFragment + ".exe" ) ?
+      //         ( pathFragment + ".exe" ) : null );
+      //      if ( suitablePath != null )
+      //      {
+      //         result = System.Reflection.Assembly.LoadFrom( suitablePath );
+      //      }
+      //   }
+      //   return result;
+      //}
 
       private static Boolean IsSuitableType( Type t )
       {
@@ -472,9 +459,12 @@ namespace Qi4CS.CodeGeneration.MSBuild
             actualPath = qi4CSDir;
          }
 
-         var genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
+         IDictionary<System.Reflection.Assembly, String> genAssFilenames;
+         try
+         {
+            genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
             actualPath,
-            IsWP8OrSL5( targetFWID ),
+            IsSL5( targetFWID ),
             ( nAss, gAss ) =>
             {
                Tuple<StrongNameKeyPair, AssemblyHashAlgorithm> snTuple;
@@ -488,8 +478,12 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   eArgs.SigningAlgorithm = snTuple.Item2;
                }
                return eArgs;
-            }
-         );
+            } );
+         }
+         catch ( InvalidApplicationModelException apme )
+         {
+            throw new Qi4CSBuildException( "The Qi4CS model was not valid:\n" + apme.ValidationResult, apme );
+         }
 
          if ( verify )
          {
@@ -595,10 +589,9 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return binPath;
       }
 
-      private static Boolean IsWP8OrSL5( String targetFW )
+      private static Boolean IsSL5( String targetFW )
       {
-         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase )
-            || "WindowsPhone".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
+         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
       }
 
       private static void Verify( String winSDKBinDir, String fileName, Boolean verifyStrongName )
@@ -681,21 +674,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// Creates a new instance of <see cref="Qi4CSBuildException"/> with specified message.
       /// </summary>
       /// <param name="msg">The message.</param>
-      public Qi4CSBuildException( String msg )
-         : base( msg )
+      /// <param name="inner">The inner exception, if any.</param>
+      public Qi4CSBuildException( String msg, Exception inner = null )
+         : base( msg, inner )
       {
 
       }
-
-      ///// <summary>
-      ///// This is deserialization constructor.
-      ///// </summary>
-      ///// <param name="info">The <see cref="System.Runtime.Serialization.SerializationInfo"/>.</param>
-      ///// <param name="context">The <see cref="System.Runtime.Serialization.StreamingContext"/>.</param>
-      //protected Qi4CSBuildException( System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context )
-      //   : base( info, context )
-      //{
-
-      //}
    }
 }

@@ -263,13 +263,13 @@ namespace Qi4CS.Core.Runtime.Model
 
       public event EventHandler<ApplicationCodeGenerationArgs> ApplicationCodeGenerationEvent;
 
-      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILReflectionContext reflectionContext, Boolean isWP8OrSL5Emit )
+      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILReflectionContext reflectionContext, Boolean isSilverlight )
       {
          var validationResult = this.ValidationResult;
          CheckValidation( validationResult, "Tried to emit code based on application model with validation errors." );
 
          IDictionary<CompositeModel, CompositeEmittingInfo> cResults;
-         var assDic = this.PerformEmitting( isWP8OrSL5Emit, reflectionContext, out cResults );
+         var assDic = this.PerformEmitting( isSilverlight, reflectionContext, out cResults );
 
          this.ApplicationCodeGenerationEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeGenerationArgs(
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
@@ -291,7 +291,7 @@ namespace Qi4CS.Core.Runtime.Model
       //private static readonly ConstructorInfo ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR = typeof( AssemblyDefaultAliasAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
-      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isWP8OrSL5Emit, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, CompositeEmittingInfo> cResultsOut )
+      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, CompositeEmittingInfo> cResultsOut )
       {
          var typeModelDic = this._typeModelDic.Value;
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
@@ -302,7 +302,7 @@ namespace Qi4CS.Core.Runtime.Model
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
             .Distinct()
-            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => Tuple.Create( mt.NewCodeGenerator( isWP8OrSL5Emit, reflectionContext ), mt.CodeGenerationInfo ) );
+            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => Tuple.Create( mt.NewCodeGenerator( isSilverlight, reflectionContext ), mt.CodeGenerationInfo ) );
 
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
