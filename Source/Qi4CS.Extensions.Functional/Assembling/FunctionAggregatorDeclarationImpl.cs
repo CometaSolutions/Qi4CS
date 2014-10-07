@@ -26,13 +26,13 @@ using Qi4CS.Core.SPI.Model;
 using Qi4CS.Extensions.Functional.Model;
 using Qi4CS.Extensions.Functional.Instance;
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 using CILAssemblyManipulator.API;
 #endif
 
 namespace Qi4CS.Extensions.Functional.Assembling
 {
-#if !LOAD_ONLY
+#if QI4CS_SDK
    internal static class FunctionAggregatorDeclarationCodeGenStatics
    {
       internal static readonly System.Reflection.MethodInfo INVOCATION_HANDLER_METHOD = typeof( FunctionInvocationHelper ).LoadMethodOrThrow( "InvokeMethod", null );
@@ -231,7 +231,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
                      }
                   } );
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
                   args.Model.ApplicationModel.ApplicationCodeGenerationEvent += new EventHandler<ApplicationCodeGenerationArgs>( ( sender2, args2 ) =>
                   {
                      this.GenerateType( args.Model, info, args2 );
@@ -248,7 +248,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
          return INVOCATION_HANDLER_PREFIX + model.CompositeModelID + "_" + model.Methods.Single( cMethod => cMethod.NativeInfo.Equals( method ) ).MethodIndex;
       }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
       private void GenerateType( CompositeModel cModel, FunctionInfo<TKey, TComposite> info, ApplicationCodeGenerationArgs args )
       {
          foreach ( var kvp in info.FunctionMethods )

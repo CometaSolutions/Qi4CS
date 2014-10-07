@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
-#if !LOAD_ONLY
+#if QI4CS_SDK
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,7 +113,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._gBuilders = cf.NewListProxy( curGArgs == null ? new List<CILTypeParameter>( EMPTY_PARAMS ) : curGArgs.Cast<CILTypeParameter>().ToList() ).CQ;
       }
 
-      #region EmittableWithGenericArguments Members
+#region EmittableWithGenericArguments Members
 
       public ListQuery<CILTypeParameter> GenericArguments
       {
@@ -125,7 +125,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      #region EmittableWithBuilder<TBuilder> Members
+#region EmittableWithBuilder<TBuilder> Members
 
       public TBuilder Builder
       {
@@ -165,7 +165,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._currentLambdaClassCount = 0;
       }
 
-      #region TypeGenerationInfo Members
+#region TypeGenerationInfo Members
 
       public DictionaryQuery<CILType, CILType> Parents
       {
@@ -300,7 +300,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._compositeField = compositeField;
       }
 
-      #region AbstractTypeGenerationInfoForComposites Members
+#region AbstractTypeGenerationInfoForComposites Members
 
       public CILField CompositeField
       {
@@ -469,7 +469,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._instancePoolRequired = instancePoolRequired;
       }
 
-      #region FragmentTypeGenerationInfo Members
+#region FragmentTypeGenerationInfo Members
 
       public Boolean IsInstancePoolRequired
       {
@@ -703,7 +703,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 
-      #region MethodGenerationInfo Members
+#region MethodGenerationInfo Members
 
       public CILTypeBase ReturnType
       {
@@ -715,7 +715,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      #region MethodGenerationInfo Members
+#region MethodGenerationInfo Members
 
       public CILParameter ReturnParameter
       {

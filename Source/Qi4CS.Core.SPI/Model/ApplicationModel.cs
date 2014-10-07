@@ -124,7 +124,7 @@ namespace Qi4CS.Core.SPI.Model
       /// <seealso cref="ApplicationCodeResolveArgs"/>
       event EventHandler<ApplicationCodeResolveArgs> ApplicationCodeResolveEvent;
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 
       /// <summary>
       /// This event is fired whenever code is genereated via <see cref="GenerateCode(CILAssemblyManipulator.API.CILReflectionContext, Boolean)"/> method.
@@ -319,7 +319,7 @@ namespace Qi4CS.Core.SPI.Model
       }
    }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 
    /// <summary>
    /// The event args type used in <see cref="ApplicationModel{T}.ApplicationCodeGenerationEvent"/> event.

@@ -30,7 +30,7 @@ using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.Runtime.Assembling;
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 using CILAssemblyManipulator.API;
 #endif
 
@@ -257,7 +257,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 
       #region ApplicationModel<TApplicationInstance> Members
 

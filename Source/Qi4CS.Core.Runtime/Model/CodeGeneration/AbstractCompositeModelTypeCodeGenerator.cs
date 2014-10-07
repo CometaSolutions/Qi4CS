@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
-#if !LOAD_ONLY
+#if QI4CS_SDK
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractCompositeModelTypeCodeGenerator : CompositeModelTypeCodeGenerator
    {
-      #region CompositeModelTypeCodeGenerator Members
+#region CompositeModelTypeCodeGenerator Members
 
       public void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
       {

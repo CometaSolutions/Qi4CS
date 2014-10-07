@@ -45,7 +45,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       CompositeModel NewCompositeModel( ApplicationModel<ApplicationSPI> appModel, CompositeAssemblyInfo compositeInfo, Func<Int32, Object, Attribute, Attribute> attributeTransformer, String architectureContainerID );
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
       CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
 #endif
 
@@ -124,7 +124,7 @@ namespace Qi4CS.Core.Runtime.Model
          return result;
       }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
 
       public abstract CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
 
@@ -149,7 +149,7 @@ namespace Qi4CS.Core.Runtime.Model
          // Nothing to do.
       }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
       public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
          return new PlainCompositeModelTypeCodeGenerator( isSilverlight, reflectionContext );
@@ -206,7 +206,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-#if !LOAD_ONLY
+#if QI4CS_SDK
       public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
          return new ServiceModelTypeCodeGenerator( isSilverlight, reflectionContext );
@@ -240,7 +240,7 @@ namespace Qi4CS.Core.Runtime.Model
    //         // TODO override .Equals -method to call Object.ReferenceEquals(...), once value composite cache is working.
    //      }
 
-   //#if !LOAD_ONLY
+   //#if QI4CS_SDK
 
    //      public override CompositeModelTypeCodeGenerator NewCodeGenerator( CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
    //      {

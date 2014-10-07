@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. 
  */
-#if !LOAD_ONLY
+#if QI4CS_SDK
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -37,7 +37,7 @@ namespace Qi4CS.Core.Runtime.Model
    {
       private class BaseTypeComparer : IComparer<Type>
       {
-         #region IComparer<Type> Members
+#region IComparer<Type> Members
 
          public Int32 Compare( Type x, Type y )
          {
