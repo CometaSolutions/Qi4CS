@@ -52,9 +52,8 @@
     <Reference Include="System" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="UtilPack, Version=0.9.6.0, Culture=neutral, PublicKeyToken=a19296b3eb5ffc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\UtilPack.0.9.6.0\lib\portable-net4+windows8\UtilPack.dll</HintPath>
+    <Reference Include="UtilPack">
+      <HintPath>..\..\packages\UtilPack.0.9.6.1\lib\portable-net40+win\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

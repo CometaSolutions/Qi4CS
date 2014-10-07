@@ -149,7 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.0.9.6.0\lib\portable-net4+windows8\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.0.9.6.1\lib\portable-net40+win\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
