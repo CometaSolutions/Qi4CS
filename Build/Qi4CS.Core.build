@@ -19,9 +19,9 @@
     <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.DotNET/Qi4CS.CodeGeneration.DotNET.csproj" />
     <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.csproj" />
     
-    <Qi4CSNonCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
+    <!-- <Qi4CSNonCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
     <Qi4CSNonCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
-    <Qi4CSNonCoreProject Condition=" '$(Qi4CSCoreConfiguration)' != 'Debug_WP' and '$(Qi4CSCoreConfiguration)' != 'Release_WP' " Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
+    <Qi4CSNonCoreProject Condition=" '$(Qi4CSCoreConfiguration)' != 'Debug_WP' and '$(Qi4CSCoreConfiguration)' != 'Release_WP' " Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" /> -->
   </ItemGroup>
   
   <!-- Import target for restoring NuGet packages -->
@@ -44,7 +44,7 @@
     <MSBuild Condition=" '$(Qi4CSCoreConfiguration.EndsWith(`_SDK`))' == 'true' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
     
     <!-- Build Qi4CS other projects -->
-    <MSBuild Projects="@(Qi4CSNonCoreProject)" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+    <!-- <MSBuild Projects="@(Qi4CSNonCoreProject)" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" /> -->
   </Target>
   
 
@@ -64,9 +64,9 @@
       <!-- NuSpec file information -->
     <PropertyGroup>
       <Qi4CSCoreBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSCoreBaseDir)))</Qi4CSCoreBaseDirNuSpec>
-      <NuSpec_OutputPath>$(MSBuildThisFileDirectory)../NuSpec/Qi4CS.Core.nuspec</NuSpec_OutputPath>
+      <NuSpec_OutputPath>$(Qi4CSCoreBaseDir)/NuSpec/Qi4CS.Core.nuspec</NuSpec_OutputPath>
       <NuSpec_ID>Qi4CS.Core</NuSpec_ID>
-      <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
+      <NuSpec_VersionFilename>$(Qi4CSCoreBaseDir)/Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
       <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
       <NuSpec_Description>Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the core package required for all projects using Qi4CS.</NuSpec_Description>
       <NuSpec_Title>Qi4CS Core</NuSpec_Title>
@@ -80,6 +80,8 @@
       <NuSpec_FilesXML><![CDATA[
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.dll" target="lib\portable-net40+win8\Qi4CS.Core.dll" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.xml" target="lib\portable-net40+win8\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.dll" target="lib\wpa\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.xml" target="lib\wpa\Qi4CS.Core.xml" />
 
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Source\Qi4CS.CodeGeneration.MSBuild\Qi4CS.CodeGeneration.MSBuild.targets" target="build\Qi4CS.Core.targets" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\UtilPack.dll" target="build\UtilPack.dll" />
