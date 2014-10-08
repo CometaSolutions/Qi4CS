@@ -172,7 +172,7 @@ public static partial class E_Qi4CS
    public static IEnumerable<Type> GetAllCompositeTypes( this CompositeModel model )
    {
       return model.Methods
-         .Select( cMethod => cMethod.NativeInfo.ReflectedType )
+         .Select( cMethod => cMethod.NativeInfo.DeclaringType )
          .Concat( model.PublicTypes )
          .Concat( model.GetAllInjectableModelsWithInjectionScope<Qi4CS.Core.API.Model.ThisAttribute>().Select( i => i.TargetType ) )
          .GetBottomTypes();

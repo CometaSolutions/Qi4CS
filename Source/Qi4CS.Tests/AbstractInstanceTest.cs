@@ -44,7 +44,7 @@ namespace Qi4CS.Tests
       {
          var keyDir = System.IO.Path.Combine(
                System.IO.Path.GetDirectoryName( new Uri( typeof( Qi4CSCodeGenHelper ).Assembly.CodeBase ).LocalPath ),
-               "..", "..", "..", "..", "..", "..", "..",
+               "..", "..", "..", "..", "..", "..",
                "Keys"
                );
          var snPath = System.IO.Path.Combine(

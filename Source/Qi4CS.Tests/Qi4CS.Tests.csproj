@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -74,30 +74,30 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Portable">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.2\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.3\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Extensions.Configuration">
-      <HintPath>..\..\Output\$(Configuration)\dotNET\SDK\Qi4CS.Extensions.Configuration.dll</HintPath>
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Extensions.Configuration.XML">
-      <HintPath>..\..\Output\$(Configuration)\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.dll</HintPath>
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Extensions.Functional">
-      <HintPath>..\..\Output\$(Configuration)\dotNET\SDK\Qi4CS.Extensions.Functional.dll</HintPath>
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Functional.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Qi4CS.Core">
-      <HintPath>..\..\Output\$(Configuration)\dotNET\SDK\Qi4CS.Core.dll</HintPath>
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="UtilPack, Version=0.9.6.0, Culture=neutral, PublicKeyToken=a19296b3eb5ffc91, processorArchitecture=MSIL">
+    <Reference Include="UtilPack">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\UtilPack.0.9.6.0\lib\portable-net4+windows8\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.0.9.6.1\lib\portable-net40+win\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -214,6 +214,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
