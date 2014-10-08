@@ -34,7 +34,11 @@ namespace Qi4CS.Core.SPI.Common
       /// <summary>
       /// Helper field to get access of Qi4CS assembly.
       /// </summary>
-      public static readonly Assembly QI4CS_ASSEMBLY = Assembly.GetExecutingAssembly();
+      public static readonly Assembly QI4CS_ASSEMBLY = typeof( Types )
+#if WINDOWS_PHONE_APP
+         .GetTypeInfo()
+#endif
+.Assembly;
 
       /// <summary>
       /// Finds a method from <paramref name="classType"/> and its base type hierarchy which could be seen as implementing the <paramref name="methodFromParent"/>.
@@ -45,6 +49,9 @@ namespace Qi4CS.Core.SPI.Common
       /// <returns>The suitable method of <paramref name="classType"/>, or <c>null</c> if no such method could be found. Also returns <c>null</c> if either of <paramref name="classType"/> or <paramref name="methodFromParent"/> is <c>null</c>.</returns>
       public static MethodInfo FindMethodImplicitlyImplementingMethod( Type classType, MethodInfo methodFromParent )
       {
+#if WINDOWS_PHONE_APP
+         throw new NotImplementedException();
+#else
          // TODO optimize: if classType not interface and methodFromInterface.DeclaringType is not interface, and methodFromInterface.DeclaringType is not generic, then it is enough to just call classType.GetMethod with suitable parameters.
          MethodInfo result = null;
          if ( classType != null && methodFromParent != null )
@@ -72,6 +79,7 @@ namespace Qi4CS.Core.SPI.Common
             }
          }
          return result;
+#endif
       }
 
       /// <summary>
@@ -91,9 +99,25 @@ namespace Qi4CS.Core.SPI.Common
          {
             if ( x.IsGenericParameter && y.IsGenericParameter )
             {
-               result = comparingBaseTypes || ( x.DeclaringMethod != null && y.DeclaringMethod != null && x.GenericParameterPosition == y.GenericParameterPosition );
+               result = comparingBaseTypes || ( x
+#if WINDOWS_PHONE_APP
+                  .GetTypeInfo()
+#endif
+.DeclaringMethod != null && y
+#if WINDOWS_PHONE_APP
+                  .GetTypeInfo()
+#endif
+.DeclaringMethod != null && x.GenericParameterPosition == y.GenericParameterPosition );
             }
-            else if ( x.IsGenericType && y.IsGenericType )
+            else if ( x
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+.IsGenericType && y
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+.IsGenericType )
             {
                var cGArgs = x.GetGenericArguments();
                var iGArgs = y.GetGenericArguments();

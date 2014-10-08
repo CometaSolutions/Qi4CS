@@ -255,7 +255,11 @@ namespace Qi4CS.Core.API.Instance
 
          if ( appendAssembly )
          {
-            builder.Append( ASSEMBLY_START ).Append( type.Assembly.FullName ).Append( ASSEMBLY_END );
+            builder.Append( ASSEMBLY_START ).Append( type
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+.Assembly.FullName ).Append( ASSEMBLY_END );
          }
 
          var ns = type.Namespace;
@@ -268,7 +272,11 @@ namespace Qi4CS.Core.API.Instance
          {
             ProcessDeclaringType( type, builder, nestedSeparator );
             builder.Append( type.Name );
-            if ( type.IsGenericType )
+            if ( type
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+.IsGenericType )
             {
                var gArgs = type.GetGenericArguments();
                builder.Append( GENERIC_ARGS_START );
