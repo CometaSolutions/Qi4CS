@@ -30,6 +30,7 @@ using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.API.Common;
 using Qi4CS.Core.SPI.Common;
 
+
 namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractModelTypeModelScopeSupportBase
@@ -121,6 +122,7 @@ namespace Qi4CS.Core.Runtime.Model
          #endregion
       }
 
+
       protected class AttributeEqualityComparer : IEqualityComparer<Object>
       {
 
@@ -144,7 +146,7 @@ namespace Qi4CS.Core.Runtime.Model
             Boolean result = true;
             while ( result && current != null )
             {
-               foreach ( FieldInfo field in current.GetFields( BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public ) )
+               foreach ( var field in current.GetAllInstanceFields() )
                {
                   Object xVal = field.GetValue( x );
                   Object yVal = field.GetValue( y );
@@ -154,7 +156,7 @@ namespace Qi4CS.Core.Runtime.Model
                      break;
                   }
                }
-               current = current.BaseType;
+               current = current.GetBaseType();
             }
             return result;
          }
@@ -171,16 +173,13 @@ namespace Qi4CS.Core.Runtime.Model
 
       private static readonly MethodInfo GENERIC_FRAGMENT_METHOD = ArchitectureDefaults.GENERIC_FRAGMENT_TYPE.LoadMethodOrThrow( "Invoke", null );
 
-      private static readonly BindingFlags GET_PUBLIC_DECLARED_INSTANCE_METHODS = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-      private static readonly BindingFlags GET_DECLARED_INSTANCE_METHODS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-
-      private static readonly Func<Type, Object[]> TYPE_ATTRIBUTES_EXTRACTOR = type => type.GetCustomAttributes( true );
-      private static readonly Func<FieldInfo, Object[]> FIELD_INFO_ATTRIBUTES_EXTRACTOR = field => field.GetCustomAttributes( true );
-      private static readonly Func<MethodInfo, Object[]> METHOD_INFO_ATTRIBUTES_EXTRACTOR = method => method.GetCustomAttributes( true );
+      private static readonly Func<Type, IEnumerable<Object>> TYPE_ATTRIBUTES_EXTRACTOR = type => type.GetCustomAttributes( true );
+      private static readonly Func<FieldInfo, IEnumerable<Object>> FIELD_INFO_ATTRIBUTES_EXTRACTOR = field => field.GetCustomAttributes( true );
+      private static readonly Func<MethodInfo, IEnumerable<Object>> METHOD_INFO_ATTRIBUTES_EXTRACTOR = method => method.GetCustomAttributes( true );
       //      private static readonly Func<ConstructorInfo, Object[]> CTOR_INFO_ATTRIBUTES_EXTRACTOR = ctor => ctor.GetCustomAttributes( true );
-      private static readonly Func<ParameterInfo, Object[]> PARAMETER_INFO_ATTRIBUTES_EXTRACTOR = param => param.GetCustomAttributes( true );
-      private static readonly Func<PropertyInfo, Object[]> PROPERTY_INFO_ATTRIBUTES_EXTRACTOR = pInfo => pInfo.GetCustomAttributes( true );
-      private static readonly Func<EventInfo, Object[]> EVENT_INFO_ATTRIBUTES_EXTRACTOR = eInfo => eInfo.GetCustomAttributes( true );
+      private static readonly Func<ParameterInfo, IEnumerable<Object>> PARAMETER_INFO_ATTRIBUTES_EXTRACTOR = param => param.GetCustomAttributes( true );
+      private static readonly Func<PropertyInfo, IEnumerable<Object>> PROPERTY_INFO_ATTRIBUTES_EXTRACTOR = pInfo => pInfo.GetCustomAttributes( true );
+      private static readonly Func<EventInfo, IEnumerable<Object>> EVENT_INFO_ATTRIBUTES_EXTRACTOR = eInfo => eInfo.GetCustomAttributes( true );
 
 
       public CompositeModel NewCompositeModel( ApplicationModel<ApplicationSPI> appModel, CompositeAssemblyInfo compositeInfo, Func<Int32, Object, Attribute, Attribute> attributeTransformer, String architectureContainerID )
@@ -253,7 +252,7 @@ namespace Qi4CS.Core.Runtime.Model
                   if ( !Object.Equals( typeof( Object ), type ) )
                   {
                      processedCompositeTypes.Add( type );
-                     foreach ( var property in type.GetProperties( GET_DECLARED_INSTANCE_METHODS ) )
+                     foreach ( var property in type.GetAllDeclaredInstanceProperties() )
                      {
                         var getter = property.GetGetMethod();
                         var setter = property.GetSetMethod();
@@ -270,7 +269,7 @@ namespace Qi4CS.Core.Runtime.Model
                         }
                      }
 
-                     foreach ( var eventInfo in type.GetEvents( GET_DECLARED_INSTANCE_METHODS ) )
+                     foreach ( var eventInfo in type.GetAllDeclaredInstanceEvents() )
                      {
                         var adder = eventInfo.GetAddMethod();
                         var remover = eventInfo.GetRemoveMethod();
@@ -287,7 +286,7 @@ namespace Qi4CS.Core.Runtime.Model
                         }
                      }
 
-                     foreach ( MethodInfo method in type.GetMethods( GET_DECLARED_INSTANCE_METHODS ) )
+                     foreach ( MethodInfo method in type.GetAllDeclaredInstanceMethods() )
                      {
                         if ( this.ShouldProcessAsCompositeMethod( method, null, compositeInfo, attributeTransformer ) && !allCompositeMethods.Contains( method ) )
                         {
@@ -509,7 +508,7 @@ namespace Qi4CS.Core.Runtime.Model
             currentCompositeTypes = this.ProcessThisTypeForSubTypes( currentCompositeType, fragmentTypes );
          }
 
-         return currentCompositeType.IsInterface ? currentCompositeTypes.SelectMany( cType => cType.GetImplementedInterfaces() ) : currentCompositeTypes.SelectMany( cType => cType.GetAllParentTypes() );
+         return currentCompositeType.IsInterface() ? currentCompositeTypes.SelectMany( cType => cType.GetImplementedInterfaces() ) : currentCompositeTypes.SelectMany( cType => cType.GetAllParentTypes() );
       }
 
       protected Boolean ShouldProcessAsCompositeMethod( MethodInfo method, MemberInfo currentEventOrProperty, CompositeAssemblyInfo assInfo, Func<Int32, Object, Attribute, Attribute> attributeTransformer )
@@ -528,7 +527,7 @@ namespace Qi4CS.Core.Runtime.Model
 
             CompositeMethodVisiblity methodVisiblity;
             // If no CompositeMethodAttribute is defined, then see if DefaultCompositeMethodVisibilityAttribute is defined for enclosing type or any of its base types or interfaces
-            if ( compositeMethodAttr == null && !method.DeclaringType.IsInterface )
+            if ( compositeMethodAttr == null && !method.DeclaringType.IsInterface() )
             {
                // Correct order: base-type chain (interfaces may only contain public methods -> no point using DefaultCompositeMethodVisibilityAttribute for interfaces.
                var compositeMethodVisAttr = method.DeclaringType.GetClassHierarchy()
@@ -543,7 +542,7 @@ namespace Qi4CS.Core.Runtime.Model
                // CompositeMethodAttribute is found, so any non-private method is ok
                methodVisiblity = CompositeMethodVisiblity.Public | CompositeMethodVisiblity.Internal | CompositeMethodVisiblity.Protected | CompositeMethodVisiblity.ProtectedAndInternal | CompositeMethodVisiblity.ProtectedOrInternal;
             }
-            result = method.DeclaringType.IsInterface || ( methodVisiblity.MethodConsideredToBeCompositeMethod( method ) && !method.DeclaringType.GetImplementedInterfaces().SelectMany( iFace => iFace.GetMethods( GET_PUBLIC_DECLARED_INSTANCE_METHODS ) ).Any( iFaceMethod => Types.FindMethodImplicitlyImplementingMethod( method.DeclaringType, iFaceMethod ) == method ) );
+            result = method.DeclaringType.IsInterface() || ( methodVisiblity.MethodConsideredToBeCompositeMethod( method ) && !method.DeclaringType.GetImplementedInterfaces().SelectMany( iFace => iFace.GetPublicDeclaredInstanceMethods() ).Any( iFaceMethod => Types.FindMethodImplicitlyImplementingMethod( method.DeclaringType, iFaceMethod ) == method ) );
          }
          return result;
       }
@@ -632,7 +631,7 @@ namespace Qi4CS.Core.Runtime.Model
          Int32 fieldIndex = compositeModel.Fields.CQ.Count;
          foreach ( var fieldInfo in fragmentType.GetClassHierarchy()
                .Distinct()
-               .SelectMany( type => type.GetFields( BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly ) )
+               .SelectMany( type => type.GetAllDeclaredInstanceFields() )
                .Where( field => this.GetInjectionScopes( this.ProcessCustomAttributes( assInfo, field, FIELD_INFO_ATTRIBUTES_EXTRACTOR, attributeTransformer ) ).Any()
                                 && !compositeModel.Fields.CQ.Any( f => f.NativeInfo == field ) ) )
          {
@@ -651,7 +650,7 @@ namespace Qi4CS.Core.Runtime.Model
          )
       {
          Int32 ctorIndex = compositeModel.Constructors.MQ.Count;
-         foreach ( ConstructorInfo ctorInfo in fragmentType.GetConstructors( BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+         foreach ( ConstructorInfo ctorInfo in fragmentType.GetAllInstanceConstructors() )
          {
             compositeModel.Constructors.Add( this.NewConstructorModel( cf, compositeModel, assInfo, ctorInfo, ctorIndex, defaultConstraints, attributeTransformer ) );
             ++ctorIndex;
@@ -690,7 +689,7 @@ namespace Qi4CS.Core.Runtime.Model
                .Where( fragmentType =>
                   ArchitectureDefaults.GENERIC_FRAGMENT_TYPE.IsAssignableFrom( fragmentType ) ||
                    currentComposite.GetAllParentTypes().Any( type => type.GetGenericDefinitionIfGenericType().IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( fragmentType ) ) ||
-                  ( !fragmentType.ContainsGenericParameters && this.GetSpecialMethods( assInfo, fragmentType, attributeTransformer ).Any() ) // TODO a bit of performance killer
+                  ( !fragmentType.ContainsGenericParameters() && this.GetSpecialMethods( assInfo, fragmentType, attributeTransformer ).Any() ) // TODO a bit of performance killer
                   )
                .ToDictionary( fType => fType, fType => this.ProcessFragmentTypeFromAssembly( fType, currentComposite ) );
 
@@ -698,12 +697,12 @@ namespace Qi4CS.Core.Runtime.Model
          foreach ( var kvp in result.ToArray() )
          {
             Type type = kvp.Value;
-            if ( type.IsGenericTypeDefinition && result.Values.Any( another => !Object.Equals( another, type ) && another.IsGenericType && another.GetGenericTypeDefinition().Equals( type ) ) )
+            if ( type.IsGenericTypeDefinition() && result.Values.Any( another => !Object.Equals( another, type ) && another.IsGenericType() && another.GetGenericTypeDefinition().Equals( type ) ) )
             {
                result.Remove( kvp.Key );
             }
          }
-         if ( addIfNotInterface && !currentComposite.IsInterface )
+         if ( addIfNotInterface && !currentComposite.IsInterface() )
          {
             result[currentComposite] = currentComposite;
          }
@@ -718,9 +717,9 @@ namespace Qi4CS.Core.Runtime.Model
          foreach ( var currentComposite in currentCompositeType.GetAllParentTypes() )
          {
             if (
-               fragmentType.IsGenericTypeDefinition &&
-               currentComposite.IsGenericType &&
-               !currentComposite.ContainsGenericParameters &&
+               fragmentType.IsGenericTypeDefinition() &&
+               currentComposite.IsGenericType() &&
+               !currentComposite.ContainsGenericParameters() &&
                 currentComposite.GetGenericTypeDefinition().IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( fragmentType )
                )
             {
@@ -851,7 +850,7 @@ namespace Qi4CS.Core.Runtime.Model
       {
          if ( compositeInfo != null )
          {
-            Type possibleMixin = compositeInfo.Types.FirstOrDefault( pType => !pType.IsInterface );
+            Type possibleMixin = compositeInfo.Types.FirstOrDefault( pType => !pType.IsInterface() );
             if ( possibleMixin != null )
             {
                typez[possibleMixin] = possibleMixin;// = typez.Concat( Enumerable.Repeat( possibleMixin, 1 ) );
@@ -925,7 +924,7 @@ namespace Qi4CS.Core.Runtime.Model
                      AppliesToFilter filter = null;
                      if ( !appliesFiltersCache.TryGetValue( applyFilter, out filter ) )
                      {
-                        filter = (AppliesToFilter) applyFilter.GetConstructor( Empty<Type>.Array ).Invoke( null );
+                        filter = (AppliesToFilter) applyFilter.LoadConstructorOrThrow( 0 ).Invoke( null );
                         appliesFiltersCache.Add( applyFilter, filter );
                      }
                      result = filter.AppliesTo( owner.NativeInfo, fragmentMethod );
@@ -1237,7 +1236,7 @@ namespace Qi4CS.Core.Runtime.Model
       {
          return constraintType.GetInterfaces()
             .Any( iFace =>
-               iFace.IsGenericType &&
+               iFace.IsGenericType() &&
                Object.Equals( typeof( Constraint<,> ), iFace.GetGenericTypeDefinition() ) &&
                  iFace.GetGenericArguments()[0].IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( attributeType ) &&
                ( iFace.GetGenericArguments()[1].IsGenericParameter || iFace.GetGenericArguments()[1].GetGenericDefinitionIfGenericType().IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( valueType.GetRootOfArrayByRefPointerType() ) )
@@ -1285,7 +1284,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual IDictionary<MethodInfo, Attribute[]> GetSpecialMethods( CompositeAssemblyInfo assInfo, Type fragmentType, Func<Int32, Object, Attribute, Attribute> attributeTransformer )
       {
          IDictionary<MethodInfo, Attribute[]> result = new Dictionary<MethodInfo, Attribute[]>();
-         foreach ( MethodInfo method in fragmentType.GetMethods( BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic ) )
+         foreach ( MethodInfo method in fragmentType.GetAllInstanceMethods() )
          {
             Attribute[] specialAttrs = this.GetSpecialScopes( this.ProcessCustomAttributes( assInfo, method, METHOD_INFO_ATTRIBUTES_EXTRACTOR, attributeTransformer ) ).ToArray();
             if ( specialAttrs.Any() )
@@ -1305,7 +1304,7 @@ namespace Qi4CS.Core.Runtime.Model
             .Distinct( ATTRIBUTE_EQUALITY_COMPARER );
       }
 
-      protected virtual IList<Attribute> ProcessCustomAttributes<TReflectedElement>( CompositeAssemblyInfo assInfo, TReflectedElement reflectedElement, Func<TReflectedElement, Object[]> attributeExtractor, Func<Int32, Object, Attribute, Attribute> attributeTransformer )
+      protected virtual IList<Attribute> ProcessCustomAttributes<TReflectedElement>( CompositeAssemblyInfo assInfo, TReflectedElement reflectedElement, Func<TReflectedElement, IEnumerable<Object>> attributeExtractor, Func<Int32, Object, Attribute, Attribute> attributeTransformer )
       {
          return attributeExtractor( reflectedElement ).Cast<Attribute>().Select( attr => attributeTransformer( assInfo.CompositeID, reflectedElement, attr ) ).Where( attr => attr != null ).ToList();
       }
@@ -1410,7 +1409,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual IEnumerable<Type> TransformThisTypeForSubType( Type originalThisType, Type resolvedThisType )
       {
          IEnumerable<Type> result;
-         if ( ( !originalThisType.IsGenericType && resolvedThisType.IsGenericType ) || ( originalThisType.IsGenericType && resolvedThisType.IsGenericType && resolvedThisType.GetGenericArguments().Length > originalThisType.GetGenericArguments().Length ) )
+         if ( ( !originalThisType.IsGenericType() && resolvedThisType.IsGenericType() ) || ( originalThisType.IsGenericType() && resolvedThisType.IsGenericType() && resolvedThisType.GetGenericArguments().Length > originalThisType.GetGenericArguments().Length ) )
          {
             // TODO handle this (possible) error situation better.
             throw new InternalException( "Original this type was " + originalThisType + " but it resolved to " + resolvedThisType + ", having generic argument mismatch." );
@@ -1420,7 +1419,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             result = Enumerable.Repeat( originalThisType, 1 );
          }
-         else if ( originalThisType.IsGenericType && resolvedThisType.IsGenericType )
+         else if ( originalThisType.IsGenericType() && resolvedThisType.IsGenericType() )
          {
             var gArgs = originalThisType.GetGenericArguments();
             var gDef = originalThisType.GetGenericDefinitionIfGenericType();
@@ -1445,7 +1444,7 @@ namespace Qi4CS.Core.Runtime.Model
          IEnumerable<TModel> models,
          Func<TModel, Type> reflectedInfoDeclaringTypeExtractor,
          Func<Type, TModel, TMemberInfo> memberInfoExtractor,
-         Func<TMemberInfo, Object[]> attributesExtractor,
+         Func<TMemberInfo, IEnumerable<Object>> attributesExtractor,
          Func<Int32, Object, Attribute, Attribute> attributeTransformer
          )
          where TModel : ModelWithAttributesMutable<TMemberInfo>
@@ -1479,10 +1478,280 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected virtual Boolean WillDefaultValueCreatorParameterBeNull( PropertyInfo pInfo )
       {
-         return !pInfo.DeclaringType.ContainsGenericParameters;
+         return !pInfo.DeclaringType.ContainsGenericParameters();
       }
 
       protected abstract void PostProcessModel( CompositeModelMutable model, CompositeAssemblyInfo info, String architectureContainerID );
 
    }
+}
+
+public static partial class E_Qi4CS
+{
+#if !WINDOWS_PHONE_APP
+   private const BindingFlags GET_PUBLIC_DECLARED_INSTANCE_METHODS = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+   private const BindingFlags GET_DECLARED_INSTANCE_METHODS = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+   private const BindingFlags GET_INSTANCE_METHODS = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+#endif
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<MethodInfo>
+#else
+ MethodInfo[]
+#endif
+ GetPublicDeclaredInstanceMethods( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredMethods.Where(m => m.IsPublic && !m.IsStatic)
+#else
+ type.GetMethods( GET_PUBLIC_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<MethodInfo>
+#else
+ MethodInfo[]
+#endif
+ GetAllDeclaredInstanceMethods( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredMethods.Where(m => !m.IsStatic)
+#else
+ type.GetMethods( GET_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<MethodInfo>
+#else
+ MethodInfo[]
+#endif
+ GetAllInstanceMethods( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetRuntimeMethods().Where(m => !m.IsStatic)
+#else
+ type.GetMethods( GET_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<PropertyInfo>
+#else
+ PropertyInfo[]
+#endif
+ GetAllDeclaredInstanceProperties( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredProperties.Where(p => !p.GetSomeMethod().IsStatic)
+#else
+ type.GetProperties( GET_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<EventInfo>
+#else
+ EventInfo[]
+#endif
+ GetAllDeclaredInstanceEvents( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredEvents.Where(e => !e.GetSomeMethod().IsStatic)
+#else
+ type.GetEvents( GET_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<FieldInfo>
+#else
+ FieldInfo[]
+#endif
+ GetAllInstanceFields( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+         // http://geertvanhorrik.com/2012/07/02/flattenhierarchy-for-static-members-in-winrt/ it seems .GetRuntimeFields() does indeed return all non-static fields including inherited onces (but not static (altho this may be fixed?))
+ type.GetRuntimeFields().Where(f => !f.IsStatic)
+#else
+ type.GetFields( GET_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<FieldInfo>
+#else
+ FieldInfo[]
+#endif
+ GetAllDeclaredInstanceFields( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredFields.Where(f => !f.IsStatic)
+#else
+ type.GetFields( GET_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static
+#if WINDOWS_PHONE_APP
+      IEnumerable<ConstructorInfo>
+#else
+ ConstructorInfo[]
+#endif
+ GetAllInstanceConstructors( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().DeclaredConstructors.Where(c => !c.IsStatic)
+#else
+ type.GetConstructors( GET_DECLARED_INSTANCE_METHODS )
+#endif
+;
+   }
+
+   internal static Type GetBaseType( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().BaseType
+#else
+ type.BaseType
+#endif
+;
+   }
+
+   internal static Boolean IsInterface( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().IsInterface
+#else
+ type.IsInterface
+#endif
+;
+   }
+
+   internal static Boolean ContainsGenericParameters( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().ContainsGenericParameters
+#else
+ type.ContainsGenericParameters
+#endif
+;
+   }
+
+   internal static Boolean IsGenericType( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().IsGenericType
+#else
+ type.IsGenericType
+#endif
+;
+   }
+
+   internal static Boolean IsGenericTypeDefinition( this Type type )
+   {
+      return
+#if WINDOWS_PHONE_APP
+ type.GetTypeInfo().IsGenericTypeDefinition
+#else
+ type.IsGenericTypeDefinition
+#endif
+;
+   }
+
+#if WINDOWS_PHONE_APP
+
+   internal static IEnumerable<Object> GetCustomAttributes(this Type type, Boolean inherit)
+   {
+      return type.GetTypeInfo().GetCustomAttributes(inherit);
+   }
+
+   internal static IEnumerable<Object> GetCustomAttributes(this Type type, Type attributeType, Boolean inherit)
+   {
+      return type.GetTypeInfo().GetCustomAttributes(attributeType, inherit);
+   }
+
+   internal static MethodInfo GetSetMethod(this PropertyInfo property)
+   {
+      var retVal = property.SetMethod;
+      return retVal != null && retVal.IsPublic ? retVal : null;
+   }
+
+   internal static MethodInfo GetGetMethod(this PropertyInfo property)
+   {
+      var retVal = property.GetMethod;
+      return retVal != null && retVal.IsPublic ? retVal : null;
+   }
+
+   internal static MethodInfo GetAddMethod(this EventInfo evt)
+   {
+      var retVal = evt.AddMethod;
+      return retVal != null && retVal.IsPublic ? retVal : null;
+   }
+
+   internal static MethodInfo GetRemoveMethod(this EventInfo evt)
+   {
+      var retVal = evt.RemoveMethod;
+      return retVal != null && retVal.IsPublic ? retVal : null;
+   }
+
+   internal static PropertyInfo GetProperty(this Type type, String name)
+   {
+      var retVal = type.GetRuntimeProperty(name);
+      return retVal != null && retVal.GetSomeMethod().IsPublic ? retVal : null;
+   }
+
+   internal static EventInfo GetEvent(this Type type, String name)
+   {
+      var retVal = type.GetRuntimeEvent(name);
+      return retVal != null && retVal.GetSomeMethod().IsPublic ? retVal : null;
+   }
+
+   internal static MethodInfo GetSomeMethod(this PropertyInfo property)
+   {
+      return property.SetMethod ?? property.GetMethod;
+   }
+
+   internal static MethodInfo GetSomeMethod(this EventInfo evt)
+   {
+      return evt.AddMethod ?? evt.RemoveMethod ?? evt.RaiseMethod;
+   }
+
+   internal static Boolean IsAssignableFrom(this Type type, Type other)
+   {
+      return type.GetTypeInfo().IsAssignableFrom(other.GetTypeInfo());
+   }
+
+   internal static IEnumerable<Type> GetInterfaces(this Type type)
+   {
+      return type.GetTypeInfo().ImplementedInterfaces;
+   }
+#endif
 }

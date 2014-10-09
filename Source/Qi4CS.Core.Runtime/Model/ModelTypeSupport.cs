@@ -200,7 +200,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected override void PostValidateModel( CompositeModel compositeModel, CompositeValidationResult validationResult )
       {
          ServiceCompositeModel sModel = (ServiceCompositeModel) compositeModel;
-         if ( sModel.PublicTypes.Any( pType => pType.ContainsGenericParameters ) )
+         if ( sModel.PublicTypes.Any( pType => pType.ContainsGenericParameters() ) )
          {
             validationResult.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "All the generic arguments of service composite's all public types must be closed.", compositeModel ) );
          }
