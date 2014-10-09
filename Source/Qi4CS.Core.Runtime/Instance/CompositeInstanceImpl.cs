@@ -195,7 +195,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       private Int32 _isPrototype;
 
-      private Thread _isPrototypeTransitionInProgress;
+      private InProgressTracker _isPrototypeTransitionInProgress;
       private readonly Action _prototypeAction;
 
       public CompositeInstanceImpl( CompositeInstanceStructureOwner structureOwner, CompositeModel model, IEnumerable<Type> publicCompositeTypes, UsesContainerQuery usesContainer )

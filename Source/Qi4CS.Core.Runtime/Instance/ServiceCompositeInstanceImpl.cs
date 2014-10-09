@@ -116,10 +116,10 @@ namespace Qi4CS.Core.Runtime.Instance
       // DURING_PASSIVATION -> PASSIVE: otherwise (passivation phase completes with or without errors)
       private Int32 _activationState;
 
-      private Thread _activationInProgress;
+      private InProgressTracker _activationInProgress;
       private readonly Action _activationAction;
 
-      private Thread _passivationInProgress;
+      private InProgressTracker _passivationInProgress;
       private readonly Action _passivationAction;
 
       private readonly String _serviceID;

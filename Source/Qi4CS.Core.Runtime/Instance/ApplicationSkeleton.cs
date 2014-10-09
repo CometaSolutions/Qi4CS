@@ -55,8 +55,8 @@ namespace Qi4CS.Core.Runtime.Instance
       // ACTIVE -> DURING_PASSIVATION: when application is passivated
       // DURING_PASSIVATION -> PASSIVE: always
       private Int32 _activationState;
-      private Thread _activationInProgress;
-      private Thread _passivationInProgress;
+      private InProgressTracker _activationInProgress;
+      private InProgressTracker _passivationInProgress;
       private CancellationTokenSource _cancelTokenSource;
 
       public ApplicationSkeleton(
@@ -281,7 +281,7 @@ GetOrAdd(
          }
       }
 
-      public static Int32 ThreadsafeStateTransition( ref Int32 transitionState, Int32 initialState, Int32 intermediate, Int32 final, Boolean rollbackStateOnFailure, ref Thread inProgressTracker, Int32 waitTime, Action transitionAction )
+      public static Int32 ThreadsafeStateTransition( ref Int32 transitionState, Int32 initialState, Int32 intermediate, Int32 final, Boolean rollbackStateOnFailure, ref InProgressTracker inProgressTracker, Int32 waitTime, Action transitionAction )
       {
          Int32 oldValue = Interlocked.CompareExchange( ref transitionState, intermediate, initialState );
          if ( initialState == oldValue )
@@ -289,7 +289,7 @@ GetOrAdd(
             Boolean finished = false;
             try
             {
-               Interlocked.Exchange( ref inProgressTracker, Thread.CurrentThread );
+               Interlocked.Exchange( ref inProgressTracker, new InProgressTracker() );
 
                transitionAction();
 
@@ -301,7 +301,7 @@ GetOrAdd(
                Interlocked.Exchange( ref transitionState, finished || !rollbackStateOnFailure ? final : initialState );
             }
          }
-         else if ( final != oldValue && !Thread.CurrentThread.Equals( inProgressTracker ) )
+         else if ( final != oldValue && !( new InProgressTracker() ).Equals( inProgressTracker ) )
          {
             // We are entering mid-transition from another thread
 #if SILVERLIGHT
@@ -324,9 +324,9 @@ GetOrAdd(
          return oldValue;
       }
 
-      public static Boolean PerformActivation( ref Int32 transitionState, ref Thread activationInProgress, Thread passivationInProgress, Int32 waitTime, Boolean throwIfActivatingWithinPassivation, Action activationAction )
+      public static Boolean PerformActivation( ref Int32 transitionState, ref InProgressTracker activationInProgress, InProgressTracker passivationInProgress, Int32 waitTime, Boolean throwIfActivatingWithinPassivation, Action activationAction )
       {
-         var passivationInProgressBool = Thread.CurrentThread.Equals( passivationInProgress );
+         var passivationInProgressBool = new InProgressTracker().Equals( passivationInProgress );
          if ( throwIfActivatingWithinPassivation && passivationInProgressBool )
          {
             // Trying to activate within passivation => not possible
@@ -363,9 +363,9 @@ GetOrAdd(
          return result;
       }
 
-      public static Boolean PerformPassivation( ref Int32 transitionState, ref Thread passivationInProgress, Thread activationInProgress, Int32 waitTime, Action passivationAction )
+      public static Boolean PerformPassivation( ref Int32 transitionState, ref InProgressTracker passivationInProgress, InProgressTracker activationInProgress, Int32 waitTime, Action passivationAction )
       {
-         Int32 initialState = (Int32) ( Thread.CurrentThread.Equals( activationInProgress ) ? ActivationState.DURING_ACTIVATION : ActivationState.ACTIVE );
+         Int32 initialState = (Int32) ( new InProgressTracker().Equals( activationInProgress ) ? ActivationState.DURING_ACTIVATION : ActivationState.ACTIVE );
          Int32 prevState;
          Boolean actionInvoked;
          Boolean tryAgain;
@@ -428,4 +428,44 @@ GetOrAdd(
    }
 
    public enum ActivationState { PASSIVE, DURING_ACTIVATION, ACTIVE, DURING_PASSIVATION };
+
+
+   public sealed class InProgressTracker : IEquatable<InProgressTracker>
+   {
+      private readonly Int32 _threadID;
+
+      public InProgressTracker()
+      {
+         this._threadID =
+#if WINDOWS_PHONE_APP
+         Environment.CurrentManagedThreadId
+#else
+ Thread.CurrentThread.ManagedThreadId
+#endif
+;
+      }
+
+      public Int32 ThreadID
+      {
+         get
+         {
+            return this._threadID;
+         }
+      }
+
+      public Boolean Equals( InProgressTracker other )
+      {
+         return Object.ReferenceEquals( this, other ) || ( other != null && this._threadID == other._threadID );
+      }
+
+      public override Boolean Equals( object obj )
+      {
+         return this.Equals( obj as InProgressTracker );
+      }
+
+      public override Int32 GetHashCode()
+      {
+         return this._threadID.GetHashCode();
+      }
+   }
 }
