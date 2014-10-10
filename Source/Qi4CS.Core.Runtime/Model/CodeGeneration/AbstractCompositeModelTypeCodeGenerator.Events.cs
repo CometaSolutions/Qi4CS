@@ -224,24 +224,24 @@ namespace Qi4CS.Core.Runtime.Model
          out Action<CILField, MethodIL> checkAction
          )
       {
-         var storage = eventModel.GetEventStorageKind();
+         //var storage = eventModel.GetEventStorageKind();
 
-         if ( EventStorage.STRONG_REFS.Equals( storage ) )
-         {
-            fieldType = eventType;
-            addAction = ( eventField, il ) => this.EmitEventModificationMethodForStronglyReferencedEvents( eventField, il, DELEGATE_COMBINE_METHOD );
-            removeAction = ( eventField, il ) => this.EmitEventModificationMethodForStronglyReferencedEvents( eventField, il, DELEGATE_REMOVE_METHOD );
-            invokeAction = this.EmitEventInvocationMethodForStronglyReferencedEvents;
-            checkAction = this.EmitEventCheckMethodForStronglyReferencedEvents;
-         }
-         else
-         {
-            fieldType = WEAK_EVENT_WRAPPER_TYPE;
-            addAction = this.EmitEventAdditionMethodForWeaklyReferencedEvents;
-            removeAction = this.EmitEventRemovingMethodForWeaklyReferencedEvents;
-            invokeAction = this.EmitEventInvocationMethodForWeaklyReferencedEvents;
-            checkAction = this.EmitEventCheckMethodForWeaklyReferencedEvents;
-         }
+         //if ( EventStorage.STRONG_REFS.Equals( storage ) )
+         //{
+         fieldType = eventType;
+         addAction = ( eventField, il ) => this.EmitEventModificationMethodForStronglyReferencedEvents( eventField, il, DELEGATE_COMBINE_METHOD );
+         removeAction = ( eventField, il ) => this.EmitEventModificationMethodForStronglyReferencedEvents( eventField, il, DELEGATE_REMOVE_METHOD );
+         invokeAction = this.EmitEventInvocationMethodForStronglyReferencedEvents;
+         checkAction = this.EmitEventCheckMethodForStronglyReferencedEvents;
+         //}
+         //else
+         //{
+         //   fieldType = WEAK_EVENT_WRAPPER_TYPE;
+         //   addAction = this.EmitEventAdditionMethodForWeaklyReferencedEvents;
+         //   removeAction = this.EmitEventRemovingMethodForWeaklyReferencedEvents;
+         //   invokeAction = this.EmitEventInvocationMethodForWeaklyReferencedEvents;
+         //   checkAction = this.EmitEventCheckMethodForWeaklyReferencedEvents;
+         //}
       }
 
       protected virtual void EmitEventCheckMethodForStronglyReferencedEvents(

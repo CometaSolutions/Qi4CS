@@ -41,17 +41,17 @@ public static partial class E_Qi4CS
    /// <typeparam name="TEvent">The type of the event handler.</typeparam>
    /// <param name="evt">The <see cref="CompositeEvent{T}"/>.</param>
    /// <returns>The value of the field holding event handlers.</returns>
-   /// <exception cref="InvalidOperationException">If the event represented by given <see cref="CompositeEvent{T}"/> is not stored using strong references.</exception>
-   /// <seealso cref="Qi4CS.Core.API.Model.EventStorage"/>
-   /// <seealso cref="Qi4CS.Core.API.Model.EventStorageStyleAttribute"/>
+   ///// <exception cref="InvalidOperationException">If the event represented by given <see cref="CompositeEvent{T}"/> is not stored using strong references.</exception>
+   ///// <seealso cref="Qi4CS.Core.API.Model.EventStorage"/>
+   ///// <seealso cref="Qi4CS.Core.API.Model.EventStorageStyleAttribute"/>
    public static TEvent GetEventFieldValue<TEvent>( this CompositeEvent<TEvent> evt )
       where TEvent : class
    {
-      // TODO this should actually be a method of CompositeEvent interfaces. Since it is not possible to write this same method cleanly as extension method for CompositeEvent (without the generic parameter)
-      if ( ( (CompositeEventSPI) evt ).Model.GetEventStorageKind() != Qi4CS.Core.API.Model.EventStorage.STRONG_REFS )
-      {
-         throw new InvalidOperationException( "Getting field value of event is only possible for events stored as strong reference." );
-      }
+      //// TODO this should actually be a method of CompositeEvent interfaces. Since it is not possible to write this same method cleanly as extension method for CompositeEvent (without the generic parameter)
+      //if ( ( (CompositeEventSPI) evt ).Model.GetEventStorageKind() != Qi4CS.Core.API.Model.EventStorage.STRONG_REFS )
+      //{
+      //   throw new InvalidOperationException( "Getting field value of event is only possible for events stored as strong reference." );
+      //}
 
       return evt.InvokeFunctionWithRef<EventInfo, TEvent>( ReturnParam );
    }

@@ -107,7 +107,7 @@ namespace Qi4CS.Core.Runtime.Model
             .Select( inj => new ThisTypeInfo( inj ) )
             .ToArray();
          var thisTypesInModel = compositeModel.Methods
-            .Select( m => m.NativeInfo.ReflectedType )
+            .Select( m => m.NativeInfo.DeclaringType )
             .Concat( compositeModel.PublicTypes )
             .Concat( injThisTypes.Select( inj => inj.resolvedTargetType ) )
             .Concat( compositeModel.GetAllFragmentTypes().SelectMany( ft => ft.GetAllParentTypes( false ) ) )

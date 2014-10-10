@@ -37,7 +37,7 @@ namespace Qi4CS.Core.Runtime.Model
    {
       private class BaseTypeComparer : IComparer<Type>
       {
-#region IComparer<Type> Members
+         #region IComparer<Type> Members
 
          public Int32 Compare( Type x, Type y )
          {
@@ -123,7 +123,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly LocalBuilderInfo LB_CONSTRAINT_INSTANCE;
       protected static readonly LocalBuilderInfo LB_EXCEPTION_LIST;
       protected static readonly LocalBuilderInfo LB_EVENT_HANDLERS;
-      protected static readonly LocalBuilderInfo LB_EVENT_HANDLERS_WEAK;
+      //protected static readonly LocalBuilderInfo LB_EVENT_HANDLERS_WEAK;
       protected static readonly LocalBuilderInfo LB_AMOUNT_OF_DEAD_EVENT_INFOS;
       protected static readonly LocalBuilderInfo LB_CONSTRAINT_VIOLATION_EXCEPTION;
       protected static readonly LocalBuilderInfo LB_TEMP_STORAGE;
@@ -162,8 +162,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly Type INT_PTR_TYPE_NATIVE = typeof( IntPtr );
       protected static readonly Type STRING_TYPE_NATIVE = typeof( String );
       protected static readonly Type EXCEPTION_TYPE_NATIVE = typeof( Exception );
-      protected static readonly Type WEAK_EVENT_WRAPPER_TYPE_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration );
-      protected static readonly Type STRONG_EVENT_WRAPPER_TYPE_NATIVE = typeof( EventHandlerInfoForCodeGeneration );
+      //protected static readonly Type WEAK_EVENT_WRAPPER_TYPE_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration );
+      //protected static readonly Type STRONG_EVENT_WRAPPER_TYPE_NATIVE = typeof( EventHandlerInfoForCodeGeneration );
       protected static readonly Type IENUMERABLE_GDEF_TYPE_NATIVE = typeof( IEnumerable<> );
       protected static readonly Type IENUMERABLE_NO_GDEF_TYPE_NATIVE = typeof( System.Collections.IEnumerable );
       protected static readonly Type USE_DEFAULTS_ATTRIBUTE_TYPE_NATIVE = typeof( UseDefaultsAttribute );
@@ -428,15 +428,15 @@ namespace Qi4CS.Core.Runtime.Model
          INTERLOCKED_EXCHANGE_METHOD_GDEF_NATIVE = typeof( Interlocked ).LoadMethodGDefinitionOrThrow( "Exchange" );
          GET_INVOCATION_LIST_METHOD_NATIVE = typeof( MulticastDelegate ).LoadMethodOrThrow( "GetInvocationList", null );
          ADD_LAST_METHOD_NATIVE = typeof( LinkedList<> ).LoadMethodWithParamTypesOrThrow( "AddLast", typeof( LinkedList<> ).GetGenericArguments() );
-         WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadGetterOrThrow( "Array" );
-         WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadGetterOrThrow( "ElementCount" );
-         WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "CleanUp", null );
-         WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "Combine", null );
-         WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "Remove", null );
-         IS_EVENT_INFO_DEAD_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "IsDead", null );
-         EVENT_INFO_TARGET_GETTER_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadGetterOrThrow( "Target" );
-         EVENT_INFO_METHOD_GETTER_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadGetterOrThrow( "Method" );
-         EVENT_INFO_CTOR_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadConstructorOrThrow( (Int32?) null );
+         //WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadGetterOrThrow( "Array" );
+         //WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadGetterOrThrow( "ElementCount" );
+         //WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "CleanUp", null );
+         //WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "Combine", null );
+         //WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "Remove", null );
+         //IS_EVENT_INFO_DEAD_METHOD_NATIVE = typeof( WeakEventHandlerWrapperForCodeGeneration ).LoadMethodOrThrow( "IsDead", null );
+         //EVENT_INFO_TARGET_GETTER_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadGetterOrThrow( "Target" );
+         //EVENT_INFO_METHOD_GETTER_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadGetterOrThrow( "Method" );
+         //EVENT_INFO_CTOR_NATIVE = typeof( EventHandlerInfoForCodeGeneration ).LoadConstructorOrThrow( (Int32?) null );
          Q_NAME_GET_BARE_TYPE_NAME_METHOD_NATIVE = typeof( QualifiedName ).LoadMethodOrThrow( "GetBareTypeName", null );
          Q_NAME_FROM_MEMBER_INFO_METHOD_NATIVE = typeof( QualifiedName ).LoadMethodOrThrow( "FromMemberInfo", null );
          INJECTION_EXCEPTION_CTOR_NATIVE = typeof( InjectionException ).LoadConstructorOrThrow( (Int32?) null );
@@ -523,7 +523,7 @@ namespace Qi4CS.Core.Runtime.Model
          LB_CONSTRAINT_INSTANCE = new LocalBuilderInfo( "constraintInstance", typeof( Object ) );
          LB_EXCEPTION_LIST = new LocalBuilderInfo( "exceptions", EXCEPTION_LIST_CTOR_NATIVE.DeclaringType );
          LB_EVENT_HANDLERS = new LocalBuilderInfo( "handlers", typeof( Delegate[] ) );
-         LB_EVENT_HANDLERS_WEAK = new LocalBuilderInfo( "handlers", typeof( WeakEventHandlerWrapperForCodeGeneration ) );
+         //LB_EVENT_HANDLERS_WEAK = new LocalBuilderInfo( "handlers", typeof( WeakEventHandlerWrapperForCodeGeneration ) );
          LB_AMOUNT_OF_DEAD_EVENT_INFOS = new LocalBuilderInfo( "amountOfDead", WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE.ReturnType );
          LB_CONSTRAINT_VIOLATION_EXCEPTION = new LocalBuilderInfo( "constraintViolationException", CONSTRAINT_EXCEPTION_VIOLATIONS_GETTER_NATIVE.DeclaringType );
          LB_TEMP_STORAGE = new LocalBuilderInfo( "tempStorage", typeof( Object ) );

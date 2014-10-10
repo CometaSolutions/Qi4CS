@@ -66,18 +66,18 @@ public static partial class E_Qi4CS
       return result;
    }
 
-   /// <summary>
-   /// Helper method to get the storage style associated with this <see cref="EventModel"/>.
-   /// </summary>
-   /// <param name="evtModel">The <see cref="EventModel"/>.</param>
-   /// <returns>The <see cref="EventStorage"/> of the <see cref="EventModel"/>.</returns>
-   /// <remarks>
-   /// This method checks whether <see cref="EventStorageStyleAttribute"/> is defined for this method, and if so, will return the value of <see cref="EventStorageStyleAttribute.Storage"/> property.
-   /// Otherwise it will return the value of <see cref="EventStorageStyleAttribute.DEFAULT_STORAGE"/> const.
-   /// </remarks>
-   public static EventStorage GetEventStorageKind( this EventModel evtModel )
-   {
-      var storageStyle = evtModel.AllAttributes.OfType<EventStorageStyleAttribute>().FirstOrDefault();
-      return storageStyle == null ? EventStorageStyleAttribute.DEFAULT_STORAGE : storageStyle.Storage;
-   }
+   ///// <summary>
+   ///// Helper method to get the storage style associated with this <see cref="EventModel"/>.
+   ///// </summary>
+   ///// <param name="evtModel">The <see cref="EventModel"/>.</param>
+   ///// <returns>The <see cref="EventStorage"/> of the <see cref="EventModel"/>.</returns>
+   ///// <remarks>
+   ///// This method checks whether <see cref="EventStorageStyleAttribute"/> is defined for this method, and if so, will return the value of <see cref="EventStorageStyleAttribute.Storage"/> property.
+   ///// Otherwise it will return the value of <see cref="EventStorageStyleAttribute.DEFAULT_STORAGE"/> const.
+   ///// </remarks>
+   //public static EventStorage GetEventStorageKind( this EventModel evtModel )
+   //{
+   //   var storageStyle = evtModel.AllAttributes.OfType<EventStorageStyleAttribute>().FirstOrDefault();
+   //   return storageStyle == null ? EventStorageStyleAttribute.DEFAULT_STORAGE : storageStyle.Storage;
+   //}
 }

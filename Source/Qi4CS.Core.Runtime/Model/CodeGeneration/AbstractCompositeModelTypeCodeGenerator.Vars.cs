@@ -260,8 +260,8 @@ namespace Qi4CS.Core.Runtime.Model
          this.INT_PTR_TYPE = INT_PTR_TYPE_NATIVE.NewWrapperAsType( ctx );
          this.STRING_TYPE = STRING_TYPE_NATIVE.NewWrapperAsType( ctx );
          this.EXCEPTION_TYPE = EXCEPTION_TYPE_NATIVE.NewWrapperAsType( ctx );
-         this.WEAK_EVENT_WRAPPER_TYPE = WEAK_EVENT_WRAPPER_TYPE_NATIVE.NewWrapperAsType( ctx );
-         this.STRONG_EVENT_WRAPPER_TYPE = STRONG_EVENT_WRAPPER_TYPE_NATIVE.NewWrapperAsType( ctx );
+         //this.WEAK_EVENT_WRAPPER_TYPE = WEAK_EVENT_WRAPPER_TYPE_NATIVE.NewWrapperAsType( ctx );
+         //this.STRONG_EVENT_WRAPPER_TYPE = STRONG_EVENT_WRAPPER_TYPE_NATIVE.NewWrapperAsType( ctx );
          this.IENUMERABLE_GDEF_TYPE = IENUMERABLE_GDEF_TYPE_NATIVE.NewWrapperAsType( ctx );
          this.IENUMERABLE_NO_GDEF_TYPE = IENUMERABLE_NO_GDEF_TYPE_NATIVE.NewWrapperAsType( ctx );
          this.USE_DEFAULTS_ATTRIBUTE_TYPE = USE_DEFAULTS_ATTRIBUTE_TYPE_NATIVE.NewWrapperAsType( ctx );
