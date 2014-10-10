@@ -83,7 +83,11 @@ namespace Qi4CS.Core.Runtime.Assembling
       {
          types = types.FilterNulls();
          this._affectedTypes.UnionWith( types );
-         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type.Assembly ) );
+         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type
+#if WINDOWS_PHONE_APP
+            .GetTypeInfo()
+#endif
+.Assembly ) );
          if ( mainType != null )
          {
             this.ForEachInfo( info =>

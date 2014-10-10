@@ -101,7 +101,11 @@ namespace Qi4CS.Core.Runtime.Assembling
                this._info.Types.Add( type );
             }
          }
-         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type.Assembly ) );
+         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type
+#if WINDOWS_PHONE_APP
+            .GetTypeInfo()
+#endif
+.Assembly ) );
          if ( mainType != null )
          {
             this._info.MainCodeGenerationType = mainType;
@@ -179,7 +183,7 @@ namespace Qi4CS.Core.Runtime.Assembling
 
       public static PropertyInfo ProcessPropertyInfoForDefaultProvider( PropertyInfo property )
       {
-         if ( property.DeclaringType.ContainsGenericParameters )
+         if ( property.DeclaringType.ContainsGenericParameters() )
          {
             property = property.DeclaringType.GetGenericTypeDefinition().LoadPropertyOrThrow( property.Name );
          }

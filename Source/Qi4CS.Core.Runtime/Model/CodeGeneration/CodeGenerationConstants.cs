@@ -18,6 +18,7 @@
 using System;
 using System.Linq;
 using Qi4CS.Core.API.Common;
+using System.Reflection;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -46,6 +47,30 @@ namespace Qi4CS.Core.Runtime.Model
             throw new InternalException( "Could not find " + typeof( CompositeTypeIDAttribute ) + " attribute on generated type." );
          }
          return attr.CompositeTypeID;
+      }
+
+      public static Boolean TryGetConstructorModelIndex( this ConstructorInfo ctor, out Int32 idx )
+      {
+         var attr = ctor.GetCustomAttributes( false ).OfType<ConstructorModelIndexAttribute>().FirstOrDefault();
+         var retVal = attr != null;
+         idx = retVal ? attr.Index : 0;
+         return retVal;
+      }
+
+      public static Boolean TryGetCompositeMethodModelIndex( this MethodInfo method, out Int32 idx )
+      {
+         var attr = method.GetCustomAttributes( false ).OfType<CompositeMethodModelIndexAttribute>().FirstOrDefault();
+         var retVal = attr != null;
+         idx = retVal ? attr.Index : 0;
+         return retVal;
+      }
+
+      public static Boolean TryGetSpecialMethodModelIndex( this MethodInfo method, out Int32 idx )
+      {
+         var attr = method.GetCustomAttributes( false ).OfType<SpecialMethodModelIndexAttribute>().FirstOrDefault();
+         var retVal = attr != null;
+         idx = retVal ? attr.Index : 0;
+         return retVal;
       }
    }
 }

@@ -454,122 +454,122 @@ namespace Qi4CS.Tests.Core.Instance.Event
          #endregion
       }
 
-      public abstract class TestCompositeMixinWithWeakEvents<T> : TestComposite<T>
-      {
-#pragma warning disable 649
+      //      public abstract class TestCompositeMixinWithWeakEvents<T> : TestComposite<T>
+      //      {
+      //#pragma warning disable 649
 
-         [This]
-         private TestComposite<T> _self;
+      //         [This]
+      //         private TestComposite<T> _self;
 
-         [State( typeof( TestComposite<> ), "GenericEvent" )]
-         private Func<T, String> _genericEventInvoker;
+      //         [State( typeof( TestComposite<> ), "GenericEvent" )]
+      //         private Func<T, String> _genericEventInvoker;
 
-         [State( "NormalEvent" )]
-         private Action<String> _normalEventInvoker;
+      //         [State( "NormalEvent" )]
+      //         private Action<String> _normalEventInvoker;
 
-         [State]
-         private EventHandler<EventArgs> _typicalEventInvoker;
+      //         [State]
+      //         private EventHandler<EventArgs> _typicalEventInvoker;
 
-         [State( typeof( TestComposite<> ), "NormalEvent" )]
-         private CompositeEvent _cEvent;
+      //         [State( typeof( TestComposite<> ), "NormalEvent" )]
+      //         private CompositeEvent _cEvent;
 
-         [State( "DirectInvokeEvent" )]
-         private Action<T> _directEventInvoker;
+      //         [State( "DirectInvokeEvent" )]
+      //         private Action<T> _directEventInvoker;
 
-         [State( "DirectInvokeEventWithReturnType" )]
-         private Func<T> _directEventWithReturnTypeInvoker;
+      //         [State( "DirectInvokeEventWithReturnType" )]
+      //         private Func<T> _directEventWithReturnTypeInvoker;
 
-         [State( "InvokeAllEventRethrowNoReturnType" )]
-         private Action<T> _invokeAllEventRethrowNoReturnTypeInvoker;
+      //         [State( "InvokeAllEventRethrowNoReturnType" )]
+      //         private Action<T> _invokeAllEventRethrowNoReturnTypeInvoker;
 
-         [State( "InvokeAllEventRethrowWithReturnType" )]
-         private Func<T> _invokeAllEventRethrowWithReturnTypeInvoker;
+      //         [State( "InvokeAllEventRethrowWithReturnType" )]
+      //         private Func<T> _invokeAllEventRethrowWithReturnTypeInvoker;
 
-         [State( "InvokeAllEventNoThrowNoReturnType" )]
-         private Action<T> _invokeAllEventNoThrowNoReturnTypeInvoker;
+      //         [State( "InvokeAllEventNoThrowNoReturnType" )]
+      //         private Action<T> _invokeAllEventNoThrowNoReturnTypeInvoker;
 
-         [State( "InvokeAllEventNoThrowWithReturnType" )]
-         private Func<T> _invokeAllEventNoThrowWithReturntypeInvoker;
+      //         [State( "InvokeAllEventNoThrowWithReturnType" )]
+      //         private Func<T> _invokeAllEventNoThrowWithReturntypeInvoker;
 
-#pragma warning restore 649
+      //#pragma warning restore 649
 
-         #region TestComposite<T> Members
+      //         #region TestComposite<T> Members
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Func<T, String> GenericEvent;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Func<T, String> GenericEvent;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Action<String> NormalEvent;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Action<String> NormalEvent;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event EventHandler<EventArgs> TypicalEvent;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event EventHandler<EventArgs> TypicalEvent;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Action<T> DirectInvokeEvent;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Action<T> DirectInvokeEvent;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Action<T> InvokeAllEventRethrowNoReturnType;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Action<T> InvokeAllEventRethrowNoReturnType;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Func<T> InvokeAllEventRethrowWithReturnType;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Func<T> InvokeAllEventRethrowWithReturnType;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Action<T> InvokeAllEventNoThrowNoReturnType;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Action<T> InvokeAllEventNoThrowNoReturnType;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Func<T> InvokeAllEventNoThrowWithReturnType;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Func<T> InvokeAllEventNoThrowWithReturnType;
 
-         [EventStorageStyle( EventStorage.WEAK_REFS )]
-         public abstract event Func<T> DirectInvokeEventWithReturnType;
+      //         [EventStorageStyle( EventStorage.WEAK_REFS )]
+      //         public abstract event Func<T> DirectInvokeEventWithReturnType;
 
-         public virtual String FireGenericEvent( T param )
-         {
-            return this._genericEventInvoker( param );
-         }
+      //         public virtual String FireGenericEvent( T param )
+      //         {
+      //            return this._genericEventInvoker( param );
+      //         }
 
-         public virtual void FireNormalEvent( string param )
-         {
-            Assert.IsNotNull( this._cEvent );
-            this._normalEventInvoker( param );
-         }
+      //         public virtual void FireNormalEvent( string param )
+      //         {
+      //            Assert.IsNotNull( this._cEvent );
+      //            this._normalEventInvoker( param );
+      //         }
 
-         public virtual void FireTypicalEvent( EventArgs args )
-         {
-            this._typicalEventInvoker( this._self, args );
-         }
+      //         public virtual void FireTypicalEvent( EventArgs args )
+      //         {
+      //            this._typicalEventInvoker( this._self, args );
+      //         }
 
-         public virtual void FireDirectInvokeEvent( T param )
-         {
-            this._directEventInvoker( param );
-         }
+      //         public virtual void FireDirectInvokeEvent( T param )
+      //         {
+      //            this._directEventInvoker( param );
+      //         }
 
-         public virtual void FireInvokeAllEventRethrowNoReturnTypeEvent( T param )
-         {
-            this._invokeAllEventRethrowNoReturnTypeInvoker( param );
-         }
+      //         public virtual void FireInvokeAllEventRethrowNoReturnTypeEvent( T param )
+      //         {
+      //            this._invokeAllEventRethrowNoReturnTypeInvoker( param );
+      //         }
 
-         public virtual T FireInvokeAllEventRethrowWithReturnTypeEvent()
-         {
-            return this._invokeAllEventRethrowWithReturnTypeInvoker();
-         }
+      //         public virtual T FireInvokeAllEventRethrowWithReturnTypeEvent()
+      //         {
+      //            return this._invokeAllEventRethrowWithReturnTypeInvoker();
+      //         }
 
-         public virtual void FireInvokeAllEventNoThrowNoReturnTypeEvent( T param )
-         {
-            this._invokeAllEventNoThrowNoReturnTypeInvoker( param );
-         }
+      //         public virtual void FireInvokeAllEventNoThrowNoReturnTypeEvent( T param )
+      //         {
+      //            this._invokeAllEventNoThrowNoReturnTypeInvoker( param );
+      //         }
 
-         public virtual T FireInvokeAllEventNoThrowWithReturnTypeEvent()
-         {
-            return this._invokeAllEventNoThrowWithReturntypeInvoker();
-         }
+      //         public virtual T FireInvokeAllEventNoThrowWithReturnTypeEvent()
+      //         {
+      //            return this._invokeAllEventNoThrowWithReturntypeInvoker();
+      //         }
 
-         public virtual T FireDirectInvokeEventWithReturnType()
-         {
-            return this._directEventWithReturnTypeInvoker();
-         }
+      //         public virtual T FireDirectInvokeEventWithReturnType()
+      //         {
+      //            return this._directEventWithReturnTypeInvoker();
+      //         }
 
-         #endregion
-      }
+      //         #endregion
+      //      }
 
 
       public class MyException : Exception

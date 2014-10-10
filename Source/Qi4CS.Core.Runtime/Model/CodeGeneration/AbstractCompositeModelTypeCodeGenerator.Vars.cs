@@ -151,15 +151,15 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod INTERLOCKED_EXCHANGE_METHOD_GDEF;
       protected readonly CILMethod GET_INVOCATION_LIST_METHOD;
       protected readonly CILMethod ADD_LAST_METHOD;
-      protected readonly CILMethod WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER;
-      protected readonly CILMethod WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER;
-      protected readonly CILMethod WEAK_EVENT_ARRAY_CLEANUP_METHOD;
-      protected readonly CILMethod WEAK_EVENT_ARRAY_COMBINE_METHOD;
-      protected readonly CILMethod WEAK_EVENT_ARRAY_REMOVE_METHOD;
-      protected readonly CILMethod IS_EVENT_INFO_DEAD_METHOD;
-      protected readonly CILMethod EVENT_INFO_TARGET_GETTER;
-      protected readonly CILMethod EVENT_INFO_METHOD_GETTER;
-      protected readonly CILConstructor EVENT_INFO_CTOR;
+      //protected readonly CILMethod WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER;
+      //protected readonly CILMethod WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER;
+      //protected readonly CILMethod WEAK_EVENT_ARRAY_CLEANUP_METHOD;
+      //protected readonly CILMethod WEAK_EVENT_ARRAY_COMBINE_METHOD;
+      //protected readonly CILMethod WEAK_EVENT_ARRAY_REMOVE_METHOD;
+      //protected readonly CILMethod IS_EVENT_INFO_DEAD_METHOD;
+      //protected readonly CILMethod EVENT_INFO_TARGET_GETTER;
+      //protected readonly CILMethod EVENT_INFO_METHOD_GETTER;
+      //protected readonly CILConstructor EVENT_INFO_CTOR;
       protected readonly CILMethod Q_NAME_GET_BARE_TYPE_NAME_METHOD;
       protected readonly CILMethod Q_NAME_FROM_MEMBER_INFO_METHOD;
       protected readonly CILConstructor INJECTION_EXCEPTION_CTOR;
@@ -221,6 +221,10 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod REF_ACTION_INVOKER;
       protected readonly CILMethod REF_FUNCTION_INVOKER;
       protected readonly CILConstructor REF_INVOKER_CALLBACK_CTOR;
+      protected readonly CILConstructor COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE;
+      protected readonly CILConstructor SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE;
+      protected readonly CILConstructor CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE;
+      protected readonly CILConstructor FIELD_MODEL_INDEX_ATTRIBUTE;
 
       protected readonly CILReflectionContext ctx;
       protected readonly Boolean isSilverLight;
@@ -357,15 +361,15 @@ namespace Qi4CS.Core.Runtime.Model
          this.INTERLOCKED_EXCHANGE_METHOD_GDEF = INTERLOCKED_EXCHANGE_METHOD_GDEF_NATIVE.NewWrapper( ctx );
          this.GET_INVOCATION_LIST_METHOD = GET_INVOCATION_LIST_METHOD_NATIVE.NewWrapper( ctx );
          this.ADD_LAST_METHOD = ADD_LAST_METHOD_NATIVE.NewWrapper( ctx );
-         this.WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER = WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE.NewWrapper( ctx );
-         this.WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER = WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE.NewWrapper( ctx );
-         this.WEAK_EVENT_ARRAY_CLEANUP_METHOD = WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE.NewWrapper( ctx );
-         this.WEAK_EVENT_ARRAY_COMBINE_METHOD = WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE.NewWrapper( ctx );
-         this.WEAK_EVENT_ARRAY_REMOVE_METHOD = WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE.NewWrapper( ctx );
-         this.IS_EVENT_INFO_DEAD_METHOD = IS_EVENT_INFO_DEAD_METHOD_NATIVE.NewWrapper( ctx );
-         this.EVENT_INFO_TARGET_GETTER = EVENT_INFO_TARGET_GETTER_NATIVE.NewWrapper( ctx );
-         this.EVENT_INFO_METHOD_GETTER = EVENT_INFO_METHOD_GETTER_NATIVE.NewWrapper( ctx );
-         this.EVENT_INFO_CTOR = EVENT_INFO_CTOR_NATIVE.NewWrapper( ctx );
+         //this.WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER = WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE.NewWrapper( ctx );
+         //this.WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER = WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE.NewWrapper( ctx );
+         //this.WEAK_EVENT_ARRAY_CLEANUP_METHOD = WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE.NewWrapper( ctx );
+         //this.WEAK_EVENT_ARRAY_COMBINE_METHOD = WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE.NewWrapper( ctx );
+         //this.WEAK_EVENT_ARRAY_REMOVE_METHOD = WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE.NewWrapper( ctx );
+         //this.IS_EVENT_INFO_DEAD_METHOD = IS_EVENT_INFO_DEAD_METHOD_NATIVE.NewWrapper( ctx );
+         //this.EVENT_INFO_TARGET_GETTER = EVENT_INFO_TARGET_GETTER_NATIVE.NewWrapper( ctx );
+         //this.EVENT_INFO_METHOD_GETTER = EVENT_INFO_METHOD_GETTER_NATIVE.NewWrapper( ctx );
+         //this.EVENT_INFO_CTOR = EVENT_INFO_CTOR_NATIVE.NewWrapper( ctx );
          this.Q_NAME_GET_BARE_TYPE_NAME_METHOD = Q_NAME_GET_BARE_TYPE_NAME_METHOD_NATIVE.NewWrapper( ctx );
          this.Q_NAME_FROM_MEMBER_INFO_METHOD = Q_NAME_FROM_MEMBER_INFO_METHOD_NATIVE.NewWrapper( ctx );
          this.INJECTION_EXCEPTION_CTOR = INJECTION_EXCEPTION_CTOR_NATIVE.NewWrapper( ctx );
@@ -427,6 +431,9 @@ namespace Qi4CS.Core.Runtime.Model
          this.REF_ACTION_INVOKER = REF_ACTION_INVOKER_NATIVE.NewWrapper( ctx );
          this.REF_FUNCTION_INVOKER = REF_FUNCTION_INVOKER_NATIVE.NewWrapper( ctx );
          this.REF_INVOKER_CALLBACK_CTOR = REF_INVOKER_CALLBACK_CTOR_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE = COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
+         this.SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE = SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
+         this.CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE = CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
       }
    }
 }

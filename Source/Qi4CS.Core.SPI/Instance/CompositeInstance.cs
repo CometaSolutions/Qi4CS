@@ -85,11 +85,15 @@ namespace Qi4CS.Core.SPI.Instance
       /// <value>All the instances of composite objects of this <see cref="CompositeInstance"/>, with their type as key.</value>
       DictionaryQuery<Type, Object> Composites { get; }
 
+#if !WINDOWS_PHONE_APP
+
       /// <summary>
       /// Gets the mapping from a native <see cref="MethodInfo"/> to corresponding <see cref="CompositeMethodModel"/>.
       /// </summary>
       /// <value>The mapping from a native <see cref="MethodInfo"/> to corresponding <see cref="CompositeMethodModel"/>.</value>
       DictionaryQuery<MethodInfo, CompositeMethodModel> MethodToModelMapping { get; }
+
+#endif
    }
 
    /// <summary>

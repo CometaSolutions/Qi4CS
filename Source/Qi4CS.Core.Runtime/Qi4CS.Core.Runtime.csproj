@@ -162,9 +162,7 @@
     <Compile Include="Model\CodeGeneration\CompositeGenerationInfos.cs" />
     <Compile Include="Model\CodeGeneration\CompositeModelTypeCodeGenerator.cs" />
     <Compile Include="Model\CodeGeneration\CompositeTypeGenerationResult.cs" />
-    <Compile Include="Model\CodeGeneration\CompositeTypeIDAttribute.cs" />
-    <Compile Include="Model\CodeGeneration\MainPublicCompositeTypeAttribute.cs" />
-    <Compile Include="Model\CodeGeneration\NoPoolNeededAttribute.cs" />
+    <Compile Include="Model\CodeGeneration\CodeGenerationAttributes.cs" />
     <Compile Include="Model\CodeGeneration\ServiceModelTypeCodeGenerator.cs" />
     <Compile Include="Model\CodeGeneration\PlainModelTypeCodeGenerator.cs" />
     <Compile Include="Model\CodeGeneration\ValueModelTypeCodeGenerator.cs" />
@@ -219,10 +217,10 @@
   </ItemGroup>
   <Import Condition=" '$(TargetPlatformIdentifier)' != 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition=" '$(TargetPlatformIdentifier)' == 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-
   <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
   <PropertyGroup>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    </DeleteTargetFrameworkFileCondition>
     <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />

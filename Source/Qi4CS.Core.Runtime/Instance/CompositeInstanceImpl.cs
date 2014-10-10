@@ -191,7 +191,9 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
+#if !WINDOWS_PHONE_APP
       private readonly Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>> _methodsToModels;
+#endif
 
       private Int32 _isPrototype;
 
@@ -220,7 +222,7 @@ namespace Qi4CS.Core.Runtime.Instance
          this._structureOwner = structureOwner;
          var application = this._structureOwner.Application;
          this._modelInfo = this._structureOwner.ModelInfoContainer.GetCompositeModelInfo( model );
-         if ( publicCompositeTypes.Any( pcType => pcType.ContainsGenericParameters ) )
+         if ( publicCompositeTypes.Any( pcType => pcType.ContainsGenericParameters() ) )
          {
             throw new InternalException( "With given public composite types {" + String.Join( ", ", publicCompositeTypes ) + "} and public composite type in model being [" + String.Join( ", ", model.PublicTypes ) + "], the public composite types contained non-closed generic parameters." );
          }
@@ -297,13 +299,13 @@ namespace Qi4CS.Core.Runtime.Instance
             }
          }
 
-         // This has to be done after 'composites' has been populated since it uses it
+#if !WINDOWS_PHONE_APP
          this._methodsToModels = new Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>>( () =>
          {
             return application.CollectionsFactory.NewDictionaryProxy(
                this._modelInfo.Model.Methods.ToDictionary( m =>
                {
-                  return m.NativeInfo.DeclaringType.ContainsGenericParameters ?
+                  return m.NativeInfo.DeclaringType.ContainsGenericParameters() ?
                      (MethodInfo) MethodBase.GetMethodFromHandle(
                         m.NativeInfo.MethodHandle,
                      // TODO use .Single here to catch possible scenarios when there is none or too many matching composites
@@ -314,6 +316,7 @@ namespace Qi4CS.Core.Runtime.Instance
                }, m => m )
                ).CQ;
          }, LazyThreadSafetyMode.ExecutionAndPublication );
+#endif
 
          this._composites = composites.CQ;
          this._state = new CompositeStateImpl( this._structureOwner.Application.CollectionsFactory, cProps.CQ, cEvents.CQ );
@@ -330,7 +333,7 @@ namespace Qi4CS.Core.Runtime.Instance
             {
                genType = genType.MakeGenericType( gArgs );
             }
-            else if ( genType.ContainsGenericParameters )
+            else if ( genType.ContainsGenericParameters() )
             {
                throw new InternalException( "Could not find generic arguments for fragment type " + genResult.DeclaredType + "." );
             }
@@ -342,12 +345,17 @@ namespace Qi4CS.Core.Runtime.Instance
          this._constructorsForFragments = application.CollectionsFactory.NewDictionaryProxy<Type, ListQuery<FragmentConstructorInfo>>( this._fragmentInstancePools.Keys.Concat( this._fragmentInstances.Keys )
             .ToDictionary(
             fType => fType,
-            fType => application.CollectionsFactory.NewListProxy(
-               this._modelInfo.Model.Constructors
-                  .Where( fModel => fModel.NativeInfo.DeclaringType.IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( fType ) && Object.Equals( fType.BaseType.GetGenericDefinitionIfGenericType(), fModel.NativeInfo.DeclaringType.GetGenericDefinitionIfGenericType() ) )
-                  .Select( fModel => new FragmentConstructorInfo( fModel, (ConstructorInfo) ConstructorInfo.GetMethodFromHandle( fModel.NativeInfo.MethodHandle, fType.BaseType.TypeHandle ) ) )
-                  .Distinct()
-                  .ToList()
+            fType => application.CollectionsFactory.NewListProxy( fType
+               .GetAllInstanceConstructors()
+               .Select( fCtor =>
+               {
+                  Int32 idx;
+                  return fCtor.TryGetConstructorModelIndex( out idx ) ?
+                     new FragmentConstructorInfo( model.Constructors[idx], fCtor ) :
+                     null;
+               } )
+               .Where( i => i != null )
+               .ToList()
                ).CQ
             ) ).CQ;
 
@@ -481,7 +489,7 @@ namespace Qi4CS.Core.Runtime.Instance
             {
                if ( ctorWithoutParams == null )
                {
-                  result = infos.First( ctor => ctor.RuntimeInfo.DeclaringType.Equals( fragmentType.BaseType ) ).Model.ConstructorIndex;
+                  result = infos.First( ctor => ctor.RuntimeInfo.DeclaringType.Equals( fragmentType ) ).Model.ConstructorIndex;
                }
                else
                {

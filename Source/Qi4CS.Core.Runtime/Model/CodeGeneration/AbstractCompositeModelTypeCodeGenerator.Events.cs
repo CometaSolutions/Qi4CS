@@ -257,19 +257,19 @@ namespace Qi4CS.Core.Runtime.Model
            .EmitReturn();
       }
 
-      protected virtual void EmitEventCheckMethodForWeaklyReferencedEvents(
-         CILField eventField,
-         MethodIL il
-         )
-      {
-         il.EmitLoadThisField( eventField )
-           .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD )
-           .EmitLoadNull()
-           .EmitCeq()
-           .EmitLoadInt32( 0 )
-           .EmitCeq()
-           .EmitReturn();
-      }
+      //protected virtual void EmitEventCheckMethodForWeaklyReferencedEvents(
+      //   CILField eventField,
+      //   MethodIL il
+      //   )
+      //{
+      //   il.EmitLoadThisField( eventField )
+      //     .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD )
+      //     .EmitLoadNull()
+      //     .EmitCeq()
+      //     .EmitLoadInt32( 0 )
+      //     .EmitCeq()
+      //     .EmitReturn();
+      //}
 
       protected virtual void EmitEventInvocationMethodForStronglyReferencedEvents(
          EventModel eventModel,
@@ -477,13 +477,13 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( !VOID_TYPE.Equals( eventMethodToInvoke.GetReturnType() ) )
          {
-            LocalBuilder amountOfDeadB;
-            if ( invokeMethod.TryGetLocal( LB_AMOUNT_OF_DEAD_EVENT_INFOS, out amountOfDeadB ) )
-            {
-               il
-                  .EmitLoadLocal( amountOfDeadB )
-                  .EmitBranch( BranchType.IF_FALSE, afterNullCheckLabel );
-            }
+            //LocalBuilder amountOfDeadB;
+            //if ( invokeMethod.TryGetLocal( LB_AMOUNT_OF_DEAD_EVENT_INFOS, out amountOfDeadB ) )
+            //{
+            //   il
+            //      .EmitLoadLocal( amountOfDeadB )
+            //      .EmitBranch( BranchType.IF_FALSE, afterNullCheckLabel );
+            //}
             LocalBuilder resultB;
             if ( invokeMethod.TryGetLocal( LB_RESULT, out resultB ) )
             {
@@ -551,325 +551,325 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      protected virtual void EmitEventInvocationMethodForWeaklyReferencedEvents(
-         EventModel eventModel,
-         CompositeTypeGenerationInfo thisGenerationInfo,
-         CILField eventField,
-         CILTypeBase eventType,
-         CompositeMethodGenerationInfo invokeMethod,
-         CILMethod eventMethodToInvoke
-         )
-      {
-         //   EventHandlerInfoArrayWrapper wrapper = this._myEventManualWeak;
-         //   if ( wrapper != null )
-         //   {
-         //      EventHandlerInfo[] evts = wrapper.Array;
-         //      Boolean cleanUp = false;
-         //      try
-         //      {
-         //      for ( Int32 idx = 0; idx < wrapper.ElementCount; ++idx )
-         //      {
-         //         EventHandlerInfo info = evts[idx];
-         //         Object target = info.Target;
-         //         if ( EventHandlerInfoArrayWrapper.IsDead( info ) )
-         //         {
-         //            cleanUp = true;
-         //         }
-         //         else
-         //         {
-         //            (result) = new <event type>(target, info.Method).Invoke(params);
-         //         }
-         //      }
-         //      
-         //      }
-         //      finally
-         //      {
-         //      if ( cleanUp )
-         //      {
-         //         Interlocked.CompareExchange( ref this._myEventManualWeak, EventHandlerInfoArrayWrapper.CleanUp( wrapper ), wrapper );
-         //      }
-         //      }
-         //   }
+      //protected virtual void EmitEventInvocationMethodForWeaklyReferencedEvents(
+      //   EventModel eventModel,
+      //   CompositeTypeGenerationInfo thisGenerationInfo,
+      //   CILField eventField,
+      //   CILTypeBase eventType,
+      //   CompositeMethodGenerationInfo invokeMethod,
+      //   CILMethod eventMethodToInvoke
+      //   )
+      //{
+      //   //   EventHandlerInfoArrayWrapper wrapper = this._myEventManualWeak;
+      //   //   if ( wrapper != null )
+      //   //   {
+      //   //      EventHandlerInfo[] evts = wrapper.Array;
+      //   //      Boolean cleanUp = false;
+      //   //      try
+      //   //      {
+      //   //      for ( Int32 idx = 0; idx < wrapper.ElementCount; ++idx )
+      //   //      {
+      //   //         EventHandlerInfo info = evts[idx];
+      //   //         Object target = info.Target;
+      //   //         if ( EventHandlerInfoArrayWrapper.IsDead( info ) )
+      //   //         {
+      //   //            cleanUp = true;
+      //   //         }
+      //   //         else
+      //   //         {
+      //   //            (result) = new <event type>(target, info.Method).Invoke(params);
+      //   //         }
+      //   //      }
+      //   //      
+      //   //      }
+      //   //      finally
+      //   //      {
+      //   //      if ( cleanUp )
+      //   //      {
+      //   //         Interlocked.CompareExchange( ref this._myEventManualWeak, EventHandlerInfoArrayWrapper.CleanUp( wrapper ), wrapper );
+      //   //      }
+      //   //      }
+      //   //   }
 
-         this.EmitEventInvocationMethodCore(
-            eventModel,
-            thisGenerationInfo,
-            eventField,
-            WEAK_EVENT_WRAPPER_TYPE,
-            invokeMethod,
-            eventMethodToInvoke,
-            ( eventLB, invocationStyle, exceptionType ) =>
-            {
-               var il = invokeMethod.IL;
+      //   this.EmitEventInvocationMethodCore(
+      //      eventModel,
+      //      thisGenerationInfo,
+      //      eventField,
+      //      WEAK_EVENT_WRAPPER_TYPE,
+      //      invokeMethod,
+      //      eventMethodToInvoke,
+      //      ( eventLB, invocationStyle, exceptionType ) =>
+      //      {
+      //         var il = invokeMethod.IL;
 
-               //      EventHandlerInfo[] evts = wrapper.Array;
-               var evtsArrayB = il.DeclareLocal( WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER.GetReturnType() );
-               il
-                  .EmitLoadLocal( eventLB )
-                  .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER )
-                  .EmitStoreLocal( evtsArrayB );
+      //         //      EventHandlerInfo[] evts = wrapper.Array;
+      //         var evtsArrayB = il.DeclareLocal( WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER.GetReturnType() );
+      //         il
+      //            .EmitLoadLocal( eventLB )
+      //            .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER )
+      //            .EmitStoreLocal( evtsArrayB );
 
-               //      Boolean cleanUp = false;
-               var cleanUpB = il.DeclareLocal( BOOLEAN_TYPE );
-               il
-                  .EmitLoadBoolean( false )
-                  .EmitStoreLocal( cleanUpB );
+      //         //      Boolean cleanUp = false;
+      //         var cleanUpB = il.DeclareLocal( BOOLEAN_TYPE );
+      //         il
+      //            .EmitLoadBoolean( false )
+      //            .EmitStoreLocal( cleanUpB );
 
-               Boolean countingDead = !VOID_TYPE.Equals( invokeMethod.ReturnType );
-               // Int32 amountOfDead = wrapper.ElementCount;
-               LocalBuilder amountOfDeadB = null;
-               if ( countingDead )
-               {
-                  amountOfDeadB = invokeMethod.GetOrCreateLocal( LB_AMOUNT_OF_DEAD_EVENT_INFOS );
-                  il
-                     .EmitLoadLocal( eventLB )
-                     .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER )
-                     .EmitStoreLocal( amountOfDeadB );
-               }
+      //         Boolean countingDead = !VOID_TYPE.Equals( invokeMethod.ReturnType );
+      //         // Int32 amountOfDead = wrapper.ElementCount;
+      //         LocalBuilder amountOfDeadB = null;
+      //         if ( countingDead )
+      //         {
+      //            amountOfDeadB = invokeMethod.GetOrCreateLocal( LB_AMOUNT_OF_DEAD_EVENT_INFOS );
+      //            il
+      //               .EmitLoadLocal( eventLB )
+      //               .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER )
+      //               .EmitStoreLocal( amountOfDeadB );
+      //         }
 
-               il.EmitTryFinally(
-                  il2 => il2.EmitSimpleForLoop(
-                     il3 =>
-                     {
-                        // Int32 idx = 0
-                        var idxB = invokeMethod.GetOrCreateLocal( LB_INDEX );
-                        il3
-                           .EmitLoadInt32( 0 )
-                           .EmitStoreLocal( idxB );
-                        return idxB;
-                     },
-                     ( il3, idxB, loopBodyStartLabel ) =>
-                     {
-                        // idx < wrapper.ElementCount
-                        il3
-                           .EmitLoadLocal( idxB )
-                           .EmitLoadLocal( eventLB )
-                           .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER )
-                           .EmitBranch( BranchType.IF_FIRST_LESSER_THAN_SECOND, loopBodyStartLabel );
-                     },
-                     E_MethodIL.EmitLeftPlusPlus,
-                     ( il3, idxB ) =>
-                     {
-                        var infoB = il3.DeclareLocal( evtsArrayB.LocalType.GetElementType() );
+      //         il.EmitTryFinally(
+      //            il2 => il2.EmitSimpleForLoop(
+      //               il3 =>
+      //               {
+      //                  // Int32 idx = 0
+      //                  var idxB = invokeMethod.GetOrCreateLocal( LB_INDEX );
+      //                  il3
+      //                     .EmitLoadInt32( 0 )
+      //                     .EmitStoreLocal( idxB );
+      //                  return idxB;
+      //               },
+      //               ( il3, idxB, loopBodyStartLabel ) =>
+      //               {
+      //                  // idx < wrapper.ElementCount
+      //                  il3
+      //                     .EmitLoadLocal( idxB )
+      //                     .EmitLoadLocal( eventLB )
+      //                     .EmitCall( WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER )
+      //                     .EmitBranch( BranchType.IF_FIRST_LESSER_THAN_SECOND, loopBodyStartLabel );
+      //               },
+      //               E_MethodIL.EmitLeftPlusPlus,
+      //               ( il3, idxB ) =>
+      //               {
+      //                  var infoB = il3.DeclareLocal( evtsArrayB.LocalType.GetElementType() );
 
-                        //         EventHandlerInfo info = evts[idx];
-                        il3
-                           .EmitLoadLocal( evtsArrayB )
-                           .EmitLoadLocal( idxB )
-                           .EmitLoadElement( evtsArrayB.LocalType )
-                           .EmitStoreLocal( infoB );
+      //                  //         EventHandlerInfo info = evts[idx];
+      //                  il3
+      //                     .EmitLoadLocal( evtsArrayB )
+      //                     .EmitLoadLocal( idxB )
+      //                     .EmitLoadElement( evtsArrayB.LocalType )
+      //                     .EmitStoreLocal( infoB );
 
-                        //         Object target = info.Target;
-                        var targetB = il3.DeclareLocal( EVENT_INFO_TARGET_GETTER.GetReturnType() );
-                        il3
-                           .EmitLoadLocal( infoB )
-                           .EmitCall( EVENT_INFO_TARGET_GETTER )
-                           .EmitStoreLocal( targetB );
+      //                  //         Object target = info.Target;
+      //                  var targetB = il3.DeclareLocal( EVENT_INFO_TARGET_GETTER.GetReturnType() );
+      //                  il3
+      //                     .EmitLoadLocal( infoB )
+      //                     .EmitCall( EVENT_INFO_TARGET_GETTER )
+      //                     .EmitStoreLocal( targetB );
 
-                        il3.EmitIfElse(
-                           ( il4, elseLabel, endIfLabel ) =>
-                           {
-                              il4
-                                 .EmitLoadLocal( infoB )
-                                 // TODO write out is dead -method
-                                 .EmitCall( IS_EVENT_INFO_DEAD_METHOD )
-                                 .EmitBranch( BranchType.IF_TRUE, elseLabel );
-                           },
-                           ( il4, elseLabel, endIfLabel ) =>
-                           {
-                              // (result) = new <event type>(target, info.Method).Invoke(params);
+      //                  il3.EmitIfElse(
+      //                     ( il4, elseLabel, endIfLabel ) =>
+      //                     {
+      //                        il4
+      //                           .EmitLoadLocal( infoB )
+      //                           // TODO write out is dead -method
+      //                           .EmitCall( IS_EVENT_INFO_DEAD_METHOD )
+      //                           .EmitBranch( BranchType.IF_TRUE, elseLabel );
+      //                     },
+      //                     ( il4, elseLabel, endIfLabel ) =>
+      //                     {
+      //                        // (result) = new <event type>(target, info.Method).Invoke(params);
 
-                              // TODO TODO TODO
-                              // Consider changing info.Method into returning MethodInfo object, and then
-                              // use info.Method.Invoke(target, params).
-                              // Slower, but works with .NET 4 portable and PEVerifier won't give errors/warnings.
-                              this.EmitEventInvocationWithTryCatchIfNeeded(
-                                 invocationStyle,
-                                 exceptionType,
-                                 invokeMethod,
-                                 eventMethodToInvoke,
-                                 il5 =>
-                                 {
-                                    il5
-                                       .EmitLoadLocal( targetB )
+      //                        // TODO TODO TODO
+      //                        // Consider changing info.Method into returning MethodInfo object, and then
+      //                        // use info.Method.Invoke(target, params).
+      //                        // Slower, but works with .NET 4 portable and PEVerifier won't give errors/warnings.
+      //                        this.EmitEventInvocationWithTryCatchIfNeeded(
+      //                           invocationStyle,
+      //                           exceptionType,
+      //                           invokeMethod,
+      //                           eventMethodToInvoke,
+      //                           il5 =>
+      //                           {
+      //                              il5
+      //                                 .EmitLoadLocal( targetB )
 
-                                       .EmitLoadLocal( infoB )
-                                       .EmitCall( EVENT_INFO_METHOD_GETTER )
-                                       .EmitNewObject( TypeGenerationUtils.GetMethodForEmitting( decType => TypeGenerationUtils.CreateTypeForEmittingCILType( decType, thisGenerationInfo.GenericArguments, null ), eventModel.NativeInfo.EventHandlerType.LoadConstructorOrThrow( 2 ).NewWrapper( this.ctx ) ) );
-                                 },
-                                 true
-                                 );
-                           },
-                           ( il4, endIfLabel ) =>
-                           {
-                              // cleanUp = true;
-                              il4
-                                 .EmitLoadBoolean( true )
-                                 .EmitStoreLocal( cleanUpB );
+      //                                 .EmitLoadLocal( infoB )
+      //                                 .EmitCall( EVENT_INFO_METHOD_GETTER )
+      //                                 .EmitNewObject( TypeGenerationUtils.GetMethodForEmitting( decType => TypeGenerationUtils.CreateTypeForEmittingCILType( decType, thisGenerationInfo.GenericArguments, null ), eventModel.NativeInfo.EventHandlerType.LoadConstructorOrThrow( 2 ).NewWrapper( this.ctx ) ) );
+      //                           },
+      //                           true
+      //                           );
+      //                     },
+      //                     ( il4, endIfLabel ) =>
+      //                     {
+      //                        // cleanUp = true;
+      //                        il4
+      //                           .EmitLoadBoolean( true )
+      //                           .EmitStoreLocal( cleanUpB );
 
-                              if ( amountOfDeadB != null )
-                              {
-                                 // --amountOfDead
-                                 il4.EmitLeftMinusMinus( amountOfDeadB );
-                              }
-                           }
-                           );
-                     }
-                  ),
-                  il2 =>
-                     //      if ( cleanUp )
-                     //      {
-                     //         Interlocked.CompareExchange( ref this._myEventManualWeak, EventHandlerInfoArrayWrapper.CleanUp( wrapper ), wrapper );
-                     //      }
-                     il2.EmitIf(
-                     ( il3, endIfLabel ) =>
-                     {
-                        il3
-                           .EmitLoadLocal( cleanUpB )
-                           .EmitBranch( BranchType.IF_FALSE, endIfLabel );
-                     },
-                     ( il3, endIfLabel ) =>
-                     {
-                        il3
-                           .EmitLoadThisFieldAddress( eventField )
+      //                        if ( amountOfDeadB != null )
+      //                        {
+      //                           // --amountOfDead
+      //                           il4.EmitLeftMinusMinus( amountOfDeadB );
+      //                        }
+      //                     }
+      //                     );
+      //               }
+      //            ),
+      //            il2 =>
+      //               //      if ( cleanUp )
+      //               //      {
+      //               //         Interlocked.CompareExchange( ref this._myEventManualWeak, EventHandlerInfoArrayWrapper.CleanUp( wrapper ), wrapper );
+      //               //      }
+      //               il2.EmitIf(
+      //               ( il3, endIfLabel ) =>
+      //               {
+      //                  il3
+      //                     .EmitLoadLocal( cleanUpB )
+      //                     .EmitBranch( BranchType.IF_FALSE, endIfLabel );
+      //               },
+      //               ( il3, endIfLabel ) =>
+      //               {
+      //                  il3
+      //                     .EmitLoadThisFieldAddress( eventField )
 
-                           .EmitLoadLocal( eventLB )
-                           .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD )
+      //                     .EmitLoadLocal( eventLB )
+      //                     .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD )
 
-                           .EmitLoadLocal( eventLB )
+      //                     .EmitLoadLocal( eventLB )
 
-                           .EmitCall( INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF.MakeGenericMethod( eventLB.LocalType ) )
-                           .EmitPop();
-                     }
-                  ) );
-            } );
-      }
+      //                     .EmitCall( INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF.MakeGenericMethod( eventLB.LocalType ) )
+      //                     .EmitPop();
+      //               }
+      //            ) );
+      //      } );
+      //}
 
-      protected virtual void EmitEventAdditionMethodForWeaklyReferencedEvents(
-         CILField eventField,
-         MethodIL il
-         )
-      {
-         //Delegate[] invocations = <arg-1>.GetInvocationList();
-         //EventHandlerInfo[] evtsToAdd = new EventHandlerInfo[invocations.Length];
-         //for ( Int32 i = 0; i < invocations.Length; ++i )
-         //{
-         //   evtsToAdd[i] = new EventHandlerInfo( invocations[i] );
-         //}
+      //protected virtual void EmitEventAdditionMethodForWeaklyReferencedEvents(
+      //   CILField eventField,
+      //   MethodIL il
+      //   )
+      //{
+      //   //Delegate[] invocations = <arg-1>.GetInvocationList();
+      //   //EventHandlerInfo[] evtsToAdd = new EventHandlerInfo[invocations.Length];
+      //   //for ( Int32 i = 0; i < invocations.Length; ++i )
+      //   //{
+      //   //   evtsToAdd[i] = new EventHandlerInfo( invocations[i] );
+      //   //}
 
-         //EventHandlerInfoArrayWrapper current = this._myEventManualWeak;
-         //EventHandlerInfoArrayWrapper oldCurrent, combined;
-         //do
-         //{
-         //   oldCurrent = EventHandlerInfoArrayWrapper.CleanUp( current );
-         //   combined = EventHandlerInfoArrayWrapper.Combine( oldCurrent, evtsToAdd );
-         //   current = Interlocked.CompareExchange( ref this._myEventManualWeak, combined, oldCurrent );
-         //} while ( !Object.ReferenceEquals( current, oldCurrent ) );
+      //   //EventHandlerInfoArrayWrapper current = this._myEventManualWeak;
+      //   //EventHandlerInfoArrayWrapper oldCurrent, combined;
+      //   //do
+      //   //{
+      //   //   oldCurrent = EventHandlerInfoArrayWrapper.CleanUp( current );
+      //   //   combined = EventHandlerInfoArrayWrapper.Combine( oldCurrent, evtsToAdd );
+      //   //   current = Interlocked.CompareExchange( ref this._myEventManualWeak, combined, oldCurrent );
+      //   //} while ( !Object.ReferenceEquals( current, oldCurrent ) );
 
-         var invocationsB = il.DeclareLocal( GET_INVOCATION_LIST_METHOD.GetReturnType() );
-         il
-            .EmitLoadArg( 1 )
-            .EmitCall( GET_INVOCATION_LIST_METHOD )
-            .EmitStoreLocal( invocationsB );
+      //   var invocationsB = il.DeclareLocal( GET_INVOCATION_LIST_METHOD.GetReturnType() );
+      //   il
+      //      .EmitLoadArg( 1 )
+      //      .EmitCall( GET_INVOCATION_LIST_METHOD )
+      //      .EmitStoreLocal( invocationsB );
 
-         var evtsToAddB = il.DeclareLocal( STRONG_EVENT_WRAPPER_TYPE.MakeArrayType() );
-         il
-            .EmitLoadLocal( invocationsB )
-            .EmitLoadArrayLength()
-            .EmitNewArray( evtsToAddB.LocalType.GetElementType() )
-            .EmitStoreLocal( evtsToAddB )
+      //   var evtsToAddB = il.DeclareLocal( STRONG_EVENT_WRAPPER_TYPE.MakeArrayType() );
+      //   il
+      //      .EmitLoadLocal( invocationsB )
+      //      .EmitLoadArrayLength()
+      //      .EmitNewArray( evtsToAddB.LocalType.GetElementType() )
+      //      .EmitStoreLocal( evtsToAddB )
 
-            .EmitSimpleForLoop(
-            il2 =>
-            {
-               // Int32 i = 0
-               var idxB = il.DeclareLocal( LB_INDEX.Type.NewWrapper( this.ctx ) );
-               il2
-                  .EmitLoadInt32( 0 )
-                  .EmitStoreLocal( idxB );
-               return idxB;
-            },
-            ( il2, idxB, loopBodyStartLabel ) =>
-            {
-               // index < evtsToAdd.Length
-               il2
-                  .EmitLoadLocal( idxB )
-                  .EmitLoadLocal( evtsToAddB )
-                  .EmitLoadArrayLength()
-                  .EmitNumericConversion( CILTypeCode.UInt32, CILTypeCode.Int32, false )
-                  .EmitBranch( BranchType.IF_FIRST_LESSER_THAN_SECOND, loopBodyStartLabel );
-            },
-            E_MethodIL.EmitLeftPlusPlus,
-            ( il2, idxB ) =>
-            {
-               il2.EmitLoadLocal( evtsToAddB )
-                  .EmitLoadLocal( idxB )
-                  .EmitLoadLocal( invocationsB )
-                  .EmitLoadLocal( idxB )
-                  .EmitLoadElement( invocationsB.LocalType )
-                  .EmitNewObject( EVENT_INFO_CTOR )
-                  .EmitStoreElement( evtsToAddB.LocalType );
-            }
-            )
-            .EmitInterlockedCompareExchangeFieldSettingLoop(
-            eventField,
-            //fieldType,
-            ( il2, currentB ) =>
-            {
-               il2
-                  .EmitLoadLocal( currentB )
-                  .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD );
-            },
-            ( il2, oldCurrentB ) =>
-            {
-               il2
-                  .EmitLoadLocal( oldCurrentB )
-                 .EmitLoadLocal( evtsToAddB )
-                 .EmitCall( WEAK_EVENT_ARRAY_COMBINE_METHOD );
-            }
-            );
-         il.EmitReturn();
-      }
+      //      .EmitSimpleForLoop(
+      //      il2 =>
+      //      {
+      //         // Int32 i = 0
+      //         var idxB = il.DeclareLocal( LB_INDEX.Type.NewWrapper( this.ctx ) );
+      //         il2
+      //            .EmitLoadInt32( 0 )
+      //            .EmitStoreLocal( idxB );
+      //         return idxB;
+      //      },
+      //      ( il2, idxB, loopBodyStartLabel ) =>
+      //      {
+      //         // index < evtsToAdd.Length
+      //         il2
+      //            .EmitLoadLocal( idxB )
+      //            .EmitLoadLocal( evtsToAddB )
+      //            .EmitLoadArrayLength()
+      //            .EmitNumericConversion( CILTypeCode.UInt32, CILTypeCode.Int32, false )
+      //            .EmitBranch( BranchType.IF_FIRST_LESSER_THAN_SECOND, loopBodyStartLabel );
+      //      },
+      //      E_MethodIL.EmitLeftPlusPlus,
+      //      ( il2, idxB ) =>
+      //      {
+      //         il2.EmitLoadLocal( evtsToAddB )
+      //            .EmitLoadLocal( idxB )
+      //            .EmitLoadLocal( invocationsB )
+      //            .EmitLoadLocal( idxB )
+      //            .EmitLoadElement( invocationsB.LocalType )
+      //            .EmitNewObject( EVENT_INFO_CTOR )
+      //            .EmitStoreElement( evtsToAddB.LocalType );
+      //      }
+      //      )
+      //      .EmitInterlockedCompareExchangeFieldSettingLoop(
+      //      eventField,
+      //      //fieldType,
+      //      ( il2, currentB ) =>
+      //      {
+      //         il2
+      //            .EmitLoadLocal( currentB )
+      //            .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD );
+      //      },
+      //      ( il2, oldCurrentB ) =>
+      //      {
+      //         il2
+      //            .EmitLoadLocal( oldCurrentB )
+      //           .EmitLoadLocal( evtsToAddB )
+      //           .EmitCall( WEAK_EVENT_ARRAY_COMBINE_METHOD );
+      //      }
+      //      );
+      //   il.EmitReturn();
+      //}
 
-      protected virtual void EmitEventRemovingMethodForWeaklyReferencedEvents(
-         CILField eventField,
-         MethodIL il
-         )
-      {
-         //Delegate[] invocations = other.GetInvocationList();
-         //EventHandlerInfoArrayWrapper current = this._myEventManualWeak;
-         //EventHandlerInfoArrayWrapper oldCurrent, combined;
-         //do
-         //{
-         //   oldCurrent = EventHandlerInfoArrayWrapper.CleanUp( current );
-         //   combined = EventHandlerInfoArrayWrapper.Remove( oldCurrent, invocations );
-         //   current = Interlocked.CompareExchange( ref this._myEventManualWeak, combined, oldCurrent );
-         //} while ( !Object.ReferenceEquals( current, oldCurrent ) );
+      //protected virtual void EmitEventRemovingMethodForWeaklyReferencedEvents(
+      //   CILField eventField,
+      //   MethodIL il
+      //   )
+      //{
+      //   //Delegate[] invocations = other.GetInvocationList();
+      //   //EventHandlerInfoArrayWrapper current = this._myEventManualWeak;
+      //   //EventHandlerInfoArrayWrapper oldCurrent, combined;
+      //   //do
+      //   //{
+      //   //   oldCurrent = EventHandlerInfoArrayWrapper.CleanUp( current );
+      //   //   combined = EventHandlerInfoArrayWrapper.Remove( oldCurrent, invocations );
+      //   //   current = Interlocked.CompareExchange( ref this._myEventManualWeak, combined, oldCurrent );
+      //   //} while ( !Object.ReferenceEquals( current, oldCurrent ) );
 
-         var invocationsB = il.DeclareLocal( GET_INVOCATION_LIST_METHOD.GetReturnType() );
-         il
-            .EmitLoadArg( 1 )
-            .EmitCall( GET_INVOCATION_LIST_METHOD )
-            .EmitStoreLocal( invocationsB )
+      //   var invocationsB = il.DeclareLocal( GET_INVOCATION_LIST_METHOD.GetReturnType() );
+      //   il
+      //      .EmitLoadArg( 1 )
+      //      .EmitCall( GET_INVOCATION_LIST_METHOD )
+      //      .EmitStoreLocal( invocationsB )
 
-            .EmitInterlockedCompareExchangeFieldSettingLoop(
-            eventField,
-            ( il2, currentB ) =>
-            {
-               il2
-                  .EmitLoadLocal( currentB )
-                  .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD );
-            },
-            ( il2, oldCurrentB ) =>
-            {
-               il2
-                  .EmitLoadLocal( oldCurrentB )
-                  .EmitLoadLocal( invocationsB )
-                  .EmitCall( WEAK_EVENT_ARRAY_REMOVE_METHOD );
-            }
-            )
-            .EmitReturn();
-      }
+      //      .EmitInterlockedCompareExchangeFieldSettingLoop(
+      //      eventField,
+      //      ( il2, currentB ) =>
+      //      {
+      //         il2
+      //            .EmitLoadLocal( currentB )
+      //            .EmitCall( WEAK_EVENT_ARRAY_CLEANUP_METHOD );
+      //      },
+      //      ( il2, oldCurrentB ) =>
+      //      {
+      //         il2
+      //            .EmitLoadLocal( oldCurrentB )
+      //            .EmitLoadLocal( invocationsB )
+      //            .EmitCall( WEAK_EVENT_ARRAY_REMOVE_METHOD );
+      //      }
+      //      )
+      //      .EmitReturn();
+      //}
 
       protected virtual void GetEventInvocationStyle( EventModel eventModel, out EventInvocation invocationStyle, out Type exceptionType )
       {

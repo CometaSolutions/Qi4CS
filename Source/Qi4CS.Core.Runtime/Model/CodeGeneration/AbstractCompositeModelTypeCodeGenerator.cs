@@ -31,7 +31,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractCompositeModelTypeCodeGenerator : CompositeModelTypeCodeGenerator
    {
-#region CompositeModelTypeCodeGenerator Members
+      #region CompositeModelTypeCodeGenerator Members
 
       public void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
       {
@@ -405,6 +405,13 @@ namespace Qi4CS.Core.Runtime.Model
          var actualMethod = methodGenInfo.OverriddenMethod;
          thisGenInfo.NormalMethodBuilders.Add( method, methodGenInfo );
          var mb = methodGenInfo.Builder;
+
+         // Mark this method with method index attribute
+         mb.AddCustomAttribute(
+            this.COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE,
+            new[] { CILCustomAttributeFactory.NewTypedArgument( compositeMethod.MethodIndex, ctx ) },
+            null
+            );
 
 #if DEBUG
          //mb.SetCustomAttribute( new CustomAttributeBuilder( type-of( DebuggableAttribute ).GetConstructor( Type.EmptyTypes ), EMPTY_OBJECTS ) );
@@ -2574,6 +2581,14 @@ namespace Qi4CS.Core.Runtime.Model
              null,
              null ).WithReturnType( VOID_TYPE ) as CompositeMethodGenerationInfo;
 
+         // Mark this method's index
+         mb.Builder.AddCustomAttribute(
+            this.SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE,
+            new[] { CILCustomAttributeFactory.NewTypedArgument( specialMethodModel.SpecialMethodIndex, ctx ) },
+            null
+            );
+
+
          var parameters = specialMethod.Parameters;
          var il = mb.IL;
 
@@ -2700,7 +2715,6 @@ namespace Qi4CS.Core.Runtime.Model
          Boolean isPublicCompositeCtor
          )
       {
-         var fragmentGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
          var ctorParamTypes = new CILType[] { codeGenerationInfo.CompositeInstanceFieldType.NewWrapperAsType( this.ctx ), COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE, COMPOSITE_CTOR_EVENTS_PARAM_TYPE };
          Int32 firstAdditionalParamIndex = ctorParamTypes.Length;
          if ( isPublicCompositeCtor )
@@ -2751,6 +2765,7 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( isPublicCompositeCtor )
          {
+            var fragmentGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
             this.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, compositeModel, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, cInfo, firstAdditionalParamIndex );
          }
 
@@ -3306,9 +3321,10 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel instanceableModel,
          FragmentTypeGenerationInfo thisGenInfo,
-         CILConstructor parentConstructor
+         ConstructorModel model
          )
       {
+         var parentConstructor = model.NativeInfo.NewWrapper( this.ctx );
          var ctorToCall = TypeGenerationUtils.GetMethodForEmitting( thisGenInfo.Parents, parentConstructor );
          var parameters = ctorToCall.Parameters;
          var ctorParamTypes = Enumerable.Repeat( codeGenerationInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ), 1 )
@@ -3322,6 +3338,13 @@ namespace Qi4CS.Core.Runtime.Model
             thisGenInfo,
             parentConstructor,
             ctorToCall );
+
+         // Mark fragment model index for this constructor 
+         result.Builder.AddCustomAttribute(
+            this.CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE,
+            new[] { CILCustomAttributeFactory.NewTypedArgument( model.ConstructorIndex, this.ctx ) },
+            null
+            );
          var il = result.IL;
 
          // Load `this` and call base constructor with all arguments except first one
@@ -3619,7 +3642,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             if ( constructorModel.NativeInfo.DeclaringType.NewWrapper( this.ctx ).Equals( info.DirectBaseFromModel ) )
             {
-               var ctor = this.EmitFragmentConstructor( codeGenerationInfo, compositeModel, info, constructorModel.NativeInfo.NewWrapper( this.ctx ) );
+               var ctor = this.EmitFragmentConstructor( codeGenerationInfo, compositeModel, info, constructorModel );
                info.ConstructorBuilders.Add( constructorModel.ConstructorIndex, ctor );
             }
          }

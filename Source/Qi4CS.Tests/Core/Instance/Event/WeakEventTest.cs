@@ -21,30 +21,30 @@ using System;
 
 namespace Qi4CS.Tests.Core.Instance.Event
 {
-   [Serializable]
-   public class WeakEventTest : AbstractEventTest
-   {
+   //[Serializable]
+   //public class WeakEventTest : AbstractEventTest
+   //{
 
-      protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )
-      {
-         assembler
-            .NewPlainComposite()
-            .OfTypes( typeof( TestComposite<> ) )
-            .WithMixins( typeof( TestCompositeMixinWithWeakEvents<> ) );
-      }
+   //   protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )
+   //   {
+   //      assembler
+   //         .NewPlainComposite()
+   //         .OfTypes( typeof( TestComposite<> ) )
+   //         .WithMixins( typeof( TestCompositeMixinWithWeakEvents<> ) );
+   //   }
 
-      [Test]
-      public override void TestInvocationStyles()
-      {
-         this.PerformTestInAppDomain( () =>
-         {
-            base.TestDirectInvokeEvent( true );
-            base.TestDirectInvokeWithReturnTypeEvent( true );
-            base.TestInvokeAllRethrowCustomWithoutReturnType( true );
-            base.TestInvokeAllRethrowCustomWithReturnType( true );
-            base.TestInvokeAllRethrowDefaultWithoutReturnType( true );
-            base.TestInvokeAllRethrowDefaultWithReturnType( true );
-         } );
-      }
-   }
+   //   [Test]
+   //   public override void TestInvocationStyles()
+   //   {
+   //      this.PerformTestInAppDomain( () =>
+   //      {
+   //         base.TestDirectInvokeEvent( true );
+   //         base.TestDirectInvokeWithReturnTypeEvent( true );
+   //         base.TestInvokeAllRethrowCustomWithoutReturnType( true );
+   //         base.TestInvokeAllRethrowCustomWithReturnType( true );
+   //         base.TestInvokeAllRethrowDefaultWithoutReturnType( true );
+   //         base.TestInvokeAllRethrowDefaultWithReturnType( true );
+   //      } );
+   //   }
+   //}
 }

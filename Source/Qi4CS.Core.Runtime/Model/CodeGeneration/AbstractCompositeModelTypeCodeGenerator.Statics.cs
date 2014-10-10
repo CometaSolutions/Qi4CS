@@ -124,7 +124,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly LocalBuilderInfo LB_EXCEPTION_LIST;
       protected static readonly LocalBuilderInfo LB_EVENT_HANDLERS;
       //protected static readonly LocalBuilderInfo LB_EVENT_HANDLERS_WEAK;
-      protected static readonly LocalBuilderInfo LB_AMOUNT_OF_DEAD_EVENT_INFOS;
+      //protected static readonly LocalBuilderInfo LB_AMOUNT_OF_DEAD_EVENT_INFOS;
       protected static readonly LocalBuilderInfo LB_CONSTRAINT_VIOLATION_EXCEPTION;
       protected static readonly LocalBuilderInfo LB_TEMP_STORAGE;
       protected static readonly LocalBuilderInfo LB_INVOCATION_INFO;
@@ -263,15 +263,15 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo INTERLOCKED_EXCHANGE_METHOD_GDEF_NATIVE;
       protected static readonly MethodInfo GET_INVOCATION_LIST_METHOD_NATIVE;
       protected static readonly MethodInfo ADD_LAST_METHOD_NATIVE;
-      protected static readonly MethodInfo WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE;
-      protected static readonly MethodInfo WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE;
-      protected static readonly MethodInfo WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE;
-      protected static readonly MethodInfo WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE;
-      protected static readonly MethodInfo WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE;
-      protected static readonly MethodInfo IS_EVENT_INFO_DEAD_METHOD_NATIVE;
-      protected static readonly MethodInfo EVENT_INFO_TARGET_GETTER_NATIVE;
-      protected static readonly MethodInfo EVENT_INFO_METHOD_GETTER_NATIVE;
-      protected static readonly ConstructorInfo EVENT_INFO_CTOR_NATIVE;
+      //protected static readonly MethodInfo WEAK_EVENT_ARRAY_WRAPPER_ARRAY_GETTER_NATIVE;
+      //protected static readonly MethodInfo WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE;
+      //protected static readonly MethodInfo WEAK_EVENT_ARRAY_CLEANUP_METHOD_NATIVE;
+      //protected static readonly MethodInfo WEAK_EVENT_ARRAY_COMBINE_METHOD_NATIVE;
+      //protected static readonly MethodInfo WEAK_EVENT_ARRAY_REMOVE_METHOD_NATIVE;
+      //protected static readonly MethodInfo IS_EVENT_INFO_DEAD_METHOD_NATIVE;
+      //protected static readonly MethodInfo EVENT_INFO_TARGET_GETTER_NATIVE;
+      //protected static readonly MethodInfo EVENT_INFO_METHOD_GETTER_NATIVE;
+      //protected static readonly ConstructorInfo EVENT_INFO_CTOR_NATIVE;
       protected static readonly MethodInfo Q_NAME_GET_BARE_TYPE_NAME_METHOD_NATIVE;
       protected static readonly MethodInfo Q_NAME_FROM_MEMBER_INFO_METHOD_NATIVE;
       protected static readonly ConstructorInfo INJECTION_EXCEPTION_CTOR_NATIVE;
@@ -333,6 +333,9 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo REF_ACTION_INVOKER_NATIVE;
       protected static readonly MethodInfo REF_FUNCTION_INVOKER_NATIVE;
       protected static readonly ConstructorInfo REF_INVOKER_CALLBACK_CTOR_NATIVE;
+      protected static readonly ConstructorInfo COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE;
+      protected static readonly ConstructorInfo SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE;
+      protected static readonly ConstructorInfo CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE;
       //protected static readonly MethodInfo CONVERT_I64_DOUBLE_NATIVE;
       //protected static readonly MethodInfo CONVERT_DOUBLE_I64_NATIVE;
       //protected static readonly MethodInfo CONVERT_I32_SINGLE_NATIVE;
@@ -499,6 +502,9 @@ namespace Qi4CS.Core.Runtime.Model
          REF_ACTION_INVOKER_NATIVE = REF_ACTION_TYPE_NATIVE.LoadMethodOrThrow( "Invoke", 1 );
          REF_FUNCTION_INVOKER_NATIVE = REF_FUNCTION_TYPE_NATIVE.LoadMethodOrThrow( "Invoke", 1 );
          REF_INVOKER_CALLBACK_CTOR_NATIVE = typeof( RefInvokerCallback ).LoadConstructorOrThrow( (Int32?) null );
+         COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( CompositeMethodModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } );
+         SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( SpecialMethodModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } ); ;
+         CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( ConstructorModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } ); ;
 
          //CONVERT_I64_DOUBLE_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToDouble", new[] { typeof( Int64 ) } );
          //CONVERT_DOUBLE_I64_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToInt64", new[] { typeof( Double ) } );
@@ -524,7 +530,7 @@ namespace Qi4CS.Core.Runtime.Model
          LB_EXCEPTION_LIST = new LocalBuilderInfo( "exceptions", EXCEPTION_LIST_CTOR_NATIVE.DeclaringType );
          LB_EVENT_HANDLERS = new LocalBuilderInfo( "handlers", typeof( Delegate[] ) );
          //LB_EVENT_HANDLERS_WEAK = new LocalBuilderInfo( "handlers", typeof( WeakEventHandlerWrapperForCodeGeneration ) );
-         LB_AMOUNT_OF_DEAD_EVENT_INFOS = new LocalBuilderInfo( "amountOfDead", WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE.ReturnType );
+         //LB_AMOUNT_OF_DEAD_EVENT_INFOS = new LocalBuilderInfo( "amountOfDead", WEAK_EVENT_ARRAY_WRAPPER_COUNT_GETTER_NATIVE.ReturnType );
          LB_CONSTRAINT_VIOLATION_EXCEPTION = new LocalBuilderInfo( "constraintViolationException", CONSTRAINT_EXCEPTION_VIOLATIONS_GETTER_NATIVE.DeclaringType );
          LB_TEMP_STORAGE = new LocalBuilderInfo( "tempStorage", typeof( Object ) );
          LB_INVOCATION_INFO = new LocalBuilderInfo( "invocationInfo" );
