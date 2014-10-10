@@ -101,11 +101,7 @@ namespace Qi4CS.Core.Runtime.Assembling
                this._info.Types.Add( type );
             }
          }
-         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type
-#if WINDOWS_PHONE_APP
-            .GetTypeInfo()
-#endif
-.Assembly ) );
+         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type.GetAssembly() ) );
          if ( mainType != null )
          {
             this._info.MainCodeGenerationType = mainType;

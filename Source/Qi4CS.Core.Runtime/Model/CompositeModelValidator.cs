@@ -99,7 +99,7 @@ namespace Qi4CS.Core.Runtime.Model
                         {
                            result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Constraints must have constructor without parameters, but constraint of type " + constraintModel.ConstraintType + " does not.", compositeModel, compositeMethod ) );
                         }
-                        else if ( constraintModel.ConstraintType.ContainsGenericParameters && !constraintModel.ConstraintType.IsGenericTypeDefinition )
+                        else if ( constraintModel.ConstraintType.ContainsGenericParameters() && !constraintModel.ConstraintType.IsGenericTypeDefinition() )
                         {
                            result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Constraint type " + constraintModel.ConstraintType + " contains non-closed generic parameters but is not generic type definition.", compositeModel, compositeMethod ) );
                         }
@@ -163,7 +163,11 @@ namespace Qi4CS.Core.Runtime.Model
          if ( methodModel != null )
          {
             var declType = methodModel.NativeInfo.DeclaringType;
-            if ( !declType.IsClass )
+            if ( !declType
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+               .IsClass )
             {
                result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "The declaring type of fragment method " + methodModel.NativeInfo + " must be a class, however " + declType + " is not a class.", compositeModel, compositeMethod ) );
             }
@@ -171,7 +175,11 @@ namespace Qi4CS.Core.Runtime.Model
             {
                result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "The method " + methodModel.NativeInfo + " in " + declType + " is not virtual, however, all composite methods must be virtual.", compositeModel, methodModel ) );
             }
-            if ( declType.IsSealed )
+            if ( declType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+               .IsSealed )
             {
                result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "The type " + declType + " is sealed, however, all fragment types must be non-sealed.", compositeModel, methodModel ) );
             }
@@ -194,7 +202,7 @@ namespace Qi4CS.Core.Runtime.Model
             //      result.AddStructureError( new StructureValidationErrorImpl( compositeModel, methodModel, msg ) );
             //   }
             //}
-            var genName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( declType.Assembly );
+            var genName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( declType.GetAssembly() );
             if ( !IsTypeVisible( declType, genName ) )
             {
                result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "The type " + declType + " is not visible. Consider either making it public, or internal with combination of applying " + typeof( InternalsVisibleToAttribute ) + " with argument " + typeof( Qi4CSGeneratedAssemblyAttribute ) + ".ASSEMBLY_NAME to the assembly.", compositeModel, methodModel ) );
@@ -205,7 +213,15 @@ namespace Qi4CS.Core.Runtime.Model
 
       private static Boolean IsTypeVisible( Type type, String generatedAssemblyName )
       {
-         return type.IsVisible || ( !type.IsNestedPrivate && type.Assembly.GetCustomAttributes( true ).OfType<InternalsVisibleToAttribute>().Any( attr =>
+         return type
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+               .IsVisible || ( !type
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+               .IsNestedPrivate && type.GetAssembly().GetCustomAttributes( ).OfType<InternalsVisibleToAttribute>().Any( attr =>
          {
             var assName = attr.AssemblyName;
             var idx = assName.IndexOf( Qi4CSGeneratedAssemblyAttribute.ASSEMBLY_PUBLIC_KEY_SUFFIX );
@@ -244,11 +260,15 @@ namespace Qi4CS.Core.Runtime.Model
             while ( stk.Any() )
             {
                Type current = stk.Pop();
-               if ( current.IsGenericParameter && current.DeclaringMethod != null )
+               if ( current.IsGenericParameter && current
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+                  .DeclaringMethod != null )
                {
                   result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Injection scopes affecting composite type (like " + typeof( ThisAttribute ) + ", " + typeof( ConcernForAttribute ) + ", or " + typeof( SideEffectForAttribute ) + " are not allowed on method argument, which is referencing a generic method parameter.", compositeModel, memberModel ) );
                }
-               else if ( !current.IsGenericParameter && current.ContainsGenericParameters )
+               else if ( !current.IsGenericParameter && current.ContainsGenericParameters() )
                {
                   foreach ( Type gArg in current.GetGenericArguments() )
                   {
@@ -266,7 +286,15 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected virtual void ValidateCompositeType( CompositeValidationResult result, CompositeModel compositeModel, Type compositeType )
       {
-         if ( !compositeType.IsInterface && !compositeType.IsClass )
+         if ( !compositeType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+            .IsInterface && !compositeType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+            .IsClass )
          {
             result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Composites must be interfaces or class; the composite " + compositeType + " however is neither.", compositeModel ) );
          }
@@ -274,7 +302,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected virtual void ValidateFragmentType( CompositeValidationResult result, CompositeModel compositeModel, Type fragmentType )
       {
-         if ( !fragmentType.IsClass )
+         if ( !fragmentType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+            .IsClass )
          {
             result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Fragments must be classes; the fragment " + fragmentType + " however is not a class.", compositeModel ) );
          }
@@ -282,9 +314,13 @@ namespace Qi4CS.Core.Runtime.Model
          {
             var baseTypes = new HashSet<Type>( fragmentType.GetAllParentTypes() );
             baseTypes.Remove( fragmentType );
-            if ( fragmentType.IsAbstract )
+            if ( fragmentType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+               .IsAbstract )
             {
-               foreach ( var fMethod in fragmentType.GetMethods( BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance ) )
+               foreach ( var fMethod in fragmentType.GetAllInstanceMethods() )
                {
                   if ( fMethod.IsAbstract && !compositeModel.Methods.Any( cMethod => AreSameFragmentMethods( fMethod, Types.FindMethodImplicitlyImplementingMethod( fragmentType, cMethod.NativeInfo ) ) ) )
                   {
@@ -294,7 +330,7 @@ namespace Qi4CS.Core.Runtime.Model
             }
             foreach ( var baseType in baseTypes )
             {
-               if ( baseType.IsGenericType )
+               if ( baseType.IsGenericType() )
                {
                   var baseTypeGDef = baseType.GetGenericTypeDefinition();
                   if ( compositeModel.GetAllCompositeTypes().Except( compositeModel.PublicTypes ).SelectMany( cType => cType.GetAllParentTypes() ).Any( pType => pType.GetGenericDefinitionIfGenericType().Equals( baseTypeGDef ) ) &&
@@ -335,7 +371,7 @@ namespace Qi4CS.Core.Runtime.Model
 
                if ( typeCount > 0 )
                {
-                  if ( type.IsGenericTypeDefinition != firstType.IsGenericTypeDefinition || typeGargs.Take( Math.Min( gArgsCount, typeCount ) ).Where( ( tGArg, idx ) => tGArg.IsGenericParameter != gArgs[idx].IsGenericParameter ).Any() )
+                  if ( type.IsGenericTypeDefinition() != firstType.IsGenericTypeDefinition() || typeGargs.Take( Math.Min( gArgsCount, typeCount ) ).Where( ( tGArg, idx ) => tGArg.IsGenericParameter != gArgs[idx].IsGenericParameter ).Any() )
                   {
                      result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "All type interfaces must be either genericless, generic type definitions, or having all generic parameters closed.", compositeModel ) );
                   }
@@ -345,9 +381,17 @@ namespace Qi4CS.Core.Runtime.Model
                   }
                }
             }
-            if ( compositeModel.PublicTypes.Count( pType => !pType.IsInterface ) > 1 )
+            if ( compositeModel.PublicTypes.Count( pType => !pType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+               .IsInterface ) > 1 )
             {
-               result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Composite types must contain at most one class, but found the following classes:\n" + String.Join( ", ", compositeModel.PublicTypes.Select( pType => !pType.IsInterface ) ), compositeModel ) );
+               result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Composite types must contain at most one class, but found the following classes:\n" + String.Join( ", ", compositeModel.PublicTypes.Select( pType => !pType
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+                  .IsInterface ) ), compositeModel ) );
             }
          }
          else
@@ -401,7 +445,7 @@ namespace Qi4CS.Core.Runtime.Model
          else
          {
             var declType = methodModel.NativeInfo.DeclaringType;
-            var genName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( declType.Assembly );
+            var genName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( declType.GetAssembly() );
             if ( ( methodModel.NativeInfo.IsAssembly || methodModel.NativeInfo.IsFamilyAndAssembly )
                 && !IsTypeVisible( declType, genName ) )
             {

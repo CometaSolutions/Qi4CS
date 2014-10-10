@@ -27,7 +27,6 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public abstract class AbstractServiceInjectionFunctionality : InjectionFunctionality
    {
-      private static ConstructorInfo SERVICE_REF_CTOR = typeof( ServiceReferenceInfo<> ).LoadConstructorOrThrow( 1 );
       private static MethodInfo ENUMERABLE_CAST_METHOD = typeof( Enumerable ).LoadMethodGDefinitionOrThrow( "Cast" );
 
       #region InjectionFunctionality Members
@@ -48,11 +47,11 @@ namespace Qi4CS.Core.Runtime.Model
             {
                retVal = new ValidationResult( false, "Qualifier type " + qType + " must implement " + typeof( ServiceQualifier ) + "." );
             }
-            else if ( qType.ContainsGenericParameters )
+            else if ( qType.ContainsGenericParameters() )
             {
                retVal = new ValidationResult( false, "Qualifier type " + qType + " must not contain open generic parameters." );
             }
-            else if ( !qType.GetConstructors( BindingFlags.Public | BindingFlags.Instance ).Any( ctor => ctor.GetParameters().Length == 0 ) )
+            else if ( !qType.GetAllInstanceConstructors().Any( ctor => ctor.IsPublic && ctor.GetParameters().Length == 0 ) )
             {
                retVal = new ValidationResult( false, "Qualifier type " + qType + "must contain parameterless constructor." );
             }
@@ -91,13 +90,13 @@ namespace Qi4CS.Core.Runtime.Model
          }
          else
          {
-            if ( targetType.IsGenericType )
+            if ( targetType.IsGenericType() )
             {
                var gArgs = targetType.GetGenericArguments();
                if ( Object.Equals( typeof( IEnumerable<> ), targetType.GetGenericTypeDefinition() ) )
                {
                   var enumerableType = gArgs[0];
-                  if ( enumerableType.IsGenericType
+                  if ( enumerableType.IsGenericType()
                      && Object.Equals( typeof( ServiceReferenceInfo<> ), enumerableType.GetGenericTypeDefinition() )
                      )
                   {
@@ -131,11 +130,11 @@ namespace Qi4CS.Core.Runtime.Model
       public static Type GetActualServiceType( Type serviceType )
       {
          Type actualServiceType = serviceType;
-         if ( actualServiceType.IsGenericType && Object.Equals( typeof( IEnumerable<> ), actualServiceType.GetGenericTypeDefinition() ) )
+         if ( actualServiceType.IsGenericType() && Object.Equals( typeof( IEnumerable<> ), actualServiceType.GetGenericTypeDefinition() ) )
          {
             actualServiceType = actualServiceType.GetGenericArguments()[0];
          }
-         if ( actualServiceType.IsGenericType && Object.Equals( typeof( ServiceReferenceInfo<> ), actualServiceType.GetGenericTypeDefinition() ) )
+         if ( actualServiceType.IsGenericType() && Object.Equals( typeof( ServiceReferenceInfo<> ), actualServiceType.GetGenericTypeDefinition() ) )
          {
             actualServiceType = actualServiceType.GetGenericArguments()[0];
          }
@@ -145,8 +144,10 @@ namespace Qi4CS.Core.Runtime.Model
 
       private static Object MakeRefToInfo( ServiceReference sRef, Type sType )
       {
-         return ( (ConstructorInfo) MethodBase.GetMethodFromHandle( SERVICE_REF_CTOR.MethodHandle, SERVICE_REF_CTOR.DeclaringType.MakeGenericType( sType ).TypeHandle ) )
-            .Invoke( new Object[] { sRef } );
+         return typeof(ServiceReferenceInfo<>)
+            .MakeGenericType(sType)
+            .LoadConstructorOrThrow(1)
+            .Invoke(new Object[] { sRef });
       }
 
       private static IEnumerable<Tuple<Attribute, ServiceQualifierAttribute>> GetQualifierTypes( AbstractInjectableModel model )

@@ -23,6 +23,7 @@ using CommonUtils;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Model;
+using System.Reflection;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -130,7 +131,7 @@ namespace Qi4CS.Core.Runtime.Model
             var processedTypes = new HashSet<ThisTypeInfo>( GDEF_EQ_COMPARER );
             foreach ( var thisType in thisTypesToProcess )
             {
-               if ( this.ModifyTypeBindingInfoDictionary( privateComposites, this.NewTypeBindingInformation( null, collectionsFactory, compositeModel, null, thisType.resolvedTargetTypeFromModel, thisType.resolvedTargetType, GetBottommostDeclaringType( compositeModel, thisType.model ), privateComposites ) ) )
+               if ( this.ModifyTypeBindingInfoDictionary( privateComposites, this.NewTypeBindingInformation( null, collectionsFactory, compositeModel, null, thisType.resolvedTargetTypeFromModel, thisType.resolvedTargetType, GetBottommostDeclaringType( thisType.model ), privateComposites ) ) )
                {
                   processedTypes.Add( thisType );
                }
@@ -153,10 +154,10 @@ namespace Qi4CS.Core.Runtime.Model
          foreach ( var fragmentType in compositeModel.GetAllFragmentTypes() )
          {
             // TODO check - if any parent is public or private composite type (genericdefifgenerictype), error
-            if ( fragmentType.IsGenericType )
+            if ( fragmentType.IsGenericType() )
             {
                var it = FindImplementingTypeFrom( fragmentType, compositeModel.PublicTypes );
-               if ( it != null || !fragmentType.ContainsGenericParameters )
+               if ( it != null || !fragmentType.ContainsGenericParameters() )
                {
                   this.ModifyTypeBindingInfoDictionary( fragmentTypeInfos, this.NewTypeBindingInformation( vResult, collectionsFactory, compositeModel, null, fragmentType, fragmentType, fragmentType, privateComposites ) );
                }
@@ -256,7 +257,7 @@ namespace Qi4CS.Core.Runtime.Model
       private static IEnumerable<Type> GetCompositeModelPublicTypeGenericArguments( CompositeModel model )
       {
          return model.PublicTypes
-            .Where( pType => pType.ContainsGenericParameters )
+            .Where( pType => pType.ContainsGenericParameters() )
             .SelectMany( pType => pType.GetGenericArguments() );
       }
 
@@ -304,7 +305,7 @@ namespace Qi4CS.Core.Runtime.Model
          foreach ( var model in invocationTypes )
          {
             var actualType = model.TargetType;
-            this.ModifyTypeBindingInfoDictionary( invocationInfos, this.NewTypeBindingInformation( vResult, collectionsFactory, compositeModel, model, actualType, actualType, GetBottommostDeclaringType( compositeModel, model ), privateComposites ) );
+            this.ModifyTypeBindingInfoDictionary( invocationInfos, this.NewTypeBindingInformation( vResult, collectionsFactory, compositeModel, model, actualType, actualType, GetBottommostDeclaringType( model ), privateComposites ) );
          }
 
          return invocationInfos;
@@ -408,7 +409,7 @@ namespace Qi4CS.Core.Runtime.Model
                               retyrn2 = true;
                            }
                         }
-                        else if ( current.IsGenericType )
+                        else if ( current.IsGenericType() )
                         {
                            foreach ( var ig in current.GetGenericArguments() )
                            {
@@ -453,7 +454,7 @@ namespace Qi4CS.Core.Runtime.Model
          IDictionary<Type, TypeBindingInformationState> privateComposites
          )
       {
-         var result = !memberType.IsGenericType;
+         var result = !memberType.IsGenericType();
          if ( !result )
          {
             result = !memberType.IsGenericParameter;
@@ -472,7 +473,7 @@ namespace Qi4CS.Core.Runtime.Model
                }
                else
                {
-                  result = !memberType.ContainsGenericParameters;
+                  result = !memberType.ContainsGenericParameters();
                   if ( result )
                   {
                      result = this.ProcessGenericTypeBindingFromPublicComposite( compositeModel, collectionsFactory, Tuple.Create<Type, Type>( memberTypeDeclaringType, null ), memberType, out list );
@@ -523,7 +524,11 @@ namespace Qi4CS.Core.Runtime.Model
          Boolean result = false;
          if ( gArg.IsGenericParameter )
          {
-            result = gArg.DeclaringMethod == null && gArg.GenericParameterPosition == position;
+            result = gArg
+#if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+.DeclaringMethod == null && gArg.GenericParameterPosition == position;
          }
          else
          {
@@ -560,16 +565,26 @@ namespace Qi4CS.Core.Runtime.Model
          return allBindingsOK ? state : null;
       }
 
-      private static Type GetBottommostDeclaringType( CompositeModel cModel, AbstractInjectableModel iModel )
+      private static Type GetBottommostDeclaringType( AbstractInjectableModel iModel )
       {
-         if ( iModel is ParameterModel )
-         {
-            return ( (ParameterModel) iModel ).NativeInfo.Member.ReflectedType;
-         }
-         else
-         {
-            return cModel.GetAllFragmentTypes().First( f => f.GetClassHierarchy().Contains( iModel.DeclaringType ) );
-         }
+         var useWholeHierarchy = iModel is ParameterModel;
+         //if (!useFragments)
+         //{
+         //   var owner = ((ParameterModel)iModel).Owner ;
+         //   useFragments = owner is SpecialMethodModel || owner is ConstructorModel;
+         //}
+
+         //return (useFragments ?
+         //   iModel.CompositeModel.GetAllFragmentTypes() :
+         //   iModel.CompositeModel.GetAllCompositeTypes() )
+         //   .First( f => f.GetClassHierarchy().Contains( iModel.DeclaringType ) );
+
+         return iModel.CompositeModel
+            .GetAllFragmentTypes()
+            .First( f =>
+               ( useWholeHierarchy ? f.GetAllParentTypes() : f.GetClassHierarchy() )
+               .Contains( iModel.DeclaringType )
+               );
       }
 
       #endregion

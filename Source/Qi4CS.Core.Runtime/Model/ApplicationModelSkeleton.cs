@@ -99,7 +99,7 @@ namespace Qi4CS.Core.Runtime.Model
                      .Concat( tModel.Value.FragmentTypeInfos.Keys )
                      .Concat( tModel.Value.ConcernInvocationTypeInfos.Keys )
                      .Concat( tModel.Value.SideEffectInvocationTypeInfos.Keys ) )
-                     .Select( type => type.Assembly )
+                     .Select( type => type.GetAssembly() )
             ) ).CQ
          , System.Threading.LazyThreadSafetyMode.ExecutionAndPublication );
       }

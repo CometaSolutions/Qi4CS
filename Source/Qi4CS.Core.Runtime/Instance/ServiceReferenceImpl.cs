@@ -49,7 +49,7 @@ namespace Qi4CS.Core.Runtime.Instance
       public Object GetServiceWithType( Type otherType )
       {
          var typeToSearch = otherType;
-         if ( typeToSearch.IsGenericType )
+         if ( typeToSearch.IsGenericType() )
          {
             typeToSearch = typeToSearch.GetGenericTypeDefinition();
          }

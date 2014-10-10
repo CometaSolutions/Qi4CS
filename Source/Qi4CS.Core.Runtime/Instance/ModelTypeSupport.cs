@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using CommonUtils;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.Runtime.Common;
@@ -82,13 +83,19 @@ namespace Qi4CS.Core.Runtime.Instance
       public virtual Boolean TryGetInstanceFromCompositeOrFragment( Object composite, out CompositeInstance instance )
       {
          var cType = composite.GetType();
-
-         var result = cType.Assembly.GetCustomAttributes( true ).OfType<Qi4CSGeneratedAssemblyAttribute>().Any();
+         var codeGenInfo = this._modelScopeSupport.CodeGenerationInfo;
+         var result = cType.GetAssembly().GetCustomAttributes( ).OfType<Qi4CSGeneratedAssemblyAttribute>().Any();
          if ( result )
          {
-            var field = composite.GetType().GetField( this._modelScopeSupport.CodeGenerationInfo.CompositeInstanceFieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly );
+            var field = composite.GetType()
+#if WINDOWS_PHONE_APP
+.GetTypeInfo().GetDeclaredField(codeGenInfo.CompositeInstanceFieldName)
+#else
+               .GetField( codeGenInfo.CompositeInstanceFieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly )
+#endif
+;
             result = field != null;
-            if ( result && this._modelScopeSupport.CodeGenerationInfo.CompositeInstanceFieldType.IsAssignableFrom( field.FieldType ) )
+            if (result && codeGenInfo.CompositeInstanceFieldType.IsAssignableFrom(field.FieldType))
             {
                instance = (CompositeInstance) field.GetValue( composite );
             }
@@ -126,7 +133,7 @@ namespace Qi4CS.Core.Runtime.Instance
       public static void ThrowIfGenericParams( Type compositeType )
       {
          ArgumentValidator.ValidateNotNull( "Composite type", compositeType );
-         if ( compositeType.ContainsGenericParameters )
+         if ( compositeType.ContainsGenericParameters() )
          {
             throw new InvalidCompositeTypeException( compositeType.Singleton(), "Not all generic parameters are closed." );
          }
@@ -145,7 +152,7 @@ namespace Qi4CS.Core.Runtime.Instance
          var violatingTypes = compositeTypes.Where( type =>
          {
             ArgumentValidator.ValidateNotNull( "Composite type", type );
-            return type.ContainsGenericParameters;
+            return type.ContainsGenericParameters();
          } );
 
          if ( violatingTypes.Any() )

@@ -469,7 +469,7 @@ namespace Qi4CS.Core.Runtime.Instance
          Int32 result = -1;
          if ( this._constructorsForFragments.TryGetValue( fragmentType, out infos ) && infos.Count > 0 )
          {
-            FragmentConstructorInfo ctorWithoutParams = infos.FirstOrDefault( ctor => !ctor.Model.Parameters.Any() && ctor.RuntimeInfo.DeclaringType.Equals( fragmentType.BaseType ) );
+            FragmentConstructorInfo ctorWithoutParams = infos.FirstOrDefault( ctor => !ctor.Model.Parameters.Any() && ctor.RuntimeInfo.DeclaringType.Equals( fragmentType.GetBaseType() ) );
             Type[] types = this._usesContainer.ContainedTypes.ToArray();
             if ( types.Any() )
             {
@@ -527,6 +527,7 @@ namespace Qi4CS.Core.Runtime.Instance
          } );
       }
 
+#if !WINDOWS_PHONE_APP
       public DictionaryQuery<MethodInfo, CompositeMethodModel> MethodToModelMapping
       {
          get
@@ -534,6 +535,7 @@ namespace Qi4CS.Core.Runtime.Instance
             return this._methodsToModels.Value;
          }
       }
+#endif
 
       private void RunPrototypeAction( MethodInfo compositeMethod, AbstractFragmentMethodModel nextMethod )
       {
@@ -635,7 +637,7 @@ namespace Qi4CS.Core.Runtime.Instance
             {
                genType = genType.MakeGenericType( gArgs );
             }
-            else if ( genType.ContainsGenericParameters )
+            else if ( genType.ContainsGenericParameters() )
             {
                throw new InternalException( "Could not find generic arguments for " + genResult.DeclaredType + "." );
             }

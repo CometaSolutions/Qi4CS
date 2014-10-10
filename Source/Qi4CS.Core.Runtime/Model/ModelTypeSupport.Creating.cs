@@ -1686,7 +1686,26 @@ public static partial class E_Qi4CS
 ;
    }
 
+   internal static System.Reflection.Assembly GetAssembly( this Type type )
+   {
+      return type
 #if WINDOWS_PHONE_APP
+.GetTypeInfo()
+#endif
+.Assembly;
+   }
+
+#if WINDOWS_PHONE_APP
+
+   internal static Type GetType(this Assembly assembly, String typeName, Boolean throwOnError)
+   {
+      var retVal = assembly.GetType(typeName);
+      if ( throwOnError && retVal == null)
+      {
+         throw new TypeLoadException("Can't fine type " + typeName + " from " + assembly + ".");
+      }
+      return retVal;
+   }
 
    internal static IEnumerable<Object> GetCustomAttributes(this Type type, Boolean inherit)
    {
@@ -1752,6 +1771,20 @@ public static partial class E_Qi4CS
    internal static IEnumerable<Type> GetInterfaces(this Type type)
    {
       return type.GetTypeInfo().ImplementedInterfaces;
+   }
+
+   internal static ConstructorInfo GetConstructor(this Type type, Type[] ctorParamTypes)
+   {
+      return type.GetAllInstanceConstructors()
+         .FirstOrDefault(c => SequenceEqualityComparer<IEnumerable<Type>, Type>.DefaultSequenceEqualityComparer.Equals(
+            ctorParamTypes,
+            c.GetParameters().Select(p => p.ParameterType))
+            );
+   }
+#else
+   internal static Object[] GetCustomAttributes( this Assembly assembly )
+   {
+      return assembly.GetCustomAttributes( true );
    }
 #endif
 }

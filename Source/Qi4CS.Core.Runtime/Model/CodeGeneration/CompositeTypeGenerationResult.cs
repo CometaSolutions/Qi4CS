@@ -135,7 +135,7 @@ namespace Qi4CS.Core.Runtime.Model
             .GetAllCompositeTypes()
             .Concat( cModel.GetAllFragmentTypes() )
             //.OrderBy( t => t, orderer )
-            .Where( t => cModel.ApplicationModel.AffectedAssemblies.Contains( t.Assembly ) )
+            .Where( t => cModel.ApplicationModel.AffectedAssemblies.Contains( t.GetAssembly() ) )
             .OrderBy( t => t.Equals( cModel.MainCodeGenerationType ) ? 0 : 1 ) // Populate main code generation type first
             .Select( t => GetGeneratedPublicType( t, cModel, codeGenerationInfo, assDic ) )
             .Distinct()
@@ -147,7 +147,13 @@ namespace Qi4CS.Core.Runtime.Model
             throw new ArgumentException( ( mainTypes.Any() ? "Too many" : "Too little" ) + " generated main types (" + String.Join( ", ", mainTypes ) + "), exactly one allowed." );
          }
          var mainType = mainTypes.First();
-         this._compositeFactory = (CompositeFactory) mainType.Assembly.GetType( mainType.Name + codeGenerationInfo.CompositeFactorySuffix, true ).GetConstructors()[0].Invoke( null );
+         this._compositeFactory = (CompositeFactory) mainType.GetAssembly().GetType( mainType.Name + codeGenerationInfo.CompositeFactorySuffix, true )
+#if WINDOWS_PHONE_APP
+            .GetAllInstanceConstructors().First()
+#else
+            .GetConstructors()[0]
+#endif
+            .Invoke(null);
 
          var fragmentTypeGenerationResults = tModel.FragmentTypeInfos.Keys
             //.OrderBy( t => t, orderer )
@@ -181,7 +187,13 @@ namespace Qi4CS.Core.Runtime.Model
             .ToDictionary( grouping => grouping.Key, grouping => collectionsFactory.NewListProxy( grouping.Select( tuple => tuple.Item2 ).ToList() ).CQ ) );
 
          this._generatedPublicMainType = mainType;
-         this._maxParamCountForCtors = mainType.GetConstructors( BindingFlags.Instance | BindingFlags.Public )[0].GetParameters().Length;
+         this._maxParamCountForCtors = mainType
+#if WINDOWS_PHONE_APP
+            .GetAllInstanceConstructors().First()
+#else
+            .GetConstructors( BindingFlags.Instance | BindingFlags.Public )[0]
+#endif
+            .GetParameters().Length;
 
          this._generatedPublicTypes = collectionsFactory.NewListProxy( publicTypes.Select(
             pt => (GeneratedTypeInfo) new GeneratedTypeInfoImpl( pt ) )
@@ -199,8 +211,16 @@ namespace Qi4CS.Core.Runtime.Model
       protected static Type GetGeneratedPublicType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, IDictionary<Assembly, Assembly> assDic )
       {
          return assDic.GetOrAdd_NotThreadSafe(
-            type.Assembly,
-            a => Types.QI4CS_ASSEMBLY.Equals( a ) ? assDic[model.MainCodeGenerationType.Assembly] : Assembly.Load( Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( a ) )
+            type.GetAssembly(),
+            a => Types.QI4CS_ASSEMBLY.Equals( a ) ? assDic[model.MainCodeGenerationType.GetAssembly()] : Assembly.Load(
+#if WINDOWS_PHONE_APP
+               new AssemblyName(
+#endif
+               Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( a )
+#if WINDOWS_PHONE_APP
+               )
+#endif
+               )
             ).GetType(
             codeGenerationInfo.PublicCompositePrefix + model.CompositeModelID,
             true
@@ -210,9 +230,13 @@ namespace Qi4CS.Core.Runtime.Model
       protected static Type GetParticipantType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, IDictionary<Assembly, Assembly> assDic, String prefix, Boolean useBaseType = false )
       {
          return GetGeneratedPublicType( type, model, codeGenerationInfo, assDic )
+#if WINDOWS_PHONE_APP
+            .GetTypeInfo().DeclaredNestedTypes.Select(t => t.AsType())
+#else
             .GetNestedTypes( BindingFlags.Public | BindingFlags.NonPublic )
+#endif
             .FirstOrDefault( tt => tt.Name.StartsWith( prefix )
-               && ( useBaseType ? tt.BaseType.GetGenericDefinitionIfContainsGenericParameters().Equals( type ) : tt.GetAllParentTypes().Any( ttt => ttt.GetGenericDefinitionIfContainsGenericParameters().Equals( type ) ) )
+               && ( useBaseType ? tt.GetBaseType().GetGenericDefinitionIfContainsGenericParameters().Equals( type ) : tt.GetAllParentTypes().Any( ttt => ttt.GetGenericDefinitionIfContainsGenericParameters().Equals( type ) ) )
             //&& !TypeUtil.TypesOf( tt ).Except( new Type[] { tt, type } ).Any( ttt => TypeUtil.IsAssignableFrom( TypeUtil.GenericDefinitionIfContainsGenericParams( type ), ttt ) )
                );
       }

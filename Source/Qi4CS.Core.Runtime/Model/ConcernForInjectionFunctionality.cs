@@ -31,7 +31,7 @@ namespace Qi4CS.Core.Runtime.Model
       public ValidationResult InjectionPossible( SPI.Model.AbstractInjectableModel model )
       {
          var targetType = model.TargetType;
-         if ( targetType.ContainsGenericParameters && targetType.IsGenericType )
+         if ( targetType.ContainsGenericParameters() && targetType.IsGenericType() )
          {
             targetType = targetType.GetGenericTypeDefinition();
          }

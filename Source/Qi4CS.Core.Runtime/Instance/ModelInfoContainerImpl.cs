@@ -118,7 +118,7 @@ namespace Qi4CS.Core.Runtime.Instance
          )
       {
          CompositeModelInfo result = null;
-         CompositeModelInfo[] modelInfos = set.Where( kvp => types.All( type => kvp.Model.PublicTypes.Any( pType => type.IsAssignableFrom( pType ) || ( type.IsGenericType && pType.Equals( type.GetGenericTypeDefinition() ) ) ) ) ).Select( kvp => kvp ).ToArray();
+         CompositeModelInfo[] modelInfos = set.Where( kvp => types.All( type => kvp.Model.PublicTypes.Any( pType => type.IsAssignableFrom( pType ) || ( type.IsGenericType() && pType.Equals( type.GetGenericTypeDefinition() ) ) ) ) ).Select( kvp => kvp ).ToArray();
          if ( modelInfos.Length > 0 )
          {
             if ( modelInfos.Length == 1 )

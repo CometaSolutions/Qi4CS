@@ -30,21 +30,19 @@ namespace Qi4CS.Core.Runtime.Model
 
       public ValidationResult InjectionPossible( SPI.Model.AbstractInjectableModel model )
       {
-         var targetType = model.TargetType;
-         if ( targetType.IsGenericType )
-         {
-            targetType = targetType.GetGenericTypeDefinition();
-         }
-         Type[] thisTypes = this.GetThisTypesToCheck( model.CompositeModel, targetType );
+         var targetType = model.TargetType.GetGenericDefinitionIfContainsGenericParameters();
+
          return new ValidationResult(
-            thisTypes.All( thisType => model.CompositeModel.Methods.Select( cMethod => cMethod.NativeInfo.ReflectedType ).Any( type => thisType.IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( type ) ) ),
+            model.CompositeModel.GetAllCompositeTypes().Any( c => targetType.IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( c) ),
             "Injection target must be composite type"
             );
       }
 
       public Object ProvideInjection( CompositeInstance instance, AbstractInjectableModel model, Type targetType )
       {
-         return instance.Composites.Values.Where( composite => targetType.IsAssignableFrom( composite.GetType() ) ).FirstOrDefault();
+         Object retVal;
+         instance.Composites.TryGetValue(targetType, out retVal);
+         return retVal;
       }
 
       public InjectionTime GetInjectionTime( AbstractInjectableModel model )
@@ -53,27 +51,5 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       #endregion
-
-      protected virtual Type[] GetThisTypesToCheck( CompositeModel compositeModel, Type targetType )
-      {
-         var types = targetType.GetAllParentTypes().ToArray();
-         Type[] result;
-         if ( types.SelectMany( type => type.GetMethods() ).Any() )
-         {
-            result = Empty<Type>.Array;
-         }
-         else
-         {
-            if ( !targetType.GetMethods().Any() )
-            {
-               result = types.Where( tType => tType.GetMethods().Any() ).GetBottomTypes();
-            }
-            else
-            {
-               result = new Type[] { targetType };
-            }
-         }
-         return result;
-      }
    }
 }
