@@ -16,6 +16,7 @@
  * limitations under the License. 
  */
 using System;
+using System.Reflection;
 using Qi4CS.Extensions.Configuration.Instance;
 
 namespace Qi4CS.Extensions.Configuration.Assembling
@@ -58,7 +59,11 @@ namespace Qi4CS.Extensions.Configuration.Assembling
       {
          if ( serializer != null )
          {
-            if ( !typeof( ConfigurationSerializer ).IsAssignableFrom( serializer ) )
+            if ( !typeof( ConfigurationSerializer )
+#if WINDOWS_PHONE_APP
+               .GetTypeInfo()
+#endif
+.IsAssignableFrom( serializer ) )
             {
                throw new ArgumentException( "Serializer type must be assignable from " + typeof( ConfigurationSerializer ) );
             }
