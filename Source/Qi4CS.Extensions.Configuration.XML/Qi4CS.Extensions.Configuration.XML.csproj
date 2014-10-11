@@ -71,7 +71,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
+    <OutputPath>..\..\Output\Debug\WP\Normal\</OutputPath>
     <DefineConstants>TRACE;DEBUG;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -79,7 +79,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
-    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
+    <OutputPath>..\..\Output\Release\WP\Normal\</OutputPath>
     <DefineConstants>TRACE;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
