@@ -464,7 +464,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
             actualPath,
-            IsSL5( targetFWID ),
+            IsSilverlight( targetFWID ),
             ( nAss, gAss ) =>
             {
                Tuple<StrongNameKeyPair, AssemblyHashAlgorithm> snTuple;
@@ -589,9 +589,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return binPath;
       }
 
-      private static Boolean IsSL5( String targetFW )
+      private static Boolean IsSilverlight( String targetFW )
       {
-         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
+         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase ) ||
+            "WindowsPhone".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
       }
 
       private static void Verify( String winSDKBinDir, String fileName, Boolean verifyStrongName )

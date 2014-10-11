@@ -336,6 +336,12 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly ConstructorInfo COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE;
       protected static readonly ConstructorInfo SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE;
       protected static readonly ConstructorInfo CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE;
+      protected static readonly MethodInfo DOUBLE_BITS_TO_INT64_NATIVE;
+      protected static readonly MethodInfo INT64_BITS_TO_DOUBLE_NATIVE;
+      protected static readonly MethodInfo GET_BYTES_INT32_NATIVE;
+      protected static readonly MethodInfo GET_BYTES_SINGLE_NATIVE;
+      protected static readonly MethodInfo BYTES_TO_INT32_NATIVE;
+      protected static readonly MethodInfo BYTES_TO_SINGLE_NATIVE;
       //protected static readonly MethodInfo CONVERT_I64_DOUBLE_NATIVE;
       //protected static readonly MethodInfo CONVERT_DOUBLE_I64_NATIVE;
       //protected static readonly MethodInfo CONVERT_I32_SINGLE_NATIVE;
@@ -505,7 +511,12 @@ namespace Qi4CS.Core.Runtime.Model
          COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( CompositeMethodModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } );
          SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( SpecialMethodModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } ); ;
          CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE = typeof( ConstructorModelIndexAttribute ).LoadConstructorOrThrow( new[] { typeof( Int32 ) } ); ;
-
+         DOUBLE_BITS_TO_INT64_NATIVE = typeof( BitConverter ).LoadMethodOrThrow( "DoubleToInt64Bits", null );
+         INT64_BITS_TO_DOUBLE_NATIVE = typeof( BitConverter ).LoadMethodOrThrow( "Int64BitsToDouble", null );
+         GET_BYTES_INT32_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "GetBytes", new[] { typeof( Int32 ) } );
+         GET_BYTES_SINGLE_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "GetBytes", new[] { typeof( Single ) } );
+         BYTES_TO_INT32_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "ToInt32", new[] { typeof( Byte[] ), typeof( Int32 ) } );
+         BYTES_TO_SINGLE_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "ToSingle", new[] { typeof( Byte[] ), typeof( Int32 ) } );
          //CONVERT_I64_DOUBLE_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToDouble", new[] { typeof( Int64 ) } );
          //CONVERT_DOUBLE_I64_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToInt64", new[] { typeof( Double ) } );
          //CONVERT_I32_SINGLE_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToSingle", new[] { typeof( Int32 ) } );

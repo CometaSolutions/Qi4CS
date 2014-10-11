@@ -225,6 +225,12 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILConstructor SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE;
       protected readonly CILConstructor CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE;
       protected readonly CILConstructor FIELD_MODEL_INDEX_ATTRIBUTE;
+      protected readonly CILMethod DOUBLE_BITS_TO_INT64;
+      protected readonly CILMethod INT64_BITS_TO_DOUBLE;
+      protected readonly CILMethod GET_BYTES_INT32;
+      protected readonly CILMethod GET_BYTES_SINGLE;
+      protected readonly CILMethod BYTES_TO_INT32;
+      protected readonly CILMethod BYTES_TO_SINGLE;
 
       protected readonly CILReflectionContext ctx;
       protected readonly Boolean isSilverLight;
@@ -434,6 +440,12 @@ namespace Qi4CS.Core.Runtime.Model
          this.COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE = COMPOSITE_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
          this.SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE = SPECIAL_METHOD_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
          this.CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE = CONSTRUCTOR_MODEL_INDEX_ATTRIBUTE_NATIVE.NewWrapper( ctx );
+         this.DOUBLE_BITS_TO_INT64 = DOUBLE_BITS_TO_INT64_NATIVE.NewWrapper( ctx );
+         this.INT64_BITS_TO_DOUBLE = INT64_BITS_TO_DOUBLE_NATIVE.NewWrapper( ctx );
+         this.GET_BYTES_INT32 = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
+         this.GET_BYTES_SINGLE = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
+         this.BYTES_TO_INT32 = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
+         this.BYTES_TO_SINGLE = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
       }
    }
 }

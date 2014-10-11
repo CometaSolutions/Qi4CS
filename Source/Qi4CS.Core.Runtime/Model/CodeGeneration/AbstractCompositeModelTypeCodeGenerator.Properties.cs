@@ -355,10 +355,10 @@ namespace Qi4CS.Core.Runtime.Model
                   // TODO if value type => maybe use placeholder class? (Like System.Lazy<T> does)
                   fieldType = OBJECT_TYPE;
                }
-               // WP8 doesn't have IntPtr or Object Interlocked.Exchange methods
+               // SL doesn't have IntPtr or Object Interlocked.Exchange methods
                iExchangeMethod = ( this.isSilverLight || ( !isIntPtr && !isObject ) ) ? INTERLOCKED_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) :
                   ( isIntPtr ? INTERLOCKED_EXCHANGE_INT_PTR_METHOD : INTERLOCKED_EXCHANGE_OBJECT_METHOD );
-               // WP8 doesn't have IntPtr Interlocked.CompareExchange method (but oddly enough has the Object variation)
+               // SL doesn't have IntPtr Interlocked.CompareExchange method (but oddly enough has the Object variation)
                iCompareExchangeMethod = isObject ? INTERLOCKED_COMPARE_EXCHANGE_OBJECT_METHOD :
                   ( ( this.isSilverLight || !isIntPtr ) ? INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF.MakeGenericMethod( fieldType ) : INTERLOCKED_COMPARE_EXCHANGE_INT_PTR_METHOD );
                fieldToPropertyCast = ( fType, pType, il ) => il.EmitCastToType( fType, pType );
@@ -374,7 +374,7 @@ namespace Qi4CS.Core.Runtime.Model
                fieldType = INT32_TYPE;
                iExchangeMethod = INTERLOCKED_EXCHANGE_I32_METHOD;
                iCompareExchangeMethod = INTERLOCKED_COMPARE_EXCHANGE_I32_METHOD;
-               fieldToPropertyCast = ( fType, pType, il ) => { il.EmitLoadInt32( 0 ); il.EmitCeq(); il.EmitLoadInt32( 0 ); il.EmitCeq(); };
+               fieldToPropertyCast = ( fType, pType, il ) => il.EmitLoadInt32( 0 ).EmitCeq().EmitLoadInt32( 0 ).EmitCeq();
                propertyToFieldCast = ( fType, pType, il ) => { var isTrueLabelWrapper = il.DefineLabel(); var afterConversionLabelWrapper = il.DefineLabel(); il.EmitBranch( BranchType.IF_TRUE, isTrueLabelWrapper ); il.EmitLoadInt32( 0 ); il.EmitBranch( BranchType.ALWAYS, afterConversionLabelWrapper ); il.MarkLabel( isTrueLabelWrapper ); il.EmitLoadInt32( 1 ); il.MarkLabel( afterConversionLabelWrapper ); };
                break;
             case CILTypeCode.Byte:
@@ -394,7 +394,8 @@ namespace Qi4CS.Core.Runtime.Model
                fieldType = this.isSilverLight ? INT64_TYPE : DOUBLE_TYPE;
                if ( this.isSilverLight )
                {
-                  // TODO. 'Cast' Double to int64 by getting same bits via CLR method.
+                  fieldToPropertyCast = ( fType, pType, il ) => il.EmitCall( INT64_BITS_TO_DOUBLE );
+                  propertyToFieldCast = ( fType, pType, il ) => il.EmitCall( DOUBLE_BITS_TO_INT64 );
                }
                break;
             case CILTypeCode.Single:
@@ -403,7 +404,11 @@ namespace Qi4CS.Core.Runtime.Model
                fieldType = this.isSilverLight ? INT32_TYPE : SINGLE_TYPE;
                if ( this.isSilverLight )
                {
-                  // TODO. 'Cast' Single to int32 by using BitConverter method (slow).
+                  // TODO this is slow
+                  // Field to property -> BitConverter.ToInt32(BitConverter.GetBytes(<field>), 0);
+                  // Property to field -> BitConverter.ToSingle(BitConverter.GetBytes(<property>), 0);
+                  fieldToPropertyCast = ( fType, pType, il ) => il.EmitCall( GET_BYTES_INT32 ).EmitLoadInt32( 0 ).EmitCall( BYTES_TO_SINGLE );
+                  propertyToFieldCast = ( fType, pType, il ) => il.EmitCall( GET_BYTES_SINGLE ).EmitLoadInt32( 0 ).EmitCall( BYTES_TO_INT32 );
                }
                break;
             default:
