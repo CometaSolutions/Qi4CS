@@ -26,16 +26,16 @@ using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 
 #if SILVERLIGHT
-using System.Linq;
+using System.Runtime.CompilerServices;
 #endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
 #if SILVERLIGHT
-   public class ThreadLocal<T>
+   // TODO maybe move this class to UtilPack ?
+   public sealed class ThreadLocal<T>
    {
-      // TODO cleanup e.g. on every 100th access time...
-
+      // Helper class to hold values, so T typeparam wouldn't have any generic constraints.
       private class ValueHolder
       {
          internal T _value;
@@ -45,9 +45,18 @@ namespace Qi4CS.Core.Runtime.Instance
          }
       }
 
-      // kvp because struct
-      private KeyValuePair<WeakReference, ValueHolder>[] _values;
+      // Table holding all instances of ThreadLocals in this thread. Since they are weak references, they should get GC'd without big issues.
+      [ThreadStatic]
+      private static ConditionalWeakTable<ThreadLocal<T>, ValueHolder> _table;
+
+      // Factory callback
       private readonly Func<T> _factory;
+
+      public ThreadLocal()
+         : this( () => default( T ) )
+      {
+
+      }
 
       public ThreadLocal( Func<T> factory )
       {
@@ -55,45 +64,30 @@ namespace Qi4CS.Core.Runtime.Instance
          this._factory = factory;
       }
 
-      private ValueHolder GetValueHolder()
-      {
-         var curThread = Thread.CurrentThread;
-         var result = this._values == null ?
-            null :
-            this._values
-               .Where( tuple => Object.ReferenceEquals( tuple.Key.Target, curThread ) )
-               .Select( tuple => tuple.Value )
-               .FirstOrDefault();
-         if ( result == null )
-         {
-            var current = this._values;
-            var curThreadW = new WeakReference( curThread );
-            result = new ValueHolder( this._factory() );
-            KeyValuePair<WeakReference, ValueHolder>[] oldCurrent;
-            IList<KeyValuePair<WeakReference, ValueHolder>> newValue;
-
-            do
-            {
-               oldCurrent = current;
-               newValue = current == null ?
-                  new List<KeyValuePair<WeakReference, ValueHolder>>() :
-                  current.Where( tuple => tuple.Key.IsAlive ).ToList();
-               newValue.Add( new KeyValuePair<WeakReference, ValueHolder>( curThreadW, result ) );
-               current = Interlocked.CompareExchange( ref this._values, newValue.ToArray(), oldCurrent );
-            } while ( current != oldCurrent );
-         }
-         return result;
-      }
-
       public T Value
       {
          get
          {
-            return this.GetValueHolder()._value;
+            ValueHolder holder;
+            T retVal;
+            if ( _table != null && _table.TryGetValue( this, out holder ) )
+            {
+               retVal = holder._value;
+            }
+            else
+            {
+               retVal = this._factory();
+               this.Value = retVal;
+            }
+            return retVal;
          }
          set
          {
-            this.GetValueHolder()._value = value;
+            if ( _table == null )
+            {
+               _table = new ConditionalWeakTable<ThreadLocal<T>, ValueHolder>();
+            }
+            _table.GetOrCreateValue( this )._value = value;
          }
       }
    }

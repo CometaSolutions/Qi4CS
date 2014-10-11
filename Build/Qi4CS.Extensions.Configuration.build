@@ -42,10 +42,10 @@
       <NuSpec_Summary>Qi4CS Extension: Configuration provides ways of mapping functionality from types of participants to object implementing such functionality.</NuSpec_Summary>
       <NuSpec_Tags>qi4cs extension configuration dynamic load save</NuSpec_Tags>
       <NuSpec_FilesXML><![CDATA[
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\portable-net40+win8\Qi4CS.Extensions.Configuration.dll" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\portable-net40+win8\Qi4CS.Extensions.Configuration.xml" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\wpa\Qi4CS.Extensions.Configuration.dll" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\wpa\Qi4CS.Extensions.Configuration.xml" />
+      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.dll" />
+      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.xml" />
+      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\wpa81\Qi4CS.Extensions.Configuration.dll" />
+      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\wpa81\Qi4CS.Extensions.Configuration.xml" />
       ]]></NuSpec_FilesXML>
       <NuSpec_DependenciesXML><![CDATA[
       <group>

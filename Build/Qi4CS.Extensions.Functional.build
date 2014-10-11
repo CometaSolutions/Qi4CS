@@ -42,10 +42,10 @@
       <NuSpec_Summary>Qi4CS Extension: Functional provides ways of mapping functionality from types of participants to object implementing such functionality.</NuSpec_Summary>
       <NuSpec_Tags>qi4cs extension functional map method api type</NuSpec_Tags>
       <NuSpec_FilesXML><![CDATA[
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.dll" target="lib\portable-net40+win8\Qi4CS.Extensions.Functional.dll" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.xml" target="lib\portable-net40+win8\Qi4CS.Extensions.Functional.xml" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.dll" target="lib\wpa\Qi4CS.Extensions.Functional.dll" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.xml" target="lib\wpa\Qi4CS.Extensions.Functional.xml" />
+      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.dll" />
+      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.xml" />
+      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.dll" target="lib\wpa81\Qi4CS.Extensions.Functional.dll" />
+      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.xml" target="lib\wpa81\Qi4CS.Extensions.Functional.xml" />
       ]]></NuSpec_FilesXML>
       <NuSpec_DependenciesXML><![CDATA[
       <group>
