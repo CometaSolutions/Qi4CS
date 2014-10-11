@@ -130,6 +130,7 @@
     <Compile Include="Instance\GenericEventMixin.cs" />
     <Compile Include="Instance\GenericPropertyMixin.cs" />
     <Compile Include="Instance\ModelTypeSupport.cs" />
+    <Compile Include="Instance\ReflectionHelper.cs" />
     <Compile Include="Model\AbstractServiceInjectionFunctionality.cs" />
     <Compile Include="Model\ConcernForInjectionFunctionality.cs" />
     <Compile Include="Model\InjectionServiceImpl.cs" />

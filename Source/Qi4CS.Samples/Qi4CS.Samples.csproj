@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9B07B99E-DF31-49A7-B304-7F99AF8FCCD3}</ProjectGuid>
@@ -70,6 +70,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CILAssemblyManipulator.Portable, Version=0.9.6.3, Culture=neutral, PublicKeyToken=d012532b26c40715, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Packages\CILAssemblyManipulator.Portable.0.9.6.3\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+    </Reference>
     <Reference Include="Qi4CS.Core">
       <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
     </Reference>
@@ -82,6 +86,10 @@
     <Reference Include="Qi4CS.CodeGeneration.DotNET">
       <HintPath>$(OutputPath)Qi4CS.CodeGeneration.DotNET.dll</HintPath>
     </Reference>
+    <Reference Include="UtilPack, Version=0.9.6.1, Culture=neutral, PublicKeyToken=a19296b3eb5ffc91, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Packages\UtilPack.0.9.6.1\lib\portable-net40+win\UtilPack.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -89,6 +97,9 @@
     <Compile Include="Qi4CSDocumentation\CILManipulatorCodeContent.cs" />
     <Compile Include="Qi4CSDocumentation\CodeContent.cs" />
     <Compile Include="Qi4CSDocumentation\ConceptualSamples.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

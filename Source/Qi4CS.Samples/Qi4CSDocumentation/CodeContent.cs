@@ -24,7 +24,6 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.API.Common;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.Bootstrap.Assembling;
-using CILAssemblyManipulator.API;
 using Qi4CS.Extensions.Functional.Assembling;
 using Qi4CS.Extensions.Functional.Model;
 

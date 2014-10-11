@@ -108,7 +108,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qi4CS.Core.Architectures\Qi4CS.Core.Architectures.csproj">
-      <Project>{5c2d448e-749e-4564-8bd4-7a5c5e1fbc55}</Project>
+      <Project>{EE51D59F-EA79-47A8-8531-9446E0C15DA8}</Project>
       <Name>Qi4CS.Core.Architectures</Name>
     </ProjectReference>
   </ItemGroup>

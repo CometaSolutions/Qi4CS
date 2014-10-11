@@ -235,9 +235,7 @@ namespace Qi4CS.Core.Runtime.Model
                            il2.EmitReflectionObjectOf( typeIDDic[curTypeID].Builder )
                               .EmitLoadArg( 2 )
                               .EmitCall( MAKE_GENERIC_TYPE_METHOD )
-                              .EmitCall( GET_CONSTRUCTORS_METHOD )
-                              .EmitLoadInt32( 0 )
-                              .EmitLoadElement( GET_CONSTRUCTORS_METHOD.GetReturnType().GetElementType() )
+                              .EmitCall( GET_FIRST_INSTANCE_CTOR )
                               .EmitLoadArg( 3 )
                               .EmitCall( CONSTRUCTOR_INVOKE_METHOD )
                               .EmitStoreLocal( resultB );
@@ -2480,8 +2478,7 @@ namespace Qi4CS.Core.Runtime.Model
                .EmitCastToType( ctorIndexB.LocalType, OBJECT_TYPE )
                .EmitLoadString( " was invalid for fragment type " )
                .EmitCall( STRING_CONCAT_METHOD_3 )
-               .EmitReflectionObjectOf( resolvedFragmentType )
-               .EmitCall( BASE_TYPE_GETTER )
+               .EmitReflectionObjectOf( resolvedFragmentType.BaseType )
                .EmitLoadString( "." )
                .EmitCall( STRING_CONCAT_METHOD_3 )
                .EmitThrowNewException( INTERNAL_EXCEPTION_CTOR )
@@ -3059,7 +3056,6 @@ namespace Qi4CS.Core.Runtime.Model
                      .EmitLoadArgumentForMethodCall( methodGenInfo.Parameters[0] )
                      .EmitReflectionObjectOf( propertyDeclaringType )
                      .EmitLoadString( item.Key.Name )
-                     .EmitLoadInt32( (Int32) DEFAULT_SEARCH_BINDING_FLAGS )
                      .EmitCall( GET_PROPERTY_INFO_METHOD )
                      .EmitCall( Q_NAME_FROM_MEMBER_INFO_METHOD )
                      .EmitLoadLocal( constraintExceptionB )
@@ -3126,7 +3122,6 @@ namespace Qi4CS.Core.Runtime.Model
             // 2nd param
               .EmitReflectionObjectOf( thisGenerationInfo.Parents[kvp.Key.DeclaringType.NewWrapperAsType( this.ctx )] )
               .EmitLoadString( kvp.Key.Name )
-              .EmitLoadInt32( (Int32) DEFAULT_SEARCH_BINDING_FLAGS )
               .EmitCall( GET_PROPERTY_INFO_METHOD )
 
             // 3rd param
@@ -3208,7 +3203,6 @@ namespace Qi4CS.Core.Runtime.Model
             // 2nd param
               .EmitReflectionObjectOf( thisGenerationInfo.Parents[kvp.Key.DeclaringType.NewWrapperAsType( this.ctx )] )
               .EmitLoadString( kvp.Key.Name )
-              .EmitLoadInt32( (Int32) DEFAULT_SEARCH_BINDING_FLAGS )
               .EmitCall( GET_EVENT_INFO_METHOD )
 
             // 3rd param
@@ -4212,13 +4206,14 @@ namespace Qi4CS.Core.Runtime.Model
                        else if ( nextModel.NativeInfo.IsGenericMethodDefinition )
                        {
                           var fragmentMethodGenInfo = fragmentTypeGenInfo.NormalMethodBuilders[nextModel.NativeInfo.NewWrapper( this.ctx )];
-                          // Generic method call, need to reflect, because next fragment is generic type and/or the method is generic.
+                          // Call to a generic method, need to reflect, because method generic arguments are lost in generic fragment invocation.
                           // result = type-of(<fragment generated type>).GetMethod(<name>, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly).MakeGenericMethod(<arg-2>.GetGenericArguments()).Invoke(fragmentInstance.Fragment, <arg-3>);
                           //il.EmitMethodOf( GetActualMethod<MethodInfo>( fragmentTypeGenInfo.Parents, fragmentMethodGenInfo.MethodBuilder ).MakeGenericMethod, fragmentMethodGenInfo.GBuilders );
-                          il.EmitReflectionObjectOf( actualFragmentType )
-                            .EmitLoadString( fragmentMethodGenInfo.Builder.Name )
-                            .EmitLoadInt32( (Int32) ( System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly ) )
-                            .EmitCall( GET_METHOD_METHOD )
+                          il.EmitReflectionObjectOf( methodToCall.GenericDefinition, false )
+                             // When we emit token of a generic method, the signature contains generic parameters of method, which are interpreted by runtime as generic parameters of currently executing method.
+                             // However, currently executing method is not a generic method.
+                             // Therefore, call .GetGenericMethodDefinition() before calling .MakeGenericMethod
+                            .EmitCall( GET_METHDO_GDEF )
                             .EmitLoadArg( 2 )
                             .EmitCall( METHOD_INFO_GET_GARGS_METHOD )
                             .EmitCall( MAKE_GENERIC_METHOD_METHOD )

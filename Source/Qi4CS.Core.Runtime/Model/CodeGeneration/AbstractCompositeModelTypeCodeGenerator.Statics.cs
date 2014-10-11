@@ -213,9 +213,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo METHOD_INFO_GET_GARGS_METHOD_NATIVE;
       protected static readonly MethodInfo MAKE_GENERIC_METHOD_METHOD_NATIVE;
       protected static readonly MethodInfo INVOKE_METHOD_METHOD_NATIVE;
-      protected static readonly MethodInfo GET_METHOD_METHOD_NATIVE;
+      protected static readonly MethodInfo GET_METHDO_GDEF_NATIVE;
       protected static readonly MethodInfo GET_CTOR_INDEX_METHOD_NATIVE;
-      protected static readonly MethodInfo BASE_TYPE_GETTER_NATIVE;
       protected static readonly ConstructorInfo APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE;
       protected static readonly MethodInfo GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE;
       protected static readonly MethodInfo TAKE_CONSTRAINT_INSTANCE_METHOD_NATIVE;
@@ -233,7 +232,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo HASH_CODE_METHOD_NATIVE;
       protected static readonly MethodInfo REFERENCE_EQUALS_METHOD_NATIVE;
       protected static readonly MethodInfo GET_TYPE_METHOD_NATIVE;
-      protected static readonly MethodInfo ASSEMBLY_GETTER_NATIVE;
       protected static readonly MethodInfo DELEGATE_COMBINE_METHOD_NATIVE;
       protected static readonly MethodInfo DELEGATE_REMOVE_METHOD_NATIVE;
       protected static readonly MethodInfo INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF_NATIVE;
@@ -327,7 +325,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo COMPOSITE_FACTORY_METHOD_NATIVE;
       protected static readonly ConstructorInfo ARGUMENT_EXCEPTION_STRING_CTOR_NATIVE;
       protected static readonly MethodInfo MAKE_GENERIC_TYPE_METHOD_NATIVE;
-      protected static readonly MethodInfo GET_CONSTRUCTORS_METHOD_NATIVE;
+      protected static readonly MethodInfo GET_FIRST_INSTANCE_CTOR_NATIVE;
       protected static readonly MethodInfo CONSTRUCTOR_INVOKE_METHOD_NATIVE;
       protected static readonly MethodInfo INT_PTR_SIZE_GETTER_NATIVE;
       protected static readonly MethodInfo REF_ACTION_INVOKER_NATIVE;
@@ -387,9 +385,8 @@ namespace Qi4CS.Core.Runtime.Model
          METHOD_INFO_GET_GARGS_METHOD_NATIVE = typeof( MethodBase ).LoadMethodOrThrow( "GetGenericArguments", null );
          MAKE_GENERIC_METHOD_METHOD_NATIVE = typeof( MethodInfo ).LoadMethodOrThrow( "MakeGenericMethod", null );
          INVOKE_METHOD_METHOD_NATIVE = typeof( MethodBase ).LoadMethodOrThrow( "Invoke", 2 );
-         GET_METHOD_METHOD_NATIVE = typeof( Type ).LoadMethodWithParamTypesOrThrow( "GetMethod", new Type[] { typeof( String ), typeof( BindingFlags ) } );
+         GET_METHDO_GDEF_NATIVE = typeof( MethodInfo ).LoadMethodOrThrow( "GetGenericMethodDefinition", null );
          GET_CTOR_INDEX_METHOD_NATIVE = typeof( CompositeInstanceImpl ).LoadMethodOrThrow( "GetConstructorIndex", null );
-         BASE_TYPE_GETTER_NATIVE = typeof( Type ).LoadGetterOrThrow( "BaseType" );
          APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE = typeof( ApplicationNotActiveException ).LoadConstructorOrThrow( 0 );
          GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE = typeof( ApplicationSPI ).LoadMethodOrThrow( "GetConstraintInstancePool", null );
          TAKE_CONSTRAINT_INSTANCE_METHOD_NATIVE = typeof( InstancePool<Object> ).LoadMethodOrThrow( "TryPeek", null );
@@ -407,16 +404,15 @@ namespace Qi4CS.Core.Runtime.Model
          HASH_CODE_METHOD_NATIVE = typeof( Object ).LoadMethodOrThrow( "GetHashCode", null );
          REFERENCE_EQUALS_METHOD_NATIVE = typeof( Object ).LoadMethodOrThrow( "ReferenceEquals", null );
          GET_TYPE_METHOD_NATIVE = typeof( Object ).LoadMethodOrThrow( "GetType", null );
-         ASSEMBLY_GETTER_NATIVE = typeof( Type ).LoadGetterOrThrow( "Assembly" );
          DELEGATE_COMBINE_METHOD_NATIVE = typeof( Delegate ).LoadMethodOrThrow( "Combine", 2 );
          DELEGATE_REMOVE_METHOD_NATIVE = typeof( Delegate ).LoadMethodOrThrow( "Remove", 2 );
          INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF_NATIVE = typeof( Interlocked ).LoadMethodGDefinitionOrThrow( "CompareExchange" );
-         GET_EVENT_INFO_METHOD_NATIVE = typeof( Type ).LoadMethodWithParamTypesOrThrow( "GetEvent", new[] { typeof( String ), typeof( System.Reflection.BindingFlags ) } );
+         GET_EVENT_INFO_METHOD_NATIVE = typeof( ReflectionHelper ).LoadMethodOrThrow( "GetDeclaredInstanceEvent", 2 );
          COMPOSITE_EVENT_CTOR_NATIVE = typeof( CompositeEventImpl<> ).LoadConstructorOrThrow( (Int32?) null );
          INVALID_OPERATION_EXCEPTION_CTOR_WITH_STRING_NATIVE = typeof( InvalidOperationException ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
          QNAME_FROM_TYPE_AND_NAME_NATIVE = typeof( QualifiedName ).LoadMethodOrThrow( "FromTypeAndName", null );
          IS_PROTOTYPE_GETTER_NATIVE = typeof( CompositeInstanceImpl ).LoadGetterOrThrow( "IsPrototype" );
-         GET_PROPERTY_INFO_METHOD_NATIVE = typeof( Type ).LoadMethodWithParamTypesOrThrow( "GetProperty", new[] { typeof( String ), typeof( System.Reflection.BindingFlags ) } );
+         GET_PROPERTY_INFO_METHOD_NATIVE = typeof( ReflectionHelper ).LoadMethodOrThrow( "GetDeclaredInstanceProperty", 2 );
          COMPOSITE_METHODS_INDEXER_NATIVE = typeof( CollectionQueryWithIndexer<CompositeMethodModel> ).LoadGetterOrThrow( "Item" );
          EVENT_MODEL_GETTER_NATIVE = typeof( CompositeMethodModel ).LoadGetterOrThrow( "EventModel" );
          PROPERTY_MODEL_GETTER_NATIVE = typeof( CompositeMethodModel ).LoadGetterOrThrow( "PropertyModel" );
@@ -502,7 +498,7 @@ namespace Qi4CS.Core.Runtime.Model
          COMPOSITE_FACTORY_METHOD_NATIVE = COMPOSITE_FACTORY_TYPE_NATIVE.LoadMethodOrThrow( "CreateInstance", null );
          ARGUMENT_EXCEPTION_STRING_CTOR_NATIVE = typeof( ArgumentException ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
          MAKE_GENERIC_TYPE_METHOD_NATIVE = typeof( Type ).LoadMethodOrThrow( "MakeGenericType", null );
-         GET_CONSTRUCTORS_METHOD_NATIVE = typeof( Type ).LoadMethodOrThrow( "GetConstructors", 0 );
+         GET_FIRST_INSTANCE_CTOR_NATIVE = typeof( ReflectionHelper ).LoadMethodOrThrow( "GetFirstInstanceConstructor", 1 );
          CONSTRUCTOR_INVOKE_METHOD_NATIVE = typeof( ConstructorInfo ).LoadMethodOrThrow( "Invoke", 1 );
          INT_PTR_SIZE_GETTER_NATIVE = typeof( IntPtr ).LoadGetterOrThrow( "Size" );
          REF_ACTION_INVOKER_NATIVE = REF_ACTION_TYPE_NATIVE.LoadMethodOrThrow( "Invoke", 1 );

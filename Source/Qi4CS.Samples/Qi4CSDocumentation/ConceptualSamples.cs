@@ -27,6 +27,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.SPI.Instance;
 using System.Runtime.CompilerServices;
+using Qi4CS.Core.Bootstrap.Instance;
 
 #pragma warning disable 1700
 #region InternalsVisibleToCode

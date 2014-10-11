@@ -54,8 +54,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILType INT_PTR_TYPE;
       protected readonly CILType STRING_TYPE;
       protected readonly CILType EXCEPTION_TYPE;
-      protected readonly CILType WEAK_EVENT_WRAPPER_TYPE;
-      protected readonly CILType STRONG_EVENT_WRAPPER_TYPE;
+      //protected readonly CILType WEAK_EVENT_WRAPPER_TYPE;
+      //protected readonly CILType STRONG_EVENT_WRAPPER_TYPE;
       protected readonly CILType IENUMERABLE_GDEF_TYPE;
       protected readonly CILType IENUMERABLE_NO_GDEF_TYPE;
       protected readonly CILType USE_DEFAULTS_ATTRIBUTE_TYPE;
@@ -101,9 +101,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod METHOD_INFO_GET_GARGS_METHOD;
       protected readonly CILMethod MAKE_GENERIC_METHOD_METHOD;
       protected readonly CILMethod INVOKE_METHOD_METHOD;
-      protected readonly CILMethod GET_METHOD_METHOD;
+      protected readonly CILMethod GET_METHDO_GDEF;
       protected readonly CILMethod GET_CTOR_INDEX_METHOD;
-      protected readonly CILMethod BASE_TYPE_GETTER;
       protected readonly CILConstructor APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR;
       protected readonly CILMethod GET_CONSTRAINT_INSTANCE_POOL_METHOD;
       protected readonly CILMethod TAKE_CONSTRAINT_INSTANCE_METHOD;
@@ -121,7 +120,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod HASH_CODE_METHOD;
       protected readonly CILMethod REFERENCE_EQUALS_METHOD;
       protected readonly CILMethod GET_TYPE_METHOD;
-      protected readonly CILMethod ASSEMBLY_GETTER;
       protected readonly CILMethod DELEGATE_COMBINE_METHOD;
       protected readonly CILMethod DELEGATE_REMOVE_METHOD;
       protected readonly CILMethod INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF;
@@ -215,7 +213,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod COMPOSITE_FACTORY_METHOD;
       protected readonly CILConstructor ARGUMENT_EXCEPTION_STRING_CTOR;
       protected readonly CILMethod MAKE_GENERIC_TYPE_METHOD;
-      protected readonly CILMethod GET_CONSTRUCTORS_METHOD;
+      protected readonly CILMethod GET_FIRST_INSTANCE_CTOR;
       protected readonly CILMethod CONSTRUCTOR_INVOKE_METHOD;
       protected readonly CILMethod INT_PTR_SIZE_GETTER;
       protected readonly CILMethod REF_ACTION_INVOKER;
@@ -317,9 +315,8 @@ namespace Qi4CS.Core.Runtime.Model
          this.METHOD_INFO_GET_GARGS_METHOD = METHOD_INFO_GET_GARGS_METHOD_NATIVE.NewWrapper( ctx );
          this.MAKE_GENERIC_METHOD_METHOD = MAKE_GENERIC_METHOD_METHOD_NATIVE.NewWrapper( ctx );
          this.INVOKE_METHOD_METHOD = INVOKE_METHOD_METHOD_NATIVE.NewWrapper( ctx );
-         this.GET_METHOD_METHOD = GET_METHOD_METHOD_NATIVE.NewWrapper( ctx );
+         this.GET_METHDO_GDEF = GET_METHDO_GDEF_NATIVE.NewWrapper( ctx );
          this.GET_CTOR_INDEX_METHOD = GET_CTOR_INDEX_METHOD_NATIVE.NewWrapper( ctx );
-         this.BASE_TYPE_GETTER = BASE_TYPE_GETTER_NATIVE.NewWrapper( ctx );
          this.APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR = APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE.NewWrapper( ctx );
          this.GET_CONSTRAINT_INSTANCE_POOL_METHOD = GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE.NewWrapper( ctx );
          this.TAKE_CONSTRAINT_INSTANCE_METHOD = TAKE_CONSTRAINT_INSTANCE_METHOD_NATIVE.NewWrapper( ctx );
@@ -337,7 +334,6 @@ namespace Qi4CS.Core.Runtime.Model
          this.HASH_CODE_METHOD = HASH_CODE_METHOD_NATIVE.NewWrapper( ctx );
          this.REFERENCE_EQUALS_METHOD = REFERENCE_EQUALS_METHOD_NATIVE.NewWrapper( ctx );
          this.GET_TYPE_METHOD = GET_TYPE_METHOD_NATIVE.NewWrapper( ctx );
-         this.ASSEMBLY_GETTER = ASSEMBLY_GETTER_NATIVE.NewWrapper( ctx );
          this.DELEGATE_COMBINE_METHOD = DELEGATE_COMBINE_METHOD_NATIVE.NewWrapper( ctx );
          this.DELEGATE_REMOVE_METHOD = DELEGATE_REMOVE_METHOD_NATIVE.NewWrapper( ctx );
          this.INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF = INTERLOCKED_COMPARE_EXCHANGE_METHOD_GDEF_NATIVE.NewWrapper( ctx );
@@ -431,7 +427,7 @@ namespace Qi4CS.Core.Runtime.Model
          this.COMPOSITE_FACTORY_METHOD = COMPOSITE_FACTORY_METHOD_NATIVE.NewWrapper( ctx );
          this.ARGUMENT_EXCEPTION_STRING_CTOR = ARGUMENT_EXCEPTION_STRING_CTOR_NATIVE.NewWrapper( ctx );
          this.MAKE_GENERIC_TYPE_METHOD = MAKE_GENERIC_TYPE_METHOD_NATIVE.NewWrapper( ctx );
-         this.GET_CONSTRUCTORS_METHOD = GET_CONSTRUCTORS_METHOD_NATIVE.NewWrapper( ctx );
+         this.GET_FIRST_INSTANCE_CTOR = GET_FIRST_INSTANCE_CTOR_NATIVE.NewWrapper( ctx );
          this.CONSTRUCTOR_INVOKE_METHOD = CONSTRUCTOR_INVOKE_METHOD_NATIVE.NewWrapper( ctx );
          this.INT_PTR_SIZE_GETTER = INT_PTR_SIZE_GETTER_NATIVE.NewWrapper( ctx );
          this.REF_ACTION_INVOKER = REF_ACTION_INVOKER_NATIVE.NewWrapper( ctx );
