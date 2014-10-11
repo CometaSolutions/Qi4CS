@@ -27,6 +27,7 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Assembling
 {
@@ -83,7 +84,7 @@ namespace Qi4CS.Core.Runtime.Assembling
       {
          types = types.FilterNulls();
          this._affectedTypes.UnionWith( types );
-         var mainType = types.FirstOrDefault( type => !Types.QI4CS_ASSEMBLY.Equals( type.GetAssembly() ) );
+         var mainType = types.FirstOrDefault(type => !ReflectionHelper.QI4CS_ASSEMBLY.Equals(type.GetAssembly()));
          if ( mainType != null )
          {
             this.ForEachInfo( info =>

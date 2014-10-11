@@ -29,6 +29,7 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.API.Common;
 using Qi4CS.Core.SPI.Common;
+using Qi4CS.Core.Runtime.Instance;
 
 
 namespace Qi4CS.Core.Runtime.Model
@@ -542,7 +543,7 @@ namespace Qi4CS.Core.Runtime.Model
                // CompositeMethodAttribute is found, so any non-private method is ok
                methodVisiblity = CompositeMethodVisiblity.Public | CompositeMethodVisiblity.Internal | CompositeMethodVisiblity.Protected | CompositeMethodVisiblity.ProtectedAndInternal | CompositeMethodVisiblity.ProtectedOrInternal;
             }
-            result = method.DeclaringType.IsInterface() || ( methodVisiblity.MethodConsideredToBeCompositeMethod( method ) && !method.DeclaringType.GetImplementedInterfaces().SelectMany( iFace => iFace.GetPublicDeclaredInstanceMethods() ).Any( iFaceMethod => Types.FindMethodImplicitlyImplementingMethod( method.DeclaringType, iFaceMethod ) == method ) );
+            result = method.DeclaringType.IsInterface() || (methodVisiblity.MethodConsideredToBeCompositeMethod(method) && !method.DeclaringType.GetImplementedInterfaces().SelectMany(iFace => iFace.GetPublicDeclaredInstanceMethods()).Any(iFaceMethod => ReflectionHelper.FindMethodImplicitlyImplementingMethod(method.DeclaringType, iFaceMethod) == method));
          }
          return result;
       }
@@ -1272,7 +1273,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
          if ( compositeMethod.DeclaringType.GetAllParentTypes().Any( dType => dType.GetGenericDefinitionIfGenericType().IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( fragment ) ) )
          {
-            MethodInfo implMethod = Types.FindMethodImplicitlyImplementingMethod( fragment, compositeMethod );
+            MethodInfo implMethod = ReflectionHelper.FindMethodImplicitlyImplementingMethod(fragment, compositeMethod);
             if ( implMethod != null && !implMethod.IsAbstract )
             {
                result = implMethod;

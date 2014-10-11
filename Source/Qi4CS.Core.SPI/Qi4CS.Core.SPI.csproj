@@ -156,7 +156,6 @@
     <Compile Include="Model\StructureValidation.cs" />
     <Compile Include="Model\ValidatableItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Common\Types.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj">
@@ -177,10 +176,10 @@
   </ItemGroup>
   <Import Condition=" '$(TargetPlatformIdentifier)' != 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition=" '$(TargetPlatformIdentifier)' == 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-
   <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
   <PropertyGroup>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    </DeleteTargetFrameworkFileCondition>
     <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />

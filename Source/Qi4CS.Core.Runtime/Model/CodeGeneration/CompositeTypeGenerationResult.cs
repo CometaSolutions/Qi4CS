@@ -24,6 +24,7 @@ using CommonUtils;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.API.Model;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -205,14 +206,14 @@ namespace Qi4CS.Core.Runtime.Model
          this._sideEffectInvocationGenerationResults = collectionsFactory.NewListProxyFromParams( sideEffectInvocationGenerationResults ).CQ;
 
          // Remember to remove Qi4CS assembly if present
-         assDic.Remove( Types.QI4CS_ASSEMBLY );
+         assDic.Remove(ReflectionHelper.QI4CS_ASSEMBLY);
       }
 
       protected static Type GetGeneratedPublicType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, IDictionary<Assembly, Assembly> assDic )
       {
          return assDic.GetOrAdd_NotThreadSafe(
             type.GetAssembly(),
-            a => Types.QI4CS_ASSEMBLY.Equals( a ) ? assDic[model.MainCodeGenerationType.GetAssembly()] : Assembly.Load(
+            a => ReflectionHelper.QI4CS_ASSEMBLY.Equals(a) ? assDic[model.MainCodeGenerationType.GetAssembly()] : Assembly.Load(
 #if WINDOWS_PHONE_APP
                new AssemblyName(
 #endif

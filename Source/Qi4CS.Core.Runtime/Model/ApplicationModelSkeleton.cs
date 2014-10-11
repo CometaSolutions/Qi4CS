@@ -32,6 +32,7 @@ using Qi4CS.Core.Runtime.Assembling;
 
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
+using Qi4CS.Core.Runtime.Instance;
 #endif
 
 namespace Qi4CS.Core.Runtime.Model
@@ -307,7 +308,7 @@ namespace Qi4CS.Core.Runtime.Model
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
          {
-            if ( !Types.QI4CS_ASSEMBLY.Equals( currentAssembly ) )
+            if ( !ReflectionHelper.QI4CS_ASSEMBLY.Equals( currentAssembly ) )
             {
                var assemblyBareFileName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( currentAssembly );
 
@@ -400,7 +401,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       private static CILModule GetEmittingModule( CompositeModel cModel, Dictionary<Assembly, CILModule> dic, Assembly assembly )
       {
-         return Types.QI4CS_ASSEMBLY.Equals( assembly ) ? dic[cModel.MainCodeGenerationType.Assembly] : dic[assembly];
+         return ReflectionHelper.QI4CS_ASSEMBLY.Equals( assembly ) ? dic[cModel.MainCodeGenerationType.Assembly] : dic[assembly];
       }
 
 #endif

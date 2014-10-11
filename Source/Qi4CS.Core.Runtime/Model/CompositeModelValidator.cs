@@ -25,6 +25,7 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Model;
 using CommonUtils;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -322,7 +323,7 @@ namespace Qi4CS.Core.Runtime.Model
             {
                foreach ( var fMethod in fragmentType.GetAllInstanceMethods() )
                {
-                  if ( fMethod.IsAbstract && !compositeModel.Methods.Any( cMethod => AreSameFragmentMethods( fMethod, Types.FindMethodImplicitlyImplementingMethod( fragmentType, cMethod.NativeInfo ) ) ) )
+                  if (fMethod.IsAbstract && !compositeModel.Methods.Any(cMethod => AreSameFragmentMethods(fMethod, ReflectionHelper.FindMethodImplicitlyImplementingMethod(fragmentType, cMethod.NativeInfo))))
                   {
                      result.StructureValidationErrors.Add( ValidationErrorFactory.NewStructureError( "Found abstract method " + fMethod + " in " + fragmentType + ", with no corresponding composite method.", compositeModel ) );
                   }

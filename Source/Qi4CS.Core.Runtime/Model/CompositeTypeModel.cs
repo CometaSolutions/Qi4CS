@@ -24,6 +24,7 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Model;
 using System.Reflection;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -513,7 +514,7 @@ namespace Qi4CS.Core.Runtime.Model
          )
       {
          return type.GetAllParentTypes()
-                .Select( t => Tuple.Create( t, typesToSearch.SelectMany( tt => tt.GetAllParentTypes() ).FirstOrDefault( tt => Types.AreStructurallySame( t, tt, true ) ) ) )
+                .Select(t => Tuple.Create(t, typesToSearch.SelectMany(tt => tt.GetAllParentTypes()).FirstOrDefault(tt => ReflectionHelper.AreStructurallySame(t, tt, true))))
                 .Where( tuple => tuple.Item2 != null )
                 .GetBottomTypes( tuple => tuple.Item1 )
                 .FirstOrDefault();

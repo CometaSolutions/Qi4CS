@@ -24,6 +24,7 @@ using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -181,7 +182,7 @@ namespace Qi4CS.Core.Runtime.Model
             .Where( targetModel =>
                ( name == null || name.Equals( targetModel.NativeInfo.Name ) )
                && ( declaringType == null || declaringType.Equals( targetModel.NativeInfo.DeclaringType.GetGenericDefinitionIfContainsGenericParameters() ) )
-               && ( targetType == null || Types.AreStructurallySame( targetType, memberInfoTargetTypeGetter( targetModel.NativeInfo ), true ) )
+               && (targetType == null || ReflectionHelper.AreStructurallySame(targetType, memberInfoTargetTypeGetter(targetModel.NativeInfo), true))
             );
       }
 

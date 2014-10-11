@@ -25,6 +25,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Tests
 {
@@ -81,7 +82,7 @@ namespace Qi4CS.Tests
          {
             ArchitectureType architecture = this.CreateArchitecture();
             this.SetUpArchitecture( architecture );
-            var ass = Types.QI4CS_ASSEMBLY;
+            var ass = ReflectionHelper.QI4CS_ASSEMBLY;
             _model = this.CreateModel( architecture );
             _model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
             _application = _model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );

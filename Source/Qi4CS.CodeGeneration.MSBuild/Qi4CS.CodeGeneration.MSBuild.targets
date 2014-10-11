@@ -14,8 +14,8 @@
       </PropertyGroup>
       <PropertyGroup Condition="$(Qi4CSSourceAssembly) == ''">
          <Qi4CSSourceAssembly Condition="'$(Qi4CSSourceAssembly)' == ''">$(AssemblyName)</Qi4CSSourceAssembly>
-         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Library' or '$(OutputType)' == 'Module'">$(Qi4CSSourceAssembly).dll</Qi4CSSourceAssembly>
-         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe'">$(Qi4CSSourceAssembly).exe</Qi4CSSourceAssembly>
+         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Library' or '$(OutputType)' == 'Module' ">$(Qi4CSSourceAssembly).dll</Qi4CSSourceAssembly>
+         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe' or '$(OutputType)' == 'AppContainerExe' ">$(Qi4CSSourceAssembly).exe</Qi4CSSourceAssembly>
       </PropertyGroup>
       <GetFrameworkSdkPath Condition="'$(Qi4CSWindowsSDKDir)' == ''" ContinueOnError="WarnAndContinue">
          <Output TaskParameter="Path" PropertyName="Qi4CSWindowsSDKDir"/>
