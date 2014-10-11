@@ -118,7 +118,7 @@ namespace Qi4CS.Extensions.Configuration.Instance
          {
             errorMsg = "No (de)serializer found for configuration of type" + configType + " located in " + info.Resource + ".";
          }
-         else if ( !typeof( ConfigurationSerializer ).IsAssignableFrom( serializerType ) )
+         else if ( !typeof( ConfigurationSerializer ).IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( serializerType ) )
          {
             errorMsg = "The serializer type " + serializerType + " does not implement " + typeof( ConfigurationSerializer ) + ".";
          }

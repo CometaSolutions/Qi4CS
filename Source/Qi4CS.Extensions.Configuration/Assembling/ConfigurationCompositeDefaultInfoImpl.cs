@@ -59,11 +59,7 @@ namespace Qi4CS.Extensions.Configuration.Assembling
       {
          if ( serializer != null )
          {
-            if ( !typeof( ConfigurationSerializer )
-#if WINDOWS_PHONE_APP
-               .GetTypeInfo()
-#endif
-.IsAssignableFrom( serializer ) )
+            if ( !typeof( ConfigurationSerializer ).IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( serializer ) )
             {
                throw new ArgumentException( "Serializer type must be assignable from " + typeof( ConfigurationSerializer ) );
             }
