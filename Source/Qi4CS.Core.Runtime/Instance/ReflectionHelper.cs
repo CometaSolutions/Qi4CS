@@ -84,22 +84,34 @@ namespace Qi4CS.Core.Runtime.Instance
             foreach (var suitableType in classType.GetAllParentTypes().Where(t => AreStructurallySame(t, methodFromParent.DeclaringType, true)))
             {
 #if WINDOWS_PHONE_APP
+               var newMethodsFromInterface = suitableType.GetAllDeclaredInstanceMethods().Where(m => String.Equals(m.Name, methodFromParent.Name));
 #else
                var newMethodFromInterface = (MethodInfo)MethodBase.GetMethodFromHandle(methodFromParent.MethodHandle, suitableType.TypeHandle);
+#endif
                result = classType
                   .GetClassHierarchy()
                   .SelectMany(t => t.GetAllDeclaredInstanceMethods())
                   .FirstOrDefault(method =>
                   {
+#if WINDOWS_PHONE_APP
+                     return newMethodsFromInterface.Any(newMethodFromInterface =>
+                  {
+#endif
                      var p1 = newMethodFromInterface.GetParameters();
                      var p2 = method.GetParameters();
-                     return String.Equals(newMethodFromInterface.Name, method.Name)
-                        && newMethodFromInterface.GetGenericArguments().Length == method.GetGenericArguments().Length
+                     return
+#if !WINDOWS_PHONE_APP
+                        String.Equals(newMethodFromInterface.Name, method.Name) &&
+#endif
+                        newMethodFromInterface.GetGenericArguments().Length == method.GetGenericArguments().Length
                         && p1.Length == p2.Length
                         && AreStructurallySame(method.ReturnParameter.ParameterType, newMethodFromInterface.ReturnParameter.ParameterType, false)
                         && p1.TakeWhile((param, idx) => AreStructurallySame(p2[idx].ParameterType, param.ParameterType, false)).Count() == p1.Length;
+#if WINDOWS_PHONE_APP
                   });
 #endif
+                  });
+
                if (result != null)
                {
                   break;
