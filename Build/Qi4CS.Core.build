@@ -18,10 +18,6 @@
     
     <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.DotNET/Qi4CS.CodeGeneration.DotNET.csproj" />
     <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.csproj" />
-    
-    <!-- <Qi4CSNonCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
-    <Qi4CSNonCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
-    <Qi4CSNonCoreProject Condition=" '$(Qi4CSCoreConfiguration)' != 'Debug_WP' and '$(Qi4CSCoreConfiguration)' != 'Release_WP' " Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" /> -->
   </ItemGroup>
   
   <!-- Import target for restoring NuGet packages -->
@@ -33,7 +29,7 @@
     
     <!-- Restore all NuGet packages -->
     <CallTarget Targets="RestoreNuGetPackages" />
-    
+
     <!-- Build Qi4CS Core projects -->
     <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSCoreBuildTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
 
@@ -43,8 +39,6 @@
     <!-- Build Qi4CS SDK, if needed -->
     <MSBuild Condition=" '$(Qi4CSCoreConfiguration.EndsWith(`_SDK`))' == 'true' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
     
-    <!-- Build Qi4CS other projects -->
-    <!-- <MSBuild Projects="@(Qi4CSNonCoreProject)" Targets="$(Qi4CSFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" /> -->
   </Target>
   
 
