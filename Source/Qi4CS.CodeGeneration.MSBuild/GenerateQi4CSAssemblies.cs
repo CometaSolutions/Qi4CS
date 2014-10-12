@@ -133,8 +133,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// Gets or sets the full file names of generated Qi4CS assemblies.
       /// </summary>
       /// <value>The full file names of generated Qi4CS assemblies.</value>
+      /// <remarks>
+      /// Each task item for generated assembly will contain metadata <c>OriginalAssemblyPath</c> with information about original assembly.
+      /// </remarks>
       [Output]
-      public String[] GeneratedFilenames { get; set; }
+      public TaskItem[] GeneratedAssemblies { get; set; }
 
       /// <inheritdoc />
       public override Boolean Execute()
@@ -193,28 +196,44 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
                   try
                   {
-                     var generator = new Qi4CSAssemblyGenerator(sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir());// (Qi4CSAssemblyGenerator) ad.CreateInstanceFromAndUnwrap( thisAssemblyPath, typeof( Qi4CSAssemblyGenerator ).FullName, false, System.Reflection.BindingFlags.CreateInstance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, new Object[] { sourceAss, this.ModelFactory }, null, null );
-                     //this.BuildEngine3.Yield();
-                     try
+                     var generator = new Qi4CSAssemblyGenerator(sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir());
+
+                     if (generator.CanGenerate)
                      {
-                        this.GeneratedFilenames = generator.GenerateAssemblies(
-                           projectDir,
-                           this.TargetFW,
-                           this.TargetFWVersion,
-                           this.TargetFWProfile,
-                           this.ReferenceAssembliesDir,
-                           this.TargetPlatform,
-                           assDir,
-                           this.AssemblyInformation,
-                           Path.GetDirectoryName( sourceAss ),
-                           this.PerformVerify,
-                           this.WindowsSDKDir
-                           );
-                        retVal = true;
+                        //this.BuildEngine3.Yield();
+                        try
+                        {
+                           this.GeneratedAssemblies = generator.GenerateAssemblies(
+                              projectDir,
+                              this.TargetFW,
+                              this.TargetFWVersion,
+                              this.TargetFWProfile,
+                              this.ReferenceAssembliesDir,
+                              this.TargetPlatform,
+                              assDir,
+                              this.AssemblyInformation,
+                              Path.GetDirectoryName(sourceAss),
+                              this.PerformVerify,
+                              this.WindowsSDKDir)
+                              .Select(kvp =>
+                              {
+                                 var item = new TaskItem(kvp.Value);
+                                 item.SetMetadata("OriginalAssemblyPath", kvp.Key);
+                                 return item;
+                              })
+                              .ToArray();
+                           retVal = true;
+                        }
+                        finally
+                        {
+                           //this.BuildEngine3.Reacquire();
+                        }
                      }
-                     finally
+                     else
                      {
-                        //this.BuildEngine3.Reacquire();
+                        this.Log.LogMessage(MessageImportance.High, "Skipping Qi4CS assembly generation as suitable model provider type was not found.");
+                        retVal = true;
+                        this.GeneratedAssemblies = Empty<TaskItem>.Array;
                      }
                   }
                   catch ( System.Reflection.TargetInvocationException tie )
@@ -299,10 +318,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="modelFactoryName">The name of the type within the assembly which implements <see cref="Qi4CSModelProvider{T}"/> and has a public parameterless constructor. If <c>null</c>, then first suitable type, in unspecified order, will be selected.</param>
       /// <param name="slRuntimeDir">Resolved silverlight runtime directory.</param>
       /// <exception cref="ArgumentNullException">If <paramref name="sourceAssembly"/> is <c>null</c>.</exception>
-      /// <exception cref="Qi4CSBuildException">If <paramref name="modelFactoryName"/> is <c>null</c>, then this is thrown when no suitable type is found. Otherwise this is thrown when the specified type is not found within the specified assembly, or when the type is not suitable.</exception>
-      /// <remarks>
-      /// Additionally any exception thrown by <see cref="System.Reflection.Assembly.LoadFrom(String)"/> is passed directly through to the caller of this constructor.
-      /// </remarks>
+      /// <exception cref="Qi4CSBuildException">If <paramref name="modelFactoryName"/> is not <c>null</c>, this is thrown when the specified type is not found within the specified assembly, or when the type is not suitable.</exception>
       public Qi4CSAssemblyGenerator( String sourceAssembly, String modelFactoryName, String slRuntimeDir )
       {
          ArgumentValidator.ValidateNotNull( "Source assembly", sourceAssembly );
@@ -339,10 +355,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
          }
          if ( mfType == null )
          {
-            throw new Qi4CSBuildException( mfNameGiven ?
-               String.Format( "The Qi4CS model factory type {0} is not found within assembly {1}", modelFactoryName, ass ) :
-               String.Format( "The assembly {0} does not contain suitable Qi4CS model factory type (which should implement {1} and have a public parameterless constructor)", ass, typeof( Qi4CSModelProvider<> ) )
-               );
+            if (mfNameGiven)
+            {
+               throw new Qi4CSBuildException(String.Format("The Qi4CS model factory type {0} is not found within assembly {1}", modelFactoryName, ass) );
+            }
          }
          else if ( mfNameGiven )
          {
@@ -351,13 +367,29 @@ namespace Qi4CS.CodeGeneration.MSBuild
                throw new Qi4CSBuildException( String.Format( "The given Qi4CS model factory type {0} with assembly {1} does not implement {2}", mfType, ass, typeof( Qi4CSModelProvider<> ) ) );
             }
          }
-         var ctor = GetSuitableCtor( sourceAssembly, mfType );
-         if ( ctor == null )
-         {
-            throw new Qi4CSBuildException( String.Format( "The Qi4CS model factory type {0} must have a public parameterless constructor.", mfType ) );
-         }
 
-         this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>) ctor.Invoke( Type.EmptyTypes );
+         if (mfType != null)
+         {
+            var ctor = GetSuitableCtor(sourceAssembly, mfType);
+            if (ctor == null)
+            {
+               throw new Qi4CSBuildException(String.Format("The Qi4CS model factory type {0} must have a public parameterless constructor.", mfType));
+            }
+
+            this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>)ctor.Invoke(Type.EmptyTypes);
+         }
+      }
+
+      /// <summary>
+      /// Get the value indicating whether Qi4CS assemblies can be generated.
+      /// </summary>
+      /// <value>The value indicating whether Qi4CS assemblies can be generated.</value>
+      public Boolean CanGenerate
+      {
+         get
+         {
+            return this._modelFactory != null;
+         }
       }
 
       private System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -418,7 +450,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
-      public String[] GenerateAssemblies( String projectDir, String targetFWID, String targetFWVersion, String targetFWProfile, String referenceAssembliesDir, String targetPlatform, String path, String assemblySNInfo, String qi4CSDir, Boolean verify, String winSDKDir )
+      public IDictionary<String, String> GenerateAssemblies( String projectDir, String targetFWID, String targetFWVersion, String targetFWProfile, String referenceAssembliesDir, String targetPlatform, String path, String assemblySNInfo, String qi4CSDir, Boolean verify, String winSDKDir )
       {
          qi4CSDir = Path.GetFullPath( qi4CSDir );
          path = Path.GetFullPath( path );
@@ -546,8 +578,9 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   Directory.CreateDirectory( path );
                }
 
-               foreach ( var fn in genAssFilenames.Values )
+               foreach ( var kvp in genAssFilenames.ToArray() )
                {
+                  var fn = kvp.Value;
                   try
                   {
                      var targetFn = Path.Combine( path, Path.GetFileName( fn ) );
@@ -565,6 +598,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                            }
                         }
                         File.Move( fn, targetFn );
+                        genAssFilenames.Remove(kvp.Key);
+                        genAssFilenames.Add(kvp.Key, targetFn);
                      }
                   }
                   catch
@@ -575,7 +610,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
             }
          }
 
-         return genAssFilenames.Values.ToArray();
+         return genAssFilenames.ToDictionary(
+            kvp => kvp.Key.CodeBase,
+            kvp => kvp.Value
+            );
       }
 
       private Boolean IsSilverlight

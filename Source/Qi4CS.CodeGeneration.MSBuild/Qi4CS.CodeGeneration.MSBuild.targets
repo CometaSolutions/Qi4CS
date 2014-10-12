@@ -1,29 +1,68 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-   <PropertyGroup Condition=" '$(DisableQi4CSBuild)' == '' and '$(Qi4CSMSBuildAssemblyFile)' == '' ">
-      <Qi4CSMSBuildAssemblyFile>$(MSBuildThisFileDirectory)Qi4CS.CodeGeneration.MSBuild.dll</Qi4CSMSBuildAssemblyFile>
+
+   <!-- Mark the directory containing assembly with Qi4CS assembly generation task -->
+   <PropertyGroup Condition=" '$(DisableQi4CSBuild)' == '' and '$(Qi4CSMSBuildAssemblyDir)' == '' ">
+      <Qi4CSMSBuildAssemblyDir>$(MSBuildThisFileDirectory)</Qi4CSMSBuildAssemblyDir>
    </PropertyGroup>
+   
+   <!-- In order to fully integrate Qi4CS assemblies in build process (required especially in SL and WPA projects),
+        the outputted Qi4CS assemblies need to be marked as being part of the build.
+        Since the exact file paths of assemblies to be generated is not easily detectable just from build files,
+        the generation needs to be done right copying intermediate files to output directory, and the generated files need to be marked as build outputs.
+   -->
+   <!-- Generate Qi4CS assemblies after the intermediate files have been copied to output directory.
+        This way all referenced assemblies should be there. -->
+   
+   <!-- On Silverlight, we have to generate assemblies before XAP packager zips files. -->
+   <PropertyGroup Condition=" '$(DisableQi4CSBuild)' == '' and '$(FilesToXapDependsOn)' != '' ">
+     <FilesToXapDependsOn>
+        $(FilesToXapDependsOn);
+        GenerateQi4CSAssemblies;
+     </FilesToXapDependsOn>
+   </PropertyGroup>
+   
+   <!-- On Windows (Phone) Apps, we have to generate assemblies before the .appxrecipe file gets generated based on packaging outputs. -->
+   <PropertyGroup Condition=" '$(DisableQi4CSBuild)' == '' and '$(GetPackagingOutputsDependsOn)' != '' ">
+     <GetPackagingOutputsDependsOn>
+       $(GetPackagingOutputsDependsOn);
+       GenerateQi4CSAssemblies;
+     </GetPackagingOutputsDependsOn>
+   </PropertyGroup>
+   
+   <!-- On .NET project, we have to generate assemblies before PrepareForRun target gets run (on SL and Windows (Phone) Apps, this $(PrepareForRunDependsOn) is overridden in .targets file by the packaging process. -->
+   <PropertyGroup Condition=" '$(DisableQi4CSBuild)' == '' and '$(FilesToXapDependsOn)' == '' and '$(GetPackagingOutputsDependsOn)' == '' ">
+     <PrepareForRunDependsOn>
+        $(PrepareForRunDependsOn);
+        GenerateQi4CSAssemblies;
+     </PrepareForRunDependsOn>
+   </PropertyGroup>
+   
+   <!-- Import Qi4CS build task -->
    <UsingTask Condition=" '$(DisableQi4CSBuild)' == '' "
               TaskName="Qi4CS.CodeGeneration.MSBuild.GenerateQi4CSAssemblies"
-              AssemblyFile="$(Qi4CSMSBuildAssemblyFile)" />
-   <Target Condition=" '$(DisableQi4CSBuild)' == '' "
-           Name="GenerateQi4CSAssemblies" >
+              AssemblyFile="$(Qi4CSMSBuildAssemblyDir)Qi4CS.CodeGeneration.MSBuild.dll" />
+   
+   <!-- The actual target that will get called -->
+   <Target Name="GenerateQi4CSAssemblies" >
       <PropertyGroup>
          <Qi4CSAssembliesDir Condition="'$(Qi4CSAssembliesDir)' == ''">$(OutputPath)</Qi4CSAssembliesDir>
          <ReferenceAssembliesDir Condition="'$(ReferenceAssembliesDir)' == ''">C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework</ReferenceAssembliesDir>
       </PropertyGroup>
-      <PropertyGroup Condition="$(Qi4CSSourceAssembly) == ''">
-         <Qi4CSSourceAssembly Condition="'$(Qi4CSSourceAssembly)' == ''">$(AssemblyName)</Qi4CSSourceAssembly>
-         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Library' or '$(OutputType)' == 'Module' ">$(Qi4CSSourceAssembly).dll</Qi4CSSourceAssembly>
-         <Qi4CSSourceAssembly Condition="'$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe' or '$(OutputType)' == 'AppContainerExe' ">$(Qi4CSSourceAssembly).exe</Qi4CSSourceAssembly>
+      <PropertyGroup Condition=" '$(Qi4CSSourceAssembly)' == ''">
+         <Qi4CSSourceAssembly Condition=" '$(Qi4CSSourceAssembly)' == '' ">$(AssemblyName)</Qi4CSSourceAssembly>
+         <Qi4CSSourceAssembly Condition=" '$(OutputType)' == 'Library' or '$(OutputType)' == 'Module' ">$(Qi4CSSourceAssembly).dll</Qi4CSSourceAssembly>
+         <Qi4CSSourceAssembly Condition=" '$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe' or '$(OutputType)' == 'AppContainerExe' ">$(Qi4CSSourceAssembly).exe</Qi4CSSourceAssembly>
       </PropertyGroup>
-      <GetFrameworkSdkPath Condition="'$(Qi4CSWindowsSDKDir)' == ''" ContinueOnError="WarnAndContinue">
+      <GetFrameworkSdkPath Condition=" '$(Qi4CSWindowsSDKDir)' == '' " ContinueOnError="WarnAndContinue">
          <Output TaskParameter="Path" PropertyName="Qi4CSWindowsSDKDir"/>
       </GetFrameworkSdkPath>
       <PropertyGroup>
+         <!-- Silverlight runtime assemblies are located in different folder, save that folder so that task will be able to load the assemblies -->
          <Qi4CSSilverlightRuntimeBaseDir Condition=" '$(Qi4CSSilverlightRuntimeBaseDir)' == '' " >C:\Program Files (x86)\Microsoft Silverlight</Qi4CSSilverlightRuntimeBaseDir>
       </PropertyGroup>
 
+      <!-- Perform generation -->
       <Qi4CS.CodeGeneration.MSBuild.GenerateQi4CSAssemblies
          AssembliesDir="$(Qi4CSAssembliesDir)"
          ModelFactory="$(Qi4CSModelFactory)"
@@ -38,7 +77,18 @@
          ReferenceAssembliesDir="$(ReferenceAssembliesDir)"
          PerformVerify="$(Qi4CSVerifyAssemblies)"
          WindowsSDKDir="$(Qi4CSWindowsSDKDir)"
-         SilverlightRuntimeBaseDir="$(Qi4CSSilverlightRuntimeBaseDir)"
-         />
+         SilverlightRuntimeBaseDir="$(Qi4CSSilverlightRuntimeBaseDir)">
+         <Output TaskParameter="GeneratedAssemblies" ItemName="Qi4CSGeneratedAssemblies" />
+       </Qi4CS.CodeGeneration.MSBuild.GenerateQi4CSAssemblies>
+       
+       <!-- Mark generated files as part of the build. -->
+       <ItemGroup>
+         <BuiltProjectOutputGroupKeyOutput Condition=" '$(GetPackagingOutputsDependsOn)' == '' " Include="@(Qi4CSGeneratedAssemblies)" />
+         <_PackagingOutputsUnexpanded Condition=" '$(GetPackagingOutputsDependsOn)' != '' " Include="@(Qi4CSGeneratedAssemblies)">
+           <TargetPath>%(Qi4CSGeneratedAssemblies.Filename)%(Qi4CSGeneratedAssemblies.Extension)</TargetPath>
+           <OutputGroup>Qi4CSAssembly</OutputGroup>
+           <ProjectName>$(ProjectName)</ProjectName>
+         </_PackagingOutputsUnexpanded>
+       </ItemGroup>
    </Target>
 </Project>
