@@ -125,6 +125,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
       public String WindowsSDKDir { get; set; }
 
       /// <summary>
+      /// Gets or sets the path where Silverlight version directories containing runtime DLLs are located.
+      /// </summary>
+      public String SilverlightRuntimeBaseDir { get; set; }
+
+      /// <summary>
       /// Gets or sets the full file names of generated Qi4CS assemblies.
       /// </summary>
       /// <value>The full file names of generated Qi4CS assemblies.</value>
@@ -182,12 +187,13 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
                   this.Log.LogMessage( Microsoft.Build.Framework.MessageImportance.High, "Generating Qi4CS assemblies for {0}, target directory is {1}, verifying: {2}.", sourceAss, assDir, this.PerformVerify );
 
+                  // TODO I'm not sure this current directory change is required anymore.
                   var oldCurDir = Environment.CurrentDirectory;
                   Environment.CurrentDirectory = Path.GetDirectoryName( sourceAss );
 
                   try
                   {
-                     var generator = new Qi4CSAssemblyGenerator( sourceAss, this.ModelFactory );// (Qi4CSAssemblyGenerator) ad.CreateInstanceFromAndUnwrap( thisAssemblyPath, typeof( Qi4CSAssemblyGenerator ).FullName, false, System.Reflection.BindingFlags.CreateInstance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, new Object[] { sourceAss, this.ModelFactory }, null, null );
+                     var generator = new Qi4CSAssemblyGenerator(sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir());// (Qi4CSAssemblyGenerator) ad.CreateInstanceFromAndUnwrap( thisAssemblyPath, typeof( Qi4CSAssemblyGenerator ).FullName, false, System.Reflection.BindingFlags.CreateInstance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance, null, new Object[] { sourceAss, this.ModelFactory }, null, null );
                      //this.BuildEngine3.Yield();
                      try
                      {
@@ -244,6 +250,27 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return retVal;
       }
 
+      private static Boolean IsSilverlight(String targetFW)
+      {
+         return "Silverlight".Equals(targetFW, StringComparison.InvariantCultureIgnoreCase) ||
+            "WindowsPhone".Equals(targetFW, StringComparison.InvariantCultureIgnoreCase);
+      }
+
+      private String ResolveSLRuntimeDir()
+      {
+         var targetFW = this.TargetFW;
+         return IsSilverlight(targetFW) ?
+            Path.Combine(this.SilverlightRuntimeBaseDir, Directory.EnumerateDirectories(this.SilverlightRuntimeBaseDir, this.GetTargetFWMajorVersion() + "*").OrderByDescending(s => s).Last()) :
+            null;
+      }
+
+      private String GetTargetFWMajorVersion()
+      {
+         // "v5.0" => "5"
+         var targetFWVersion = this.TargetFWVersion;
+         var dotIndex = targetFWVersion.IndexOf('.') - 1;
+         return dotIndex > 0 ? targetFWVersion.Substring(1,dotIndex - 1) : targetFWVersion.Substring(1);
+      }
    }
 
    /// <summary>
@@ -263,18 +290,20 @@ namespace Qi4CS.CodeGeneration.MSBuild
       private delegate Boolean ParsingDelegate<TIn, TOut>( TIn element, out TOut result );
 
       private readonly Qi4CSModelProvider<ApplicationModel<ApplicationSPI>> _modelFactory;
+      private readonly String _slRuntimeDir;
 
       /// <summary>
       /// Creates new instance of <see cref="Qi4CSAssemblyGenerator"/>.
       /// </summary>
       /// <param name="sourceAssembly">The path to the assembly containing type implementing <see cref="Qi4CSModelProvider{T}"/>. This will be given to <see cref="System.Reflection.Assembly.LoadFrom(String)"/> method.</param>
       /// <param name="modelFactoryName">The name of the type within the assembly which implements <see cref="Qi4CSModelProvider{T}"/> and has a public parameterless constructor. If <c>null</c>, then first suitable type, in unspecified order, will be selected.</param>
+      /// <param name="slRuntimeDir">Resolved silverlight runtime directory.</param>
       /// <exception cref="ArgumentNullException">If <paramref name="sourceAssembly"/> is <c>null</c>.</exception>
       /// <exception cref="Qi4CSBuildException">If <paramref name="modelFactoryName"/> is <c>null</c>, then this is thrown when no suitable type is found. Otherwise this is thrown when the specified type is not found within the specified assembly, or when the type is not suitable.</exception>
       /// <remarks>
       /// Additionally any exception thrown by <see cref="System.Reflection.Assembly.LoadFrom(String)"/> is passed directly through to the caller of this constructor.
       /// </remarks>
-      public Qi4CSAssemblyGenerator( String sourceAssembly, String modelFactoryName )
+      public Qi4CSAssemblyGenerator( String sourceAssembly, String modelFactoryName, String slRuntimeDir )
       {
          ArgumentValidator.ValidateNotNull( "Source assembly", sourceAssembly );
 
@@ -289,9 +318,25 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
          var ass = System.Reflection.Assembly.LoadFrom( sourceAssembly );
          var mfNameGiven = !String.IsNullOrEmpty( modelFactoryName );
-         var mfType = mfNameGiven ?
+
+         this._slRuntimeDir = slRuntimeDir;
+
+         if (this.IsSilverlight)
+         {
+            // We are running SL code from desktop application, so have to resolve SL-specific DLLs.
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+         }
+
+         Type mfType;
+         try
+         {
+            mfType = mfNameGiven ?
             ass.GetType( modelFactoryName, false, false ) :
             ass.GetTypes().FirstOrDefault( t => IsSuitableType( t ) && HasSuitableCtor( t ) );
+            } catch(System.Reflection.ReflectionTypeLoadException rte)
+         {
+            throw new Qi4CSBuildException(String.Join("\n\n", (Object[])rte.LoaderExceptions), rte);
+         }
          if ( mfType == null )
          {
             throw new Qi4CSBuildException( mfNameGiven ?
@@ -315,24 +360,23 @@ namespace Qi4CS.CodeGeneration.MSBuild
          this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>) ctor.Invoke( Type.EmptyTypes );
       }
 
-      //private System.Reflection.Assembly CurrentDomain_AssemblyResolve( object sender, ResolveEventArgs args )
-      //{
-      //   CILAssemblyName an;
-      //   System.Reflection.Assembly result = null;
-      //   if ( CILAssemblyName.TryParse( args.Name, out an ) )
-      //   {
-      //      var pathFragment = Path.Combine( Path.GetDirectoryName( new Uri( args.RequestingAssembly.CodeBase ).LocalPath ), an.Name );
-      //      var suitablePath = File.Exists( pathFragment + ".dll" ) ?
-      //         ( pathFragment + ".dll" ) :
-      //         ( File.Exists( pathFragment + ".exe" ) ?
-      //         ( pathFragment + ".exe" ) : null );
-      //      if ( suitablePath != null )
-      //      {
-      //         result = System.Reflection.Assembly.LoadFrom( suitablePath );
-      //      }
-      //   }
-      //   return result;
-      //}
+      private System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+      {
+         Console.WriteLine("SL BUILD trying to resolve " + args.Name + " using SL runtime directory " + this._slRuntimeDir + ".");
+
+         // This only gets invoked in Silverlight builds
+         System.Reflection.Assembly result = null;
+         CILAssemblyName aName;
+         if (CILAssemblyName.TryParse( args.Name, out aName))
+         {
+            var suitablePath = Path.Combine( this._slRuntimeDir, aName.Name + ".dll");
+            if (File.Exists(suitablePath))
+            {
+               result = System.Reflection.Assembly.LoadFrom(suitablePath);
+            }
+         }
+         return result;
+      }
 
       private static Boolean IsSuitableType( Type t )
       {
@@ -464,7 +508,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
             actualPath,
-            IsSilverlight( targetFWID ),
+            this.IsSilverlight,
             ( nAss, gAss ) =>
             {
                Tuple<StrongNameKeyPair, AssemblyHashAlgorithm> snTuple;
@@ -534,6 +578,14 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return genAssFilenames.Values.ToArray();
       }
 
+      private Boolean IsSilverlight
+      {
+         get
+         {
+            return !String.IsNullOrEmpty(this._slRuntimeDir);
+         }
+      }
+
       private static T SubElementTextOrFallback<T>( XElement element, String subElementName, ParsingDelegate<XElement, T> parser, T fallback )
       {
          var elem = element.XPathSelectElement( subElementName );
@@ -589,11 +641,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return binPath;
       }
 
-      private static Boolean IsSilverlight( String targetFW )
-      {
-         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase ) ||
-            "WindowsPhone".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
-      }
+
 
       private static void Verify( String winSDKBinDir, String fileName, Boolean verifyStrongName )
       {

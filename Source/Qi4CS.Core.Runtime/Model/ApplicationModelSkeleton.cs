@@ -121,7 +121,8 @@ namespace Qi4CS.Core.Runtime.Model
 
          CheckValidation( validationResult, "Tried to create new application instance from model with validation errors." );
          var assDic = new Dictionary<Assembly, Assembly>();
-         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary( model => model, model => this._compositeModelTypeSupport[model.ModelType].LoadTypes( model, ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel, assDic ) ) ).CQ;
+         var loadingEvt = this.GeneratedAssemblyLoadingEvent;
+         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary( model => model, model => this._compositeModelTypeSupport[model.ModelType].LoadTypes( model, ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel, loadingEvt, assDic ) ) ).CQ;
          this.ApplicationCodeResolveEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeResolveArgs( dic, this.CollectionsFactory.NewDictionaryProxy( assDic ).CQ ) ) );
          var result = this.CreateNew( validationResult, applicationName, mode, version, dic );
          this.ApplicationInstanceCreatedEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCreationArgs( result ) ) );
@@ -183,6 +184,8 @@ namespace Qi4CS.Core.Runtime.Model
       public event EventHandler<ApplicationCreationArgs> ApplicationInstanceCreatedEvent;
 
       public event EventHandler<ApplicationCodeResolveArgs> ApplicationCodeResolveEvent;
+
+      public event EventHandler<AssemblyLoadingArgs> GeneratedAssemblyLoadingEvent;
 
       #endregion
 
@@ -405,5 +408,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 #endif
+
+
    }
 }

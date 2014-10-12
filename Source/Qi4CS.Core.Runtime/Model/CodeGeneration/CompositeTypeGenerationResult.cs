@@ -125,8 +125,9 @@ namespace Qi4CS.Core.Runtime.Model
       public PublicCompositeTypeGenerationResultImpl(
          CompositeModel cModel,
          CompositeTypeModel tModel,
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         IDictionary<Assembly, Assembly> assDic
+         EventHandler<AssemblyLoadingArgs> loadingEvt,
+         IDictionary<Assembly, Assembly> assDic,
+         CompositeCodeGenerationInfo codeGenerationInfo
          )
       {
          //var orderer = new TypeLoadOrderer( cModel );
@@ -138,7 +139,7 @@ namespace Qi4CS.Core.Runtime.Model
             //.OrderBy( t => t, orderer )
             .Where( t => cModel.ApplicationModel.AffectedAssemblies.Contains( t.GetAssembly() ) )
             .OrderBy( t => t.Equals( cModel.MainCodeGenerationType ) ? 0 : 1 ) // Populate main code generation type first
-            .Select( t => GetGeneratedPublicType( t, cModel, codeGenerationInfo, assDic ) )
+            .Select( t => GetGeneratedPublicType( t, cModel, codeGenerationInfo, loadingEvt, assDic ) )
             .Distinct()
             .ToArray();
 
@@ -152,31 +153,31 @@ namespace Qi4CS.Core.Runtime.Model
 #if WINDOWS_PHONE_APP
             .GetAllInstanceConstructors().First()
 #else
-            .GetConstructors()[0]
+.GetConstructors()[0]
 #endif
-            .Invoke(null);
+.Invoke( null );
 
          var fragmentTypeGenerationResults = tModel.FragmentTypeInfos.Keys
             //.OrderBy( t => t, orderer )
-            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, assDic, codeGenerationInfo.FragmentPrefix, true ) ) )
+            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, loadingEvt, assDic, codeGenerationInfo.FragmentPrefix, true ) ) )
             .Where( t => t.Item2 != null )
             .Select( t => (FragmentTypeGenerationResult) new FragmentTypeGenerationResultImpl( t.Item1, t.Item2 ) )
             .ToArray();
          var concernInvocationGenerationResults = tModel.ConcernInvocationTypeInfos.Keys
             //.OrderBy( t => t, orderer )
-            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, assDic, codeGenerationInfo.ConcernInvocationPrefix ) ) )
+            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, loadingEvt, assDic, codeGenerationInfo.ConcernInvocationPrefix ) ) )
             .Where( t => t.Item2 != null )
             .Select( t => (TypeGenerationResult) new TypeGenerationResultImpl( t.Item2, t.Item1 ) )
             .ToArray();
          var sideEffectInvocationGenerationResults = tModel.SideEffectInvocationTypeInfos.Keys
             //.OrderBy( t => t, orderer )
-            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, assDic, codeGenerationInfo.SideEffectInvocationPrefix ) ) )
+            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, loadingEvt, assDic, codeGenerationInfo.SideEffectInvocationPrefix ) ) )
             .Where( t => t.Item2 != null )
             .Select( t => (TypeGenerationResult) new TypeGenerationResultImpl( t.Item2, t.Item1 ) )
             .ToArray();
          var privateCompositeGenerationresults = tModel.PrivateCompositeTypeInfos.Keys
             //.OrderBy( t => t, orderer )
-            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, assDic, codeGenerationInfo.PrivateCompositePrefix ) ) )
+            .Select( t => Tuple.Create( t, GetParticipantType( t, cModel, codeGenerationInfo, loadingEvt, assDic, codeGenerationInfo.PrivateCompositePrefix ) ) )
             .Where( t => t.Item2 != null )
             .Select( t => (TypeGenerationResult) new TypeGenerationResultImpl( t.Item2, t.Item1 ) )
             .ToArray();
@@ -192,9 +193,9 @@ namespace Qi4CS.Core.Runtime.Model
 #if WINDOWS_PHONE_APP
             .GetAllInstanceConstructors().First()
 #else
-            .GetConstructors( BindingFlags.Instance | BindingFlags.Public )[0]
+.GetConstructors( BindingFlags.Instance | BindingFlags.Public )[0]
 #endif
-            .GetParameters().Length;
+.GetParameters().Length;
 
          this._generatedPublicTypes = collectionsFactory.NewListProxy( publicTypes.Select(
             pt => (GeneratedTypeInfo) new GeneratedTypeInfoImpl( pt ) )
@@ -206,37 +207,65 @@ namespace Qi4CS.Core.Runtime.Model
          this._sideEffectInvocationGenerationResults = collectionsFactory.NewListProxyFromParams( sideEffectInvocationGenerationResults ).CQ;
 
          // Remember to remove Qi4CS assembly if present
-         assDic.Remove(ReflectionHelper.QI4CS_ASSEMBLY);
+         assDic.Remove( ReflectionHelper.QI4CS_ASSEMBLY );
       }
 
-      protected static Type GetGeneratedPublicType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, IDictionary<Assembly, Assembly> assDic )
+      protected static Type GetGeneratedPublicType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic )
       {
          return assDic.GetOrAdd_NotThreadSafe(
             type.GetAssembly(),
-            a => ReflectionHelper.QI4CS_ASSEMBLY.Equals(a) ? assDic[model.MainCodeGenerationType.GetAssembly()] : Assembly.Load(
-#if WINDOWS_PHONE_APP
-               new AssemblyName(
-#endif
-               Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( a )
-#if WINDOWS_PHONE_APP
-               )
-#endif
-               )
+            a => ReflectionHelper.QI4CS_ASSEMBLY.Equals( a ) ? assDic[model.MainCodeGenerationType.GetAssembly()] : DoLoadGeneratedAssembly( a, model.ApplicationModel, loadingEvt )
             ).GetType(
             codeGenerationInfo.PublicCompositePrefix + model.CompositeModelID,
             true
             );
       }
 
-      protected static Type GetParticipantType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, IDictionary<Assembly, Assembly> assDic, String prefix, Boolean useBaseType = false )
+      private static Assembly DoLoadGeneratedAssembly( Assembly assembly, ApplicationModel<Qi4CS.Core.SPI.Instance.ApplicationSPI> model, EventHandler<AssemblyLoadingArgs> loadingEvt )
       {
-         return GetGeneratedPublicType( type, model, codeGenerationInfo, assDic )
+         var args = new AssemblyLoadingArgs( assembly.FullName, Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( assembly ) );
+         loadingEvt.InvokeEventIfNotNull( evt => evt( model, args ) );
+
+         var an = args.Qi4CSGeneratedAssemblyName;
+         if ( !String.IsNullOrEmpty( args.Version ) )
+         {
+            an += ", Version=" + new Version( args.Version );
+         }
+
+         if ( !String.IsNullOrEmpty( args.Culture ) )
+         {
+            an += ", Culture=" + args.Culture;
+         }
+
+         if ( !String.IsNullOrEmpty( args.PublicKey ) )
+         {
+            an += ", PublicKey=" + args.PublicKey;
+         }
+         else if ( !String.IsNullOrEmpty( args.PublicKeyToken ) )
+         {
+            an += ", PublicKeyToken=" + args.PublicKeyToken;
+         }
+
+         return Assembly.Load(
+#if WINDOWS_PHONE_APP
+               new AssemblyName(
+#endif
+ an
+#if WINDOWS_PHONE_APP
+               )
+#endif
+ );
+      }
+
+      protected static Type GetParticipantType( Type type, CompositeModel model, CompositeCodeGenerationInfo codeGenerationInfo, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic, String prefix, Boolean useBaseType = false )
+      {
+         return GetGeneratedPublicType( type, model, codeGenerationInfo, loadingEvt, assDic )
 #if WINDOWS_PHONE_APP
             .GetTypeInfo().DeclaredNestedTypes.Select(t => t.AsType())
 #else
-            .GetNestedTypes( BindingFlags.Public | BindingFlags.NonPublic )
+.GetNestedTypes( BindingFlags.Public | BindingFlags.NonPublic )
 #endif
-            .FirstOrDefault( tt => tt.Name.StartsWith( prefix )
+.FirstOrDefault( tt => tt.Name.StartsWith( prefix )
                && ( useBaseType ? tt.GetBaseType().GetGenericDefinitionIfContainsGenericParameters().Equals( type ) : tt.GetAllParentTypes().Any( ttt => ttt.GetGenericDefinitionIfContainsGenericParameters().Equals( type ) ) )
             //&& !TypeUtil.TypesOf( tt ).Except( new Type[] { tt, type } ).Any( ttt => TypeUtil.IsAssignableFrom( TypeUtil.GenericDefinitionIfContainsGenericParams( type ), ttt ) )
                );

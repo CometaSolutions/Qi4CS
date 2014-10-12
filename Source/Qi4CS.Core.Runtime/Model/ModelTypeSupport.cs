@@ -39,7 +39,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       void ValidateModelsInApplication( ApplicationModel<ApplicationSPI> appModel, ApplicationValidationResultMutable appValidation );
 
-      PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, IDictionary<Assembly, Assembly> assDic );
+      PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic );
 
       CompositeModelTypeInstanceScopeSupport CreateInstanceScopeSupport();
 
@@ -90,13 +90,14 @@ namespace Qi4CS.Core.Runtime.Model
          return this.PerformValidationWithoutTypeGeneration( compositeModel );
       }
 
-      public PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, IDictionary<Assembly, Assembly> assDic )
+      public PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic )
       {
          return new PublicCompositeTypeGenerationResultImpl(
             compositeModel,
             tModel,
-            this._codeGenerationInfo,
-            assDic
+            loadingEvt,
+            assDic,
+            this._codeGenerationInfo
             );
       }
 

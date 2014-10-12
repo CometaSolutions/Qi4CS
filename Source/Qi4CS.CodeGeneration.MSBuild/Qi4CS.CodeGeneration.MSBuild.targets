@@ -20,6 +20,9 @@
       <GetFrameworkSdkPath Condition="'$(Qi4CSWindowsSDKDir)' == ''" ContinueOnError="WarnAndContinue">
          <Output TaskParameter="Path" PropertyName="Qi4CSWindowsSDKDir"/>
       </GetFrameworkSdkPath>
+      <PropertyGroup>
+         <Qi4CSSilverlightRuntimeBaseDir Condition=" '$(Qi4CSSilverlightRuntimeBaseDir)' == '' " >C:\Program Files (x86)\Microsoft Silverlight</Qi4CSSilverlightRuntimeBaseDir>
+      </PropertyGroup>
 
       <Qi4CS.CodeGeneration.MSBuild.GenerateQi4CSAssemblies
          AssembliesDir="$(Qi4CSAssembliesDir)"
@@ -34,6 +37,8 @@
          OutputDir="$(OutputPath)"
          ReferenceAssembliesDir="$(ReferenceAssembliesDir)"
          PerformVerify="$(Qi4CSVerifyAssemblies)"
-         WindowsSDKDir="$(Qi4CSWindowsSDKDir)"/>
+         WindowsSDKDir="$(Qi4CSWindowsSDKDir)"
+         SilverlightRuntimeBaseDir="$(Qi4CSSilverlightRuntimeBaseDir)"
+         />
    </Target>
 </Project>

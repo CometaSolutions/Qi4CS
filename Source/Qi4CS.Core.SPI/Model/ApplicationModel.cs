@@ -124,6 +124,13 @@ namespace Qi4CS.Core.SPI.Model
       /// <seealso cref="ApplicationCodeResolveArgs"/>
       event EventHandler<ApplicationCodeResolveArgs> ApplicationCodeResolveEvent;
 
+      /// <summary>
+      /// This event is fired just before Qi4CS model tries to load generated assembly.
+      /// The main purpose is to give modification ability to the generated assembly name (e.g. adding version and key tokens).
+      /// </summary>
+      /// <seealso cref="AssemblyLoadingArgs"/>
+      event EventHandler<AssemblyLoadingArgs> GeneratedAssemblyLoadingEvent;
+
 #if QI4CS_SDK
 
       /// <summary>
@@ -317,6 +324,78 @@ namespace Qi4CS.Core.SPI.Model
             return this._assemblies;
          }
       }
+   }
+
+   /// <summary>
+   /// The event args type used in <see cref="ApplicationModel{T}.GeneratedAssemblyLoadingEvent"/>.
+   /// </summary>
+   public sealed class AssemblyLoadingArgs : EventArgs
+   {
+      private readonly String _originalFullAssemblyName;
+      private readonly String _qi4CSAssemblyName;
+
+      /// <summary>
+      /// Creates new instance of <see cref="AssemblyLoadingArgs"/>.
+      /// </summary>
+      /// <param name="originalFullName">The full name of the original assembly.</param>
+      /// <param name="qi4CSSimpleName">The simple name of the Qi4CS generated assembly.</param>
+      public AssemblyLoadingArgs( String originalFullName, String qi4CSSimpleName )
+      {
+         ArgumentValidator.ValidateNotEmpty( "Original assembly name", originalFullName );
+         ArgumentValidator.ValidateNotEmpty( "Qi4CS generated assembly name", qi4CSSimpleName );
+
+         this._originalFullAssemblyName = originalFullName;
+         this._qi4CSAssemblyName = qi4CSSimpleName;
+      }
+
+      /// <summary>
+      /// Gets the full assembly name of the original assembly.
+      /// </summary>
+      /// <value>The full assembly name of the original assembly.</value>
+      public String OriginalAssemblyName
+      {
+         get
+         {
+            return this._originalFullAssemblyName;
+         }
+      }
+
+      /// <summary>
+      /// Gets the simple name of the Qi4CS generated assembly.
+      /// </summary>
+      /// <value>The simple name of the Qi4CS generated assembly.</value>
+      public String Qi4CSGeneratedAssemblyName
+      {
+         get
+         {
+            return this._qi4CSAssemblyName;
+         }
+      }
+
+      /// <summary>
+      /// Gets or sets the version of Qi4CS generated assembly.
+      /// </summary>
+      /// <value>The version of Qi4CS generated assembly.</value>
+      public String Version { get; set; }
+
+      /// <summary>
+      /// Gets or sets the culture of Qi4CS generated assembly.
+      /// </summary>
+      /// <value>The culture of Qi4CS generated assembly.</value>
+      public String Culture { get; set; }
+
+      /// <summary>
+      /// Gets or sets the public key token of Qi4CS generated assembly.
+      /// </summary>
+      /// <value>The public key token of Qi4CS generated assembly.</value>
+      /// <remarks>This value will be ignored if <see cref="PublicKey"/> is not <c>null</c> or empty.</remarks>
+      public String PublicKeyToken { get; set; }
+
+      /// <summary>
+      /// Gets or sets the full public key of Qi4CS generated assembly.
+      /// </summary>
+      /// <value>The full public key of Qi4CS generated assembly.</value>
+      public String PublicKey { get; set; }
    }
 
 #if QI4CS_SDK
