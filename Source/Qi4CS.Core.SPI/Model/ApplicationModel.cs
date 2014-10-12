@@ -376,7 +376,7 @@ namespace Qi4CS.Core.SPI.Model
       /// Gets or sets the version of Qi4CS generated assembly.
       /// </summary>
       /// <value>The version of Qi4CS generated assembly.</value>
-      public String Version { get; set; }
+      public Version Version { get; set; }
 
       /// <summary>
       /// Gets or sets the culture of Qi4CS generated assembly.
@@ -389,13 +389,13 @@ namespace Qi4CS.Core.SPI.Model
       /// </summary>
       /// <value>The public key token of Qi4CS generated assembly.</value>
       /// <remarks>This value will be ignored if <see cref="PublicKey"/> is not <c>null</c> or empty.</remarks>
-      public String PublicKeyToken { get; set; }
+      public Byte[] PublicKeyToken { get; set; }
 
       /// <summary>
       /// Gets or sets the full public key of Qi4CS generated assembly.
       /// </summary>
       /// <value>The full public key of Qi4CS generated assembly.</value>
-      public String PublicKey { get; set; }
+      public Byte[] PublicKey { get; set; }
    }
 
 #if QI4CS_SDK

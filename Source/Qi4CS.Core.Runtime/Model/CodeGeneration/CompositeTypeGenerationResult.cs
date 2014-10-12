@@ -227,9 +227,9 @@ namespace Qi4CS.Core.Runtime.Model
          loadingEvt.InvokeEventIfNotNull( evt => evt( model, args ) );
 
          var an = args.Qi4CSGeneratedAssemblyName;
-         if ( !String.IsNullOrEmpty( args.Version ) )
+         if ( args.Version != null )
          {
-            an += ", Version=" + new Version( args.Version );
+            an += ", Version=" + args.Version;
          }
 
          if ( !String.IsNullOrEmpty( args.Culture ) )
@@ -237,13 +237,13 @@ namespace Qi4CS.Core.Runtime.Model
             an += ", Culture=" + args.Culture;
          }
 
-         if ( !String.IsNullOrEmpty( args.PublicKey ) )
+         if ( !args.PublicKey.IsNullOrEmpty() )
          {
-            an += ", PublicKey=" + args.PublicKey;
+            an += ", PublicKey=" + StringConversions.ByteArray2HexStr( args.PublicKey );
          }
-         else if ( !String.IsNullOrEmpty( args.PublicKeyToken ) )
+         else if ( !args.PublicKeyToken.IsNullOrEmpty() )
          {
-            an += ", PublicKeyToken=" + args.PublicKeyToken;
+            an += ", PublicKeyToken=" + StringConversions.ByteArray2HexStr( args.PublicKeyToken );
          }
 
          return Assembly.Load(
