@@ -44,7 +44,9 @@
               AssemblyFile="$(Qi4CSMSBuildAssemblyDir)Qi4CS.CodeGeneration.MSBuild.dll" />
    
    <!-- The actual target that will get called -->
-   <Target Name="GenerateQi4CSAssemblies" >
+   <Target
+     Condition=" '$(DisableQi4CSBuild)' == '' "
+     Name="GenerateQi4CSAssemblies" >
       <PropertyGroup>
          <Qi4CSAssembliesDir Condition="'$(Qi4CSAssembliesDir)' == ''">$(OutputPath)</Qi4CSAssembliesDir>
          <ReferenceAssembliesDir Condition="'$(ReferenceAssembliesDir)' == ''">C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework</ReferenceAssembliesDir>
