@@ -1,4 +1,6 @@
 Qi4CS:
+ - Include generation keys into nuget package
+ - Add API to XML configuration extension that enables specifying array/list item element name at assembly time
  - Refactor Model/Validation: make ValidationResultType the same way as CompositeModelType, and store all errors in a single list.
  - Fragment order specification at bootstrap level.
  - More than one class per assembly per composite
