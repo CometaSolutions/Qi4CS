@@ -196,9 +196,9 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
                   try
                   {
-                     var generator = new Qi4CSAssemblyGenerator(sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir());
+                     var generator = new Qi4CSAssemblyGenerator( sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir() );
 
-                     if (generator.CanGenerate)
+                     if ( generator.CanGenerate )
                      {
                         //this.BuildEngine3.Yield();
                         try
@@ -212,15 +212,15 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               this.TargetPlatform,
                               assDir,
                               this.AssemblyInformation,
-                              Path.GetDirectoryName(sourceAss),
+                              Path.GetDirectoryName( sourceAss ),
                               this.PerformVerify,
-                              this.WindowsSDKDir)
-                              .Select(kvp =>
+                              this.WindowsSDKDir )
+                              .Select( kvp =>
                               {
-                                 var item = new TaskItem(kvp.Value);
-                                 item.SetMetadata("OriginalAssemblyPath", kvp.Key);
+                                 var item = new TaskItem( kvp.Value );
+                                 item.SetMetadata( "OriginalAssemblyPath", kvp.Key );
                                  return item;
-                              })
+                              } )
                               .ToArray();
                            retVal = true;
                         }
@@ -231,7 +231,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      }
                      else
                      {
-                        this.Log.LogMessage(MessageImportance.High, "Skipping Qi4CS assembly generation as suitable model provider type was not found.");
+                        this.Log.LogMessage( MessageImportance.High, "Skipping Qi4CS assembly generation as suitable model provider type was not found." );
                         retVal = true;
                         this.GeneratedAssemblies = Empty<TaskItem>.Array;
                      }
@@ -269,17 +269,17 @@ namespace Qi4CS.CodeGeneration.MSBuild
          return retVal;
       }
 
-      private static Boolean IsSilverlight(String targetFW)
+      private static Boolean IsSilverlight( String targetFW )
       {
-         return "Silverlight".Equals(targetFW, StringComparison.InvariantCultureIgnoreCase) ||
-            "WindowsPhone".Equals(targetFW, StringComparison.InvariantCultureIgnoreCase);
+         return "Silverlight".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase ) ||
+            "WindowsPhone".Equals( targetFW, StringComparison.InvariantCultureIgnoreCase );
       }
 
       private String ResolveSLRuntimeDir()
       {
          var targetFW = this.TargetFW;
-         return IsSilverlight(targetFW) ?
-            Path.Combine(this.SilverlightRuntimeBaseDir, Directory.EnumerateDirectories(this.SilverlightRuntimeBaseDir, this.GetTargetFWMajorVersion() + "*").OrderByDescending(s => s).Last()) :
+         return IsSilverlight( targetFW ) ?
+            Path.Combine( this.SilverlightRuntimeBaseDir, Directory.EnumerateDirectories( this.SilverlightRuntimeBaseDir, this.GetTargetFWMajorVersion() + "*" ).OrderByDescending( s => s ).Last() ) :
             null;
       }
 
@@ -287,8 +287,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
       {
          // "v5.0" => "5"
          var targetFWVersion = this.TargetFWVersion;
-         var dotIndex = targetFWVersion.IndexOf('.') - 1;
-         return dotIndex > 0 ? targetFWVersion.Substring(1,dotIndex - 1) : targetFWVersion.Substring(1);
+         var dotIndex = targetFWVersion.IndexOf( '.' ) - 1;
+         return dotIndex > 0 ? targetFWVersion.Substring( 1, dotIndex - 1 ) : targetFWVersion.Substring( 1 );
       }
    }
 
@@ -337,7 +337,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
 
          this._slRuntimeDir = slRuntimeDir;
 
-         if (this.IsSilverlight)
+         if ( this.IsSilverlight )
          {
             // We are running SL code from desktop application, so have to resolve SL-specific DLLs.
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
@@ -349,15 +349,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
             mfType = mfNameGiven ?
             ass.GetType( modelFactoryName, false, false ) :
             ass.GetTypes().FirstOrDefault( t => IsSuitableType( t ) && HasSuitableCtor( t ) );
-            } catch(System.Reflection.ReflectionTypeLoadException rte)
+         }
+         catch ( System.Reflection.ReflectionTypeLoadException rte )
          {
-            throw new Qi4CSBuildException(String.Join("\n\n", (Object[])rte.LoaderExceptions), rte);
+            throw new Qi4CSBuildException( String.Join( "\n\n", (Object[]) rte.LoaderExceptions ), rte );
          }
          if ( mfType == null )
          {
-            if (mfNameGiven)
+            if ( mfNameGiven )
             {
-               throw new Qi4CSBuildException(String.Format("The Qi4CS model factory type {0} is not found within assembly {1}", modelFactoryName, ass) );
+               throw new Qi4CSBuildException( String.Format( "The Qi4CS model factory type {0} is not found within assembly {1}", modelFactoryName, ass ) );
             }
          }
          else if ( mfNameGiven )
@@ -368,15 +369,15 @@ namespace Qi4CS.CodeGeneration.MSBuild
             }
          }
 
-         if (mfType != null)
+         if ( mfType != null )
          {
-            var ctor = GetSuitableCtor(sourceAssembly, mfType);
-            if (ctor == null)
+            var ctor = GetSuitableCtor( sourceAssembly, mfType );
+            if ( ctor == null )
             {
-               throw new Qi4CSBuildException(String.Format("The Qi4CS model factory type {0} must have a public parameterless constructor.", mfType));
+               throw new Qi4CSBuildException( String.Format( "The Qi4CS model factory type {0} must have a public parameterless constructor.", mfType ) );
             }
 
-            this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>)ctor.Invoke(Type.EmptyTypes);
+            this._modelFactory = (Qi4CSModelProvider<ApplicationModel<ApplicationSPI>>) ctor.Invoke( Type.EmptyTypes );
          }
       }
 
@@ -392,19 +393,19 @@ namespace Qi4CS.CodeGeneration.MSBuild
          }
       }
 
-      private System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+      private System.Reflection.Assembly CurrentDomain_AssemblyResolve( object sender, ResolveEventArgs args )
       {
-         Console.WriteLine("SL BUILD trying to resolve " + args.Name + " using SL runtime directory " + this._slRuntimeDir + ".");
+         Console.WriteLine( "SL BUILD trying to resolve " + args.Name + " using SL runtime directory " + this._slRuntimeDir + "." );
 
          // This only gets invoked in Silverlight builds
          System.Reflection.Assembly result = null;
          CILAssemblyName aName;
-         if (CILAssemblyName.TryParse( args.Name, out aName))
+         if ( CILAssemblyName.TryParse( args.Name, out aName ) )
          {
-            var suitablePath = Path.Combine( this._slRuntimeDir, aName.Name + ".dll");
-            if (File.Exists(suitablePath))
+            var suitablePath = Path.Combine( this._slRuntimeDir, aName.Name + ".dll" );
+            if ( File.Exists( suitablePath ) )
             {
-               result = System.Reflection.Assembly.LoadFrom(suitablePath);
+               result = System.Reflection.Assembly.LoadFrom( suitablePath );
             }
          }
          return result;
@@ -413,7 +414,9 @@ namespace Qi4CS.CodeGeneration.MSBuild
       private static Boolean IsSuitableType( Type t )
       {
          return t.IsClass
-            && t.GetInterfaces().Any( i => i.IsGenericType && typeof( Qi4CSModelProvider<> ).Equals( i.GetGenericTypeDefinition() ) );
+            && !t.IsAbstract
+            && t.GetGenericArguments().Length == 0
+            && typeof( Qi4CSModelProvider<> ).IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( t );
       }
 
       private static Boolean HasSuitableCtor( Type t )
@@ -598,8 +601,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                            }
                         }
                         File.Move( fn, targetFn );
-                        genAssFilenames.Remove(kvp.Key);
-                        genAssFilenames.Add(kvp.Key, targetFn);
+                        genAssFilenames.Remove( kvp.Key );
+                        genAssFilenames.Add( kvp.Key, targetFn );
                      }
                   }
                   catch
@@ -620,7 +623,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       {
          get
          {
-            return !String.IsNullOrEmpty(this._slRuntimeDir);
+            return !String.IsNullOrEmpty( this._slRuntimeDir );
          }
       }
 

@@ -239,6 +239,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                   {
                      return new System.Text.RegularExpressions.Regex( element.Value );
                   }
+                     // TODO parse XElement here.
                   else
                   {
                      var isGeneric = type.IsGenericType;
