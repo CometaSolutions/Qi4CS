@@ -188,7 +188,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   // Qi4CS assembly capable of generating code.
                   var thisAssemblyPath = new Uri( System.Reflection.Assembly.GetExecutingAssembly().CodeBase ).LocalPath;
 
-                  this.Log.LogMessage( Microsoft.Build.Framework.MessageImportance.High, "Generating Qi4CS assemblies for {0}, target directory is {1}, verifying: {2}.", sourceAss, assDir, this.PerformVerify );
+                  //this.Log.LogMessage( Microsoft.Build.Framework.MessageImportance.High, "Generating Qi4CS assemblies for {0}, target directory is {1}, verifying: {2}.", sourceAss, assDir, this.PerformVerify );
 
                   // TODO I'm not sure this current directory change is required anymore.
                   var oldCurDir = Environment.CurrentDirectory;

@@ -165,10 +165,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Portable" Condition=" '$(Qi4CSSDKBuild)' != '' ">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.4\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.6\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
     </Reference>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.0.9.6.1\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -1356,7 +1356,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             // TODO refactor this method
             var gArgs = constraintType.GenericArguments.ToArray();
-            foreach ( var constraintIFace in constraintType.AllImplementedInterfaces( false ).Where( iFace => CONSTRAINT_TYPE.Equals( iFace.GenericDefinition ) ) )
+            foreach ( var constraintIFace in constraintType.GetAllImplementedInterfaces( false ).Where( iFace => CONSTRAINT_TYPE.Equals( iFace.GenericDefinition ) ) )
             {
                // attribute
                var attribParam = constraintIFace.GenericArguments[0];
@@ -1387,7 +1387,7 @@ namespace Qi4CS.Core.Runtime.Model
                         }
                         else if ( TypeKind.Type == currentFromParam.TypeKind )
                         {
-                           currentFromParam = ( (CILType) currentFromParam ).FullInheritanceChain().FirstOrDefault( bType => bType.GenericDefinitionIfGenericType().Equals( ( (CILType) currentFromConstraint ).GenericDefinitionIfGenericType() ) );
+                           currentFromParam = ( (CILType) currentFromParam ).GetFullInheritanceChain().FirstOrDefault( bType => bType.GenericDefinitionIfGenericType().Equals( ( (CILType) currentFromConstraint ).GenericDefinitionIfGenericType() ) );
                            if ( currentFromParam == null )
                            {
                               throw new InternalException( "Constraint type " + constraintType + " is not compatible with parameter type" + parameterType + "." );
@@ -4794,7 +4794,7 @@ namespace Qi4CS.Core.Runtime.Model
          )
       {
          return fragmentGenerationInfos
-            .Where( genInfo => genInfo.DirectBaseFromModel.FullInheritanceChain().Any( t => t.DeclaredMethods.Contains( method ) ) );
+            .Where( genInfo => genInfo.DirectBaseFromModel.GetFullInheritanceChain().Any( t => t.DeclaredMethods.Contains( method ) ) );
          //{
          //   var implMethod = genInfo.DirectBaseFromModel.BaseTypeChain().SelectMany( t => t.DeclaredMethods ).FirstOrDefault( m => method.Name.Equals( m.Name ), method.GetParameters().Select( pInfo => pInfo.ParameterType ).ToArray() );
          //   return implMethod != null && !implMethod.DeclaringType.Equals( method.DeclaringType ) && implMethod.GetBaseDefinition().Equals( method );

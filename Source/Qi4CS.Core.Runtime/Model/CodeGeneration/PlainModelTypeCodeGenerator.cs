@@ -142,7 +142,7 @@ namespace Qi4CS.Core.Runtime.Model
             genInfos => genInfos.FirstOrDefault( genInfo =>
             {
                var result = thisGenInfo.Parents.Keys.Where( t => !thisGenInfo.Builder.Equals( t ) ).OnlyBottomTypes().Where( t => !OBJECT_TYPE.Equals( t ) ).Any( p => genInfo.Parents.ContainsKey( p.GenericDefinitionIfGArgsHaveGenericParams() ) )
-                  || genInfo.DirectBaseFromModel.FullInheritanceChain().Any( t => compositeModel.ApplicationModel.GenericFragmentBaseType.NewWrapperAsType( this.ctx ).Equals( t ) );
+                  || genInfo.DirectBaseFromModel.GetFullInheritanceChain().Any( t => compositeModel.ApplicationModel.GenericFragmentBaseType.NewWrapperAsType( this.ctx ).Equals( t ) );
                if ( result )
                {
                   var m = TypeGenerationUtils.FindMethodImplicitlyImplementingMethod( genInfo.DirectBaseFromModel, EQUALS_METHOD );
@@ -177,7 +177,7 @@ namespace Qi4CS.Core.Runtime.Model
             genInfos => genInfos.FirstOrDefault( genInfo =>
             {
                var result = thisGenInfo.Parents.Keys.Where( t => !thisGenInfo.Builder.Equals( t ) ).OnlyBottomTypes().Where( t => !OBJECT_TYPE.Equals( t ) ).Any( p => genInfo.Parents.ContainsKey( p.GenericDefinitionIfGArgsHaveGenericParams() ) )
-                  || genInfo.DirectBaseFromModel.FullInheritanceChain().Any( t => compositeModel.ApplicationModel.GenericFragmentBaseType.NewWrapperAsType( this.ctx ).Equals( t ) );
+                  || genInfo.DirectBaseFromModel.GetFullInheritanceChain().Any( t => compositeModel.ApplicationModel.GenericFragmentBaseType.NewWrapperAsType( this.ctx ).Equals( t ) );
                if ( result )
                {
                   var m = TypeGenerationUtils.FindMethodImplicitlyImplementingMethod( genInfo.DirectBaseFromModel, HASH_CODE_METHOD );
