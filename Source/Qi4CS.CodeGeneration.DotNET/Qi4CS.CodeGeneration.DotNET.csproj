@@ -78,11 +78,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.DotNET">
-      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.6.6\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.6.7\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Portable">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.6\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.7\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Core" />
     <Reference Include="System" />

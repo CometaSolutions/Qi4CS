@@ -48,8 +48,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qi4CS.CodeGeneration.MSBuil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qi4CS.Extensions.Configuration.XML", "Qi4CS.Extensions.Configuration.XML\Qi4CS.Extensions.Configuration.XML.csproj", "{AB903B13-AA87-42B7-940E-8FF2ECEAD2C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testingles", "Testingles\Testingles.csproj", "{AF3B95F2-F665-4D96-A487-4343949F5863}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_SDK|Any CPU = Debug_SDK|Any CPU
@@ -245,22 +243,6 @@ Global
 		{AB903B13-AA87-42B7-940E-8FF2ECEAD2C0}.Release_WP8|Any CPU.Build.0 = Release_WP|Any CPU
 		{AB903B13-AA87-42B7-940E-8FF2ECEAD2C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB903B13-AA87-42B7-940E-8FF2ECEAD2C0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_SDK|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_SDK|Any CPU.Build.0 = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_SL|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_SL|Any CPU.Build.0 = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_WP8|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug_WP8|Any CPU.Build.0 = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_SDK|Any CPU.ActiveCfg = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_SDK|Any CPU.Build.0 = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_SL|Any CPU.ActiveCfg = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_SL|Any CPU.Build.0 = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_WP8|Any CPU.ActiveCfg = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release_WP8|Any CPU.Build.0 = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF3B95F2-F665-4D96-A487-4343949F5863}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
