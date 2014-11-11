@@ -80,6 +80,7 @@ namespace Qi4CS.Core.API.Instance
       /// This is useful in e.g. services which have some kind of background thread running during application activation.
       /// Please see remarks for proper usage of this property.
       /// </summary>
+      /// <value>The <see cref="CancellationToken"/> which will get cancelled once application is passivated.</value>
       /// <remarks>
       /// <para>
       /// Consider the following example service and mixin for it.

@@ -184,6 +184,7 @@ public static partial class E_Qi4CS
    /// <typeparam name="TEvent">The type of the property.</typeparam>
    /// <param name="evt">The <see cref="CompositeEvent{T}"/>.</param>
    /// <param name="function">The delegate to invoke.</param>
+   /// <returns>The result of <paramref name="function"/>.</returns>
    /// <exception cref="InvalidOperationException">If <see cref="CompositeStateParticipant{T}.TryInvokeFunctionWithRef"/> returns <c>false</c>, that is, when the field type does not match <typeparamref name="TEvent"/>.</exception>
    /// <remarks>
    /// TODO link to documentation about how field type is deduced (it is not always the same as type of property or event).
