@@ -74,8 +74,8 @@
       <NuSpec_FilesXML><![CDATA[
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.dll" target="lib\portable-net40+win\Qi4CS.Core.dll" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.xml" target="lib\portable-net40+win\Qi4CS.Core.xml" />
-      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Qi4CS.Core.dll" target="lib\portable-net45+sl50+win+wp80\Qi4CS.Core.dll" />
-      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Qi4CS.Core.xml" target="lib\portable-net45+sl50+win+wp80\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Normal\Qi4CS.Core.dll" target="lib\portable-net40+sl50+win+wp80\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Normal\Qi4CS.Core.xml" target="lib\portable-net40+sl50+win+wp80\Qi4CS.Core.xml" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.dll" target="lib\wpa81\Qi4CS.Core.dll" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.xml" target="lib\wpa81\Qi4CS.Core.xml" />
       <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.pri" target="lib\wpa81\Qi4CS.Core.pri" />

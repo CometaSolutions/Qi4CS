@@ -29,11 +29,11 @@
     <PropertyGroup>
       <Qi4CSEConfBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSEConfBaseDir)))</Qi4CSEConfBaseDirNuSpec>
       <NuSpec_OutputPath>$(MSBuildThisFileDirectory)../NuSpec/Qi4CS.Extensions.Configuration.nuspec</NuSpec_OutputPath>
-      <NuSpec_ID>Qi4CS.Extensions.Configuration.XML</NuSpec_ID>
+      <NuSpec_ID>Qi4CS.Extensions.Configuration</NuSpec_ID>
       <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
       <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
       <NuSpec_Description>Qi4CS Extension: Configuration is an extension of Qi4CS.Core that provides basic API for assembling composites that can be deserialized and serialized by ConfigurationManager, which is also provided by this extension. The configuration composites may have their location specified at assembling time or at runtime.</NuSpec_Description>
-      <NuSpec_Title>Qi4CS Core</NuSpec_Title>
+      <NuSpec_Title>Qi4CS Extension: Configuration</NuSpec_Title>
       <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
       <NuSpec_CopyrightInceptionYear>2012</NuSpec_CopyrightInceptionYear>
       <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
@@ -49,7 +49,7 @@
       ]]></NuSpec_FilesXML>
       <NuSpec_DependenciesXML><![CDATA[
       <group>
-        <dependency id="Qi4CS.Core" version="$(NuSpec_VersionFilename)"/>
+        <dependency id="Qi4CS.Core" version="$([System.IO.File]::ReadAllText($(Qi4CSEConfBaseDir)/Source/Qi4CSVersion.txt))"/>
       </group>
       ]]></NuSpec_DependenciesXML>
     </PropertyGroup>

@@ -56,7 +56,7 @@
       <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
       <NuSpec_ProjectURL>https://github.com/CometaSolutions/Qi4CS</NuSpec_ProjectURL>
       <NuSpec_RequireLicenseAcceptance>false</NuSpec_RequireLicenseAcceptance>
-      <NuSpec_Summary>Qi4CS SDK allows dynamically generate Qi4CS assemblies.</NuSpec_Summary>
+      <NuSpec_Summary>Qi4CS SDK allows programmatically generate Qi4CS assemblies.</NuSpec_Summary>
       <NuSpec_Tags>qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity cil generation dynamic runtime</NuSpec_Tags>
       <NuSpec_FilesXML><![CDATA[
       <!-- Files for PCL edition -->

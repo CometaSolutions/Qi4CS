@@ -33,7 +33,7 @@
       <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
       <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
       <NuSpec_Description>Qi4CS Extension: Configuration (XML) is an extension of Qi4CS.Core that further augments Qi4CS.Extensions.Configuration by adding customizable XML (de)serialization support for configuration composites.</NuSpec_Description>
-      <NuSpec_Title>Qi4CS Core</NuSpec_Title>
+      <NuSpec_Title>Qi4CS Extension: Configuration (XML)</NuSpec_Title>
       <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
       <NuSpec_CopyrightInceptionYear>2014</NuSpec_CopyrightInceptionYear>
       <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
@@ -47,7 +47,7 @@
       ]]></NuSpec_FilesXML>
       <NuSpec_DependenciesXML><![CDATA[
       <group>
-        <dependency id="Qi4CS.Extensions.Configuration" version="$(NuSpec_VersionFilename)"/>
+        <dependency id="Qi4CS.Extensions.Configuration" version="$([System.IO.File]::ReadAllText($(Qi4CSEConfXMLBaseDir)/Source/Qi4CSVersion.txt))"/>
       </group>
       ]]></NuSpec_DependenciesXML>
     </PropertyGroup>
