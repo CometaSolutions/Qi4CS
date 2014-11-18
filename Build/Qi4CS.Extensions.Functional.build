@@ -33,7 +33,7 @@
       <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
       <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
       <NuSpec_Description>Qi4CS Extension: Functional is an extension of Qi4CS.Core that allows ways to parametrize some functionality, which is not part of original API of objects, based on types of such objects. This mapping information can be specified during assembly time and also modified during runtime.</NuSpec_Description>
-      <NuSpec_Title>Qi4CS Core</NuSpec_Title>
+      <NuSpec_Title>Qi4CS Extension: Functional</NuSpec_Title>
       <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
       <NuSpec_CopyrightInceptionYear>2012</NuSpec_CopyrightInceptionYear>
       <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
@@ -44,12 +44,12 @@
       <NuSpec_FilesXML><![CDATA[
       <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.dll" />
       <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.xml" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.dll" target="lib\wpa81\Qi4CS.Extensions.Functional.dll" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.xml" target="lib\wpa81\Qi4CS.Extensions.Functional.xml" />
+      <!-- <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.dll" target="lib\wpa81\Qi4CS.Extensions.Functional.dll" />
+      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.xml" target="lib\wpa81\Qi4CS.Extensions.Functional.xml" /> -->
       ]]></NuSpec_FilesXML>
       <NuSpec_DependenciesXML><![CDATA[
       <group>
-        <dependency id="Qi4CS.Core" version="$(NuSpec_VersionFilename)"/>
+        <dependency id="Qi4CS.Core" version="$([System.IO.File]::ReadAllText($(Qi4CSEFuncBaseDir)/Source/Qi4CSVersion.txt))"/>
       </group>
       ]]></NuSpec_DependenciesXML>
     </PropertyGroup>
