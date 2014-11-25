@@ -29,9 +29,74 @@ using Qi4CS.Core.Runtime.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
+#if SILVERLIGHT
+using System.Runtime.CompilerServices;
+#endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
+#if SILVERLIGHT
+      // TODO maybe move this class to UtilPack ?
+      public sealed class ThreadLocal<T>
+      {
+         // Helper class to hold values, so T typeparam wouldn't have any generic constraints.
+         private class ValueHolder
+         {
+            internal T _value;
+            internal ValueHolder( T value )
+            {
+               this._value = value;
+            }
+         }
+
+         // Table holding all instances of ThreadLocals in this thread. Since they are weak references, they should get GC'd without big issues.
+         [ThreadStatic]
+         private static ConditionalWeakTable<ThreadLocal<T>, ValueHolder> _table;
+
+         // Factory callback
+         private readonly Func<T> _factory;
+
+         public ThreadLocal()
+            : this( () => default( T ) )
+         {
+
+         }
+
+         public ThreadLocal( Func<T> factory )
+         {
+            CommonUtils.ArgumentValidator.ValidateNotNull( "Threadlocal value factory", factory );
+            this._factory = factory;
+         }
+
+         public T Value
+         {
+            get
+            {
+               ValueHolder holder;
+               T retVal;
+               if ( _table != null && _table.TryGetValue( this, out holder ) )
+               {
+                  retVal = holder._value;
+               }
+               else
+               {
+                  retVal = this._factory();
+                  this.Value = retVal;
+               }
+               return retVal;
+            }
+            set
+            {
+               if ( _table == null )
+               {
+                  _table = new ConditionalWeakTable<ThreadLocal<T>, ValueHolder>();
+               }
+               _table.GetOrCreateValue( this )._value = value;
+            }
+         }
+      }
+
+#endif
 
    public class InvocationInfoImpl : InvocationInfo
    {
