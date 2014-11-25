@@ -142,7 +142,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       }
 
-      public void ActivateIfNeeded( MethodInfo compositeMethod, AbstractFragmentMethodModel nextFragment )
+      public void ActivateIfNeeded( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo, AbstractFragmentMethodModel nextFragment )
       {
          if ( (Int32) ActivatingAllowed.ALLOWED == this._activatingAllowed )
          {
@@ -156,10 +156,12 @@ namespace Qi4CS.Core.Runtime.Instance
                }
 
                // Disable prototype
-               this.DisablePrototype( compositeMethod, nextFragment );
+               this.DisablePrototype( compositeMethodIndex, gArgsInfo, nextFragment );
 
                if ( this._activationAction != null )
                {
+                  var compositeMethod = this.GetCompositeMethodInfo( compositeMethodIndex, gArgsInfo );
+
                   if ( compositeMethod != null )
                   {
                      this.InvocationInfo = new InvocationInfoImpl( compositeMethod, nextFragment );
@@ -207,7 +209,7 @@ namespace Qi4CS.Core.Runtime.Instance
          Interlocked.Exchange( ref this._activatingAllowed, (Int32) ActivatingAllowed.ALLOWED );
          if ( ( (ServiceCompositeModel) this.ModelInfo.Model ).ActivateWithApplication )
          {
-            this.ActivateIfNeeded( null, null );
+            this.ActivateIfNeeded( -1, null, null );
          }
       }
 
