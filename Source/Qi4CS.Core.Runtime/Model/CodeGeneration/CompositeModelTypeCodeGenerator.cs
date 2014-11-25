@@ -72,6 +72,7 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo> _typesWithCompositeMethods;
       private readonly ConcurrentDictionary<CompositeModel, ConcurrentDictionary<Int32, TypeGenerationInfo>> _allGenerationInfos;
       private readonly ConcurrentDictionary<CompositeTypeModel, IDictionary<CILType, TypeBindingInformation>> _emulatedFragmentTypeInfos;
+      private readonly ConcurrentDictionary<CompositeMethodModel, CompositeMethodGenerationInfo> _compositeMethodGenerationInfos;
       private readonly CILReflectionContext _ctx;
 
       public CompositeEmittingInfo( CILReflectionContext ctx, IEnumerable<CompositeModel> models )
@@ -89,11 +90,22 @@ namespace Qi4CS.Core.Runtime.Model
          this._typesWithCompositeMethods = new ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo>( ReferenceEqualityComparer<CompositeTypeGenerationInfo>.ReferenceBasedComparer );
          this._allGenerationInfos = new ConcurrentDictionary<CompositeModel, ConcurrentDictionary<Int32, TypeGenerationInfo>>();
          this._emulatedFragmentTypeInfos = new ConcurrentDictionary<CompositeTypeModel, IDictionary<CILType, TypeBindingInformation>>();
+         this._compositeMethodGenerationInfos = new ConcurrentDictionary<CompositeMethodModel, CompositeMethodGenerationInfo>();
       }
 
       public void RegisterGenerationInfo( CompositeModel compositeModel, TypeGenerationInfo genInfo, Int32 typeID )
       {
          this._allGenerationInfos.GetOrAdd( compositeModel, muudel => new ConcurrentDictionary<Int32, TypeGenerationInfo>() ).TryAdd( typeID, genInfo );
+      }
+
+      public void RegisterCompositeMethodGenerationInfo( CompositeMethodModel model, CompositeMethodGenerationInfo info )
+      {
+         this._compositeMethodGenerationInfos.TryAdd( model, info );
+      }
+
+      public CompositeMethodGenerationInfo GetCompositeMethodGenerationInfo( CompositeMethodModel model )
+      {
+         return this._compositeMethodGenerationInfos[model];
       }
 
       public IDictionary<Int32, TypeGenerationInfo> GetGenerationInfosByTypeID( CompositeModel compositeModel )

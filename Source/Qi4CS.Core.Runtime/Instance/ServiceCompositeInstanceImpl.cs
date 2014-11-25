@@ -25,79 +25,14 @@ using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 
-#if SILVERLIGHT
-using System.Runtime.CompilerServices;
-#endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
-#if SILVERLIGHT
-   // TODO maybe move this class to UtilPack ?
-   public sealed class ThreadLocal<T>
-   {
-      // Helper class to hold values, so T typeparam wouldn't have any generic constraints.
-      private class ValueHolder
-      {
-         internal T _value;
-         internal ValueHolder( T value )
-         {
-            this._value = value;
-         }
-      }
-
-      // Table holding all instances of ThreadLocals in this thread. Since they are weak references, they should get GC'd without big issues.
-      [ThreadStatic]
-      private static ConditionalWeakTable<ThreadLocal<T>, ValueHolder> _table;
-
-      // Factory callback
-      private readonly Func<T> _factory;
-
-      public ThreadLocal()
-         : this( () => default( T ) )
-      {
-
-      }
-
-      public ThreadLocal( Func<T> factory )
-      {
-         CommonUtils.ArgumentValidator.ValidateNotNull( "Threadlocal value factory", factory );
-         this._factory = factory;
-      }
-
-      public T Value
-      {
-         get
-         {
-            ValueHolder holder;
-            T retVal;
-            if ( _table != null && _table.TryGetValue( this, out holder ) )
-            {
-               retVal = holder._value;
-            }
-            else
-            {
-               retVal = this._factory();
-               this.Value = retVal;
-            }
-            return retVal;
-         }
-         set
-         {
-            if ( _table == null )
-            {
-               _table = new ConditionalWeakTable<ThreadLocal<T>, ValueHolder>();
-            }
-            _table.GetOrCreateValue( this )._value = value;
-         }
-      }
-   }
-
-#endif
    public class ServiceCompositeInstanceImpl : CompositeInstanceImpl, ServiceCompositeInstance
    {
 
       private static readonly QualifiedName IDENTITY_QNAME = QualifiedName.FromMemberInfo( typeof( Identity ).LoadPropertyOrThrow( "Identity" ) );
-      private static readonly ThreadLocal<Object[]> PUBLIC_CTOR_HOLDER = new ThreadLocal<Object[]>( () => null );
+      //private static readonly ThreadLocal<Object[]> PUBLIC_CTOR_HOLDER = new ThreadLocal<Object[]>( () => null );
       private enum ActivatingAllowed { ALLOWED, NOT_ALLOWED }
 
       // State changes:
@@ -121,10 +56,10 @@ namespace Qi4CS.Core.Runtime.Instance
       private Int32 _activatingAllowed;
       private Int32 _needToSetIdentity;
 
-      internal ServiceCompositeInstanceImpl( CompositeInstanceStructureOwner structureOwner, CompositeModel model, IEnumerable<Type> publicCompositeType, UsesContainerQuery usesContainer, String serviceID )
-         : base( structureOwner, model, publicCompositeType, usesContainer, PUBLIC_CTOR_HOLDER )
+      internal ServiceCompositeInstanceImpl( CompositeInstanceStructureOwner structureOwner, CompositeModel model, IEnumerable<Type> publicCompositeType, UsesContainerQuery usesContainer, String serviceID, MainCompositeConstructorArguments mainCtorArgs )
+         : base( structureOwner, model, publicCompositeType, usesContainer, mainCtorArgs )
       {
-         var publicCtors = PUBLIC_CTOR_HOLDER.Value;
+         var publicCtors = mainCtorArgs.Arguments;
 
          this._activationState = (Int32) ActivationState.PASSIVE;
 
@@ -138,7 +73,6 @@ namespace Qi4CS.Core.Runtime.Instance
 
          this._activatingAllowed = (Int32) ActivatingAllowed.ALLOWED;
          this._needToSetIdentity = Convert.ToInt32( true );
-         PUBLIC_CTOR_HOLDER.Value = null;
 
       }
 

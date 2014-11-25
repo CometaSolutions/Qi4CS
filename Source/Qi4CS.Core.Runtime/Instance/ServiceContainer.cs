@@ -66,7 +66,7 @@ GetOrAdd(
             id =>
             {
                var builderUses = UsesContainerMutableImpl.CreateWithParent( model.UsesContainer );
-               var instance = new ServiceCompositeInstanceImpl( structureOwner, model, serviceTypes, builderUses.Query, serviceID );
+               var instance = new ServiceCompositeInstanceImpl( structureOwner, model, serviceTypes, builderUses.Query, serviceID, new MainCompositeConstructorArguments() );
                return instance;
             } );
 #if SILVERLIGHT

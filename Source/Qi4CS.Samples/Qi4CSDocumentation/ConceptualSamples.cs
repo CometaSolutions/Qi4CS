@@ -106,7 +106,7 @@ namespace Qi4CS.Samples.Qi4CSDocumentation
             var composite = ssp.NewPlainComposite<MyDomainFunctionality>();
             // 'composite' will be proxy created by Qi4CS
             // which will pass control to MyDomainFunctionalityMixin.DoSomething(String)
-            Console.WriteLine( composite.DoSomething( "MyParameter" ) );
+            composite.DoSomething( "MyParameter" );
 
             // And once the lifecycle is over, the Qi4CS application should be
             // passivated in order to release possibly held resources

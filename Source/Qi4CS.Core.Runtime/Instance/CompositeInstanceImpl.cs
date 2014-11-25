@@ -191,11 +191,9 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
-      private readonly Lazy<MethodInfo>[] _compositeMethods;
-
-#if !WINDOWS_PHONE_APP
+      private readonly Lazy<MethodInfo[]> _compositeMethods;
       private readonly Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>> _methodsToModels;
-#endif
+
 
       private Int32 _isPrototype;
 
@@ -213,7 +211,7 @@ namespace Qi4CS.Core.Runtime.Instance
          CompositeModel model,
          IEnumerable<Type> publicCompositeTypes,
          UsesContainerQuery usesContainer,
-         ThreadLocal<Object[]> tlPublicCtorArgs
+         MainCompositeConstructorArguments publicCtorArgsObject
          )
       {
          ArgumentValidator.ValidateNotNull( "Structure owner", structureOwner );
@@ -278,9 +276,9 @@ namespace Qi4CS.Core.Runtime.Instance
 
             if ( isMainType )
             {
-               if ( tlPublicCtorArgs != null )
+               if ( publicCtorArgsObject != null )
                {
-                  tlPublicCtorArgs.Value = curCtorArgs;
+                  publicCtorArgsObject.Arguments = curCtorArgs;
                }
                prePrototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX];
                this._prototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 1];
@@ -301,37 +299,27 @@ namespace Qi4CS.Core.Runtime.Instance
             }
          }
 
-         this._compositeMethods = model.Methods
-            .Select( m => new Lazy<MethodInfo>( () => composites.CQ.Values
-               .Distinct()
-               .SelectMany( c => c.GetType().GetAllDeclaredInstanceMethods() )
-               .First( dm =>
-               {
-                  Int32 dmIdx;
-                  return dm.TryGetCompositeMethodModelIndex( out dmIdx ) && dmIdx == m.MethodIndex;
-               } ), LazyThreadSafetyMode.ExecutionAndPublication ) )
-            .ToArray();
+         this._composites = composites.CQ;
 
-#if !WINDOWS_PHONE_APP
+         this._compositeMethods = new Lazy<MethodInfo[]>( () => this._composites.Values.Distinct( ReferenceEqualityComparer<Object>.ReferenceBasedComparer ) // Use reference-based comparer to avoid invoking .GetHashCode() and .Equals of composites, which may have their implementation in fragments
+            .Cast<CompositeCallbacks>()
+            .SelectMany( c => this._modelInfo.Model.Methods.Select( m => c.GetCompositeMethod( m.MethodIndex ) ) )
+            .Where( m => m != null )
+            .ToArray(), LazyThreadSafetyMode.ExecutionAndPublication );
+         var lol = this._compositeMethods.Value;
+
          this._methodsToModels = new Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>>( () =>
          {
-            return application.CollectionsFactory.NewDictionaryProxy(
-               this._modelInfo.Model.Methods.ToDictionary( m =>
-               {
-                  return m.NativeInfo.DeclaringType.ContainsGenericParameters() ?
-                     (MethodInfo) MethodBase.GetMethodFromHandle(
-                        m.NativeInfo.MethodHandle,
-                     // TODO use .Single here to catch possible scenarios when there is none or too many matching composites
-                     // *should* never happen since if there are any overlapping types, the .Add methods to 'composites' above
-                     // would throw.
-                        composites.CQ.Keys.Single( t => t.GetGenericDefinitionIfGenericType().Equals( m.NativeInfo.DeclaringType.GetGenericTypeDefinition() ) ).TypeHandle ) :
-                        m.NativeInfo;
-               }, m => m )
-               ).CQ;
+            var retVal = new Dictionary<MethodInfo, CompositeMethodModel>();
+            var cMethods = this._compositeMethods.Value;
+            for ( var i = 0; i < cMethods.Length; ++i )
+            {
+               var cm = cMethods[i];
+               retVal.Add( cm, this._modelInfo.Model.Methods[i] );
+            }
+            return application.CollectionsFactory.NewDictionaryProxy( retVal ).CQ;
          }, LazyThreadSafetyMode.ExecutionAndPublication );
-#endif
 
-         this._composites = composites.CQ;
          this._state = new CompositeStateImpl( this._structureOwner.Application.CollectionsFactory, cProps.CQ, cEvents.CQ );
 
          this._fragmentInstancePools = this.CreatePoolDictionary<FragmentTypeGenerationResult, FragmentInstance>(
@@ -383,8 +371,9 @@ namespace Qi4CS.Core.Runtime.Instance
          var result = generatedCompositeType.GetAllParentTypes();
          if ( !includeObject )
          {
-            result = result.Except( new Type[] { typeof( Object ) } );
+            result = result.Where( t => !t.Equals( typeof( Object ) ) );
          }
+         result = result.Where( t => !t.Equals( typeof( CompositeCallbacks ) ) );
          return result;
       }
 
@@ -664,7 +653,7 @@ namespace Qi4CS.Core.Runtime.Instance
       protected MethodInfo GetCompositeMethodInfo( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo )
       {
          var retVal = compositeMethodIndex >= 0 ?
-            this._compositeMethods[compositeMethodIndex].Value :
+            this._compositeMethods.Value[compositeMethodIndex] :
             null;
 
          if ( retVal != null && gArgsInfo != null )
@@ -683,6 +672,12 @@ namespace Qi4CS.Core.Runtime.Instance
       //}
    }
 
+   public class MainCompositeConstructorArguments
+   {
+      public Object[] Arguments { get; set; }
+   }
+
+
    public sealed class MethodGenericArgumentsInfo
    {
       private readonly RuntimeTypeHandle _typeHandle;
@@ -698,6 +693,16 @@ namespace Qi4CS.Core.Runtime.Instance
       {
          return MethodBase.GetMethodFromHandle( this._methodHandle, this._typeHandle ).GetGenericArguments();
       }
+   }
+
+   public interface CompositeCallbacks
+   {
+      /// <summary>
+      /// Gets a runtime reflection object for <see cref="CompositeMethodModel"/> with given index.
+      /// </summary>
+      /// <param name="index">The index of the composite method model.</param>
+      /// <returns>A runtime reflection object for <see cref="CompositeMethodModel"/> with given <paramref name="index"/>, or <c>null</c> if this composite does not implement given method.</returns>
+      System.Reflection.MethodInfo GetCompositeMethod( Int32 index );
    }
 }
 
