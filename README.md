@@ -87,7 +87,3 @@ static void Main(string[] args)
 }
 ```
 This quick sample should print `It works!` and wait for user input before shutting down.
-
-## Next
-
-* Publish proper documentation on separate server
