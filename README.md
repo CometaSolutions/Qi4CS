@@ -6,10 +6,15 @@ It is written in C# and, despite the abbreviation, can be used with VB.NET or ma
 API documentation and guides about getting started are located at http://www.cometasolutions.fi/qi4cs/documentation/ .
 
 NuGet packages:
+
 https://www.nuget.org/packages/Qi4CS.Core/ (direct link: http://www.nuget.org/api/v2/package/Qi4CS.Core/ )
+
 https://www.nuget.org/packages/Qi4CS.Extensions.Configuration/ (direct link: http://www.nuget.org/api/v2/package/Qi4CS.Extensions.Configuration/ )
+
 https://www.nuget.org/packages/Qi4CS.Extensions.Configuration.XML/ (direct link: http://www.nuget.org/api/v2/package/Qi4CS.Extensions.Configuration.XML/  )
+
 https://www.nuget.org/packages/Qi4CS.Extensions.Functional/ (direct link: http://www.nuget.org/api/v2/package/Qi4CS.Extensions.Functional/ )
+
 https://www.nuget.org/packages/Qi4CS.SDK/ (direct link: http://www.nuget.org/api/v2/package/Qi4CS.SDK/ )
 
 ## Quickguide to use
