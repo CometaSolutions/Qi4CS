@@ -189,8 +189,12 @@ namespace Qi4CS.Core.Runtime.Model
             {
                if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
                {
-                  this.EmitCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, cInfo, emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType ) );
-                  this.ProcessCompositeType( model, cInfo, emittingInfo );
+                  var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
+                  this.EmitCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, cInfo, isMainCtor );
+                  if ( isMainCtor )
+                  {
+                     this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
+                  }
                }
             }
          }
@@ -328,57 +332,53 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      protected void ProcessCompositeType(
+      protected void ImplementCompositeCallbacks(
          CompositeModel model,
          CompositeTypeGenerationInfo typeGenInfo,
          CompositeEmittingInfo emittingInfo
          )
       {
+         // TODO replace emitting this method by one new ctor argument - Lazy<MethodInfo[]> methods.
+
          // Emit method for getting composite runtime method info objects
          var compositeCallbacks = COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD.DeclaringType;
          typeGenInfo.Builder.AddDeclaredInterfaces( compositeCallbacks );
 
-         var method = TypeGenerationUtils.ImplementMethodForEmitting( typeGenInfo.Builder, null, t => t, COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD, COMPOSITE_FACTORY_TYPE.Name + "." + COMPOSITE_FACTORY_METHOD.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
+         var method = TypeGenerationUtils.ImplementMethodForEmitting( typeGenInfo.Builder, null, t => t, COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD, compositeCallbacks.Name + "." + COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
          var methodGenInfo = new MethodGenerationInfoImpl( method );
          // Generate code for it
          var il = method.MethodIL;
 
-         var matchingCompositeModels = model.Methods
-            .Where( m => emittingInfo.GetCompositeMethodGenerationInfo( m ).DeclaringTypeGenInfo.Equals( typeGenInfo ) )
-            .ToArray();
+         var mInfoType = this.MAKE_GENERIC_METHOD_METHOD.DeclaringType;
+         var array = il.DeclareLocal( mInfoType.MakeArrayType() );
 
-         il.EmitLoadArg( 1 )
-            .EmitSwitch(
-            matchingCompositeModels.Length,
-            ( il2, labels, defaultLabel, switchEndLabel ) =>
+         // Create an array
+         il.EmitLoadInt32( model.Methods.Count )
+            .EmitNewArray( mInfoType )
+            .EmitStoreLocal( array );
+         foreach ( var currentMethod in model.Methods )
+         {
+            il.EmitLoadLocal( array )
+               .EmitLoadInt32( currentMethod.MethodIndex );
+            // return methodof(<method>)
+            var genInfo = emittingInfo.GetCompositeMethodGenerationInfo( currentMethod );
+            var methodToReturn = genInfo.OverriddenMethod;
+            var parent = genInfo.DeclaringTypeGenInfo.Parents[currentMethod.NativeInfo.DeclaringType.NewWrapperAsType( this.ctx )];
+            if ( parent.GenericArguments.Count > 0 )
             {
-               for ( var i = 0; i < labels.Length; ++i )
-               {
-                  il2.MarkLabel( labels[i] );
-                  var currentMethod = matchingCompositeModels[i];
-                  // return methodof(<method>)
-                  var genInfo = emittingInfo.GetCompositeMethodGenerationInfo( currentMethod );
-                  var methodToReturn = genInfo.OverriddenMethod;
-                  var parent = genInfo.DeclaringTypeGenInfo.Parents[currentMethod.NativeInfo.DeclaringType.NewWrapperAsType( this.ctx )];
-                  if ( parent.GenericArguments.Count > 0 )
-                  {
-                     methodToReturn = methodToReturn.ChangeDeclaringType( parent.GenericArguments.ToArray() );
-                  }
-                  il2.EmitReflectionObjectOf( methodToReturn )
-                     .EmitReturn();
-               }
-            },
-            ( il2, switchEndLabel ) =>
+               methodToReturn = methodToReturn.ChangeDeclaringType( parent.GenericArguments.ToArray() );
+            }
+            il.EmitReflectionObjectOf( methodToReturn );
+            if ( methodToReturn.GenericArguments.Count > 0 )
             {
-               il2.EmitLoadNull()
-                  .EmitReturn();
-               //il2.EmitLoadString( "Composite method model with index " )
-               //   .EmitLoadArg( 1 )
-               //   .EmitCastToType( method.Parameters[0].ParameterType, OBJECT_TYPE )
-               //   .EmitLoadString( " does not exist in this composite model." )
-               //   .EmitCall( STRING_CONCAT_METHOD_3 )
-               //   .EmitThrowNewException( INTERNAL_EXCEPTION_CTOR );
-            } );
+               // Even if we emit token of open method, the MethodBase.GetMethodFromHandle will return method which is not a generic method definition
+               il.EmitCall( GET_METHDO_GDEF );
+            }
+            il.EmitStoreElement( mInfoType );
+         }
+
+         il.EmitLoadLocal( array )
+            .EmitReturn();
 
          method.AddOverriddenMethods( COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD );
       }

@@ -334,7 +334,7 @@ namespace Qi4CS.Core.Runtime.Instance
             var curCtorArgs = isMainType ? publicCtorArgs : compositeCtorParams;
             this.SetCompositeCtorArgs( ref curCtorArgs, cProps.AO, cEvents.AO );
             var publicComposite = factory.CreateInstance( genType.GeneratedTypeID, gArgs, curCtorArgs );
-            foreach ( var cType in this.GetTypeKeysForGeneratedType( publicComposite.GetType(), true ) )
+            foreach ( var cType in this.GetTypeKeysForGeneratedType( publicComposite.GetType(), true, isMainType ) )
             {
                composites[cType] = publicComposite;
             }
@@ -348,6 +348,7 @@ namespace Qi4CS.Core.Runtime.Instance
                prePrototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX];
                this._prototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 1];
                this._checkStateFunc = (Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>>) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 2];
+               this._compositeMethods = new Lazy<MethodInfo[]>( () => ( (CompositeCallbacks) publicComposite ).GetCompositeMethods(), LazyThreadSafetyMode.ExecutionAndPublication );
             }
          }
 
@@ -358,20 +359,13 @@ namespace Qi4CS.Core.Runtime.Instance
          foreach ( var typeGenResult in publicTypeGenResult.PrivateCompositeGenerationResults )
          {
             var privateComposite = factory.CreateInstance( typeGenResult.GeneratedTypeID, gArgs, compositeCtorParams );
-            foreach ( var cTypeOrParent in this.GetTypeKeysForGeneratedType( privateComposite.GetType(), false ) )
+            foreach ( var cTypeOrParent in this.GetTypeKeysForGeneratedType( privateComposite.GetType(), false, false ) )
             {
                composites.Add( cTypeOrParent, privateComposite );
             }
          }
 
          this._composites = composites.CQ;
-
-         this._compositeMethods = new Lazy<MethodInfo[]>( () => this._composites.Values.Distinct( ReferenceEqualityComparer<Object>.ReferenceBasedComparer ) // Use reference-based comparer to avoid invoking .GetHashCode() and .Equals of composites, which may have their implementation in fragments
-            .Cast<CompositeCallbacks>()
-            .SelectMany( c => this._modelInfo.Model.Methods.Select( m => c.GetCompositeMethod( m.MethodIndex ) ) )
-            .Where( m => m != null )
-            .ToArray(), LazyThreadSafetyMode.ExecutionAndPublication );
-         var lol = this._compositeMethods.Value;
 
          this._methodsToModels = new Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>>( () =>
          {
@@ -431,14 +425,17 @@ namespace Qi4CS.Core.Runtime.Instance
          }
       }
 
-      private IEnumerable<Type> GetTypeKeysForGeneratedType( Type generatedCompositeType, Boolean includeObject )
+      private IEnumerable<Type> GetTypeKeysForGeneratedType( Type generatedCompositeType, Boolean includeObject, Boolean mainCompositeType )
       {
          var result = generatedCompositeType.GetAllParentTypes();
          if ( !includeObject )
          {
             result = result.Where( t => !t.Equals( typeof( Object ) ) );
          }
-         result = result.Where( t => !t.Equals( typeof( CompositeCallbacks ) ) );
+         if ( mainCompositeType )
+         {
+            result = result.Where( t => !t.Equals( typeof( CompositeCallbacks ) ) );
+         }
          return result;
       }
 
@@ -762,12 +759,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
    public interface CompositeCallbacks
    {
-      /// <summary>
-      /// Gets a runtime reflection object for <see cref="CompositeMethodModel"/> with given index.
-      /// </summary>
-      /// <param name="index">The index of the composite method model.</param>
-      /// <returns>A runtime reflection object for <see cref="CompositeMethodModel"/> with given <paramref name="index"/>, or <c>null</c> if this composite does not implement given method.</returns>
-      System.Reflection.MethodInfo GetCompositeMethod( Int32 index );
+      System.Reflection.MethodInfo[] GetCompositeMethods();
    }
 }
 
