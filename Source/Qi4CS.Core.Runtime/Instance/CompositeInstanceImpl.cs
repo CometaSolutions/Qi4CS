@@ -591,7 +591,6 @@ namespace Qi4CS.Core.Runtime.Instance
          } );
       }
 
-#if !WINDOWS_PHONE_APP
       public DictionaryQuery<MethodInfo, CompositeMethodModel> MethodToModelMapping
       {
          get
@@ -599,7 +598,6 @@ namespace Qi4CS.Core.Runtime.Instance
             return this._methodsToModels.Value;
          }
       }
-#endif
 
       private void RunPrototypeAction( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo, AbstractFragmentMethodModel nextMethod )
       {
