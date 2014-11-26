@@ -3,6 +3,8 @@
 Qi4CS is a version of Qi4j ( https://github.com/Qi4j/qi4j-sdk ) for CLR platform.
 It is written in C# and, despite the abbreviation, can be used with VB.NET or managed C/C++ languages as well. It should work in Mono as well, but that has not yet been thoroughly tested.
 
+API documentation and guides about getting started are located at http://www.cometasolutions.fi/qi4cs/documentation/ .
+
 ## Quickguide to use
 
 Add a reference to `Qi4CS.Core` NuGet package (or download directly from http://nuget.org/api/v2/package/Qi4CS.Core ).
