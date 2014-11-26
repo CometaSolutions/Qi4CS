@@ -82,7 +82,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public void Activate()
       {
-         this._instance.Value.ActivateIfNeeded( null, null );
+         this._instance.Value.ActivateIfNeeded( -1, null, null );
       }
 
       public ServiceCompositeModel Model

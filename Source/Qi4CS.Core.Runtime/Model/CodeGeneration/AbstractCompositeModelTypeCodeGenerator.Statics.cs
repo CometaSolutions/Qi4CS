@@ -323,6 +323,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo INTERLOCKED_COMPARE_EXCHANGE_OBJECT_METHOD_NATIVE;
       protected static readonly ConstructorInfo COMPOSITE_TYPE_ID_CTOR_NATIVE;
       protected static readonly MethodInfo COMPOSITE_FACTORY_METHOD_NATIVE;
+      protected static readonly MethodInfo COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD_NATIVE;
       protected static readonly ConstructorInfo ARGUMENT_EXCEPTION_STRING_CTOR_NATIVE;
       protected static readonly MethodInfo MAKE_GENERIC_TYPE_METHOD_NATIVE;
       protected static readonly MethodInfo GET_FIRST_INSTANCE_CTOR_NATIVE;
@@ -496,6 +497,7 @@ namespace Qi4CS.Core.Runtime.Model
          INTERLOCKED_COMPARE_EXCHANGE_OBJECT_METHOD_NATIVE = typeof( Interlocked ).LoadMethodWithParamTypesOrThrow( "CompareExchange", new Type[] { typeof( Object ).MakeByRefType(), typeof( Object ), typeof( Object ) } );
          COMPOSITE_TYPE_ID_CTOR_NATIVE = typeof( CompositeTypeIDAttribute ).LoadConstructorOrThrow( new Type[] { typeof( Int32 ) } );
          COMPOSITE_FACTORY_METHOD_NATIVE = COMPOSITE_FACTORY_TYPE_NATIVE.LoadMethodOrThrow( "CreateInstance", null );
+         COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD_NATIVE = typeof( CompositeCallbacks ).LoadMethodOrThrow( "GetCompositeMethods", null );
          ARGUMENT_EXCEPTION_STRING_CTOR_NATIVE = typeof( ArgumentException ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
          MAKE_GENERIC_TYPE_METHOD_NATIVE = typeof( Type ).LoadMethodOrThrow( "MakeGenericType", null );
          GET_FIRST_INSTANCE_CTOR_NATIVE = typeof( ReflectionHelper ).LoadMethodOrThrow( "GetFirstInstanceConstructor", 1 );

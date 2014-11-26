@@ -23,6 +23,7 @@ using CILAssemblyManipulator.API;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.Runtime.Instance;
 using Qi4CS.Core.SPI.Model;
+using CommonUtils;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -33,12 +34,15 @@ namespace Qi4CS.Core.Runtime.Model
       protected const String ACTIVATION_METHOD_NAME = "ActivationMethod";
 
       protected static readonly System.Reflection.MethodInfo SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE;
+      protected static readonly System.Reflection.ConstructorInfo METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE;
 
       protected readonly CILMethod SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD;
+      protected readonly CILConstructor METHOD_GENERIC_ARGUMENTS_INFO_CTOR;
 
       static ServiceModelTypeCodeGenerator()
       {
          SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE = typeof( ServiceCompositeInstanceImpl ).LoadMethodOrThrow( "ActivateIfNeeded", null );
+         METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE = typeof( MethodGenericArgumentsInfo ).LoadConstructorOrThrow( (Type[]) null );
          //ACTION_CONSTRUCTOR_NATIVE = TypeUtil.TryLoadConstructor( typeof( Action<ServiceCompositeInstanceImpl> ), 2 );
       }
 
@@ -46,6 +50,7 @@ namespace Qi4CS.Core.Runtime.Model
          : base( isSilverlight, ctx )
       {
          this.SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD = SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE.NewWrapper( this.ctx );
+         this.METHOD_GENERIC_ARGUMENTS_INFO_CTOR = METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE.NewWrapper( this.ctx );
       }
 
       protected override void EmitAfterCompositeMethodBodyBegan(
@@ -68,9 +73,27 @@ namespace Qi4CS.Core.Runtime.Model
             this.InitializeComplexMethodModelLocalIfNecessary( compositeMethodModel, thisMethodGenerationInfo, out compositeMethodModelB );
          }
 
-         // cInstance.ActivateIfNeeded(<method>, <next fragment>);
+         // cInstance.ActivateIfNeeded(<method-index>, <gargs-info>, <next fragment>);
          il.EmitLoadLocal( cInstanceB )
-           .EmitReflectionObjectOf( thisMethodGenerationInfo.OverriddenMethod.MakeGenericMethod( thisMethodGenerationInfo.GenericArguments.ToArray() ) );
+           .EmitLoadInt32( compositeMethodModel.MethodIndex );
+         if ( thisMethodGenerationInfo.Builder.GenericArguments.Count > 0 )
+         {
+            // new MethodGenericArgumentsInfo(<method-handle>, <type-handle>)
+            var cMethodInfo = thisMethodGenerationInfo.OverriddenMethod.MakeGenericMethod( thisMethodGenerationInfo.GenericArguments.ToArray() );
+            il.Add( new OpCodeInfoWithMethodToken(
+                  OpCodes.Ldtoken,
+                  cMethodInfo ) )
+               .Add( new OpCodeInfoWithTypeToken(
+                  OpCodes.Ldtoken,
+                  cMethodInfo.DeclaringType
+               ) );
+            il.EmitNewObject( this.METHOD_GENERIC_ARGUMENTS_INFO_CTOR );
+         }
+         else
+         {
+            il.EmitLoadNull();
+         }
+
          if ( hasOnInvocationInjections )
          {
             il.EmitLoadLocal( compositeMethodModelB );

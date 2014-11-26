@@ -29,9 +29,74 @@ using Qi4CS.Core.Runtime.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
+#if SILVERLIGHT
+using System.Runtime.CompilerServices;
+#endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
+#if SILVERLIGHT
+      // TODO maybe move this class to UtilPack ?
+      public sealed class ThreadLocal<T>
+      {
+         // Helper class to hold values, so T typeparam wouldn't have any generic constraints.
+         private class ValueHolder
+         {
+            internal T _value;
+            internal ValueHolder( T value )
+            {
+               this._value = value;
+            }
+         }
+
+         // Table holding all instances of ThreadLocals in this thread. Since they are weak references, they should get GC'd without big issues.
+         [ThreadStatic]
+         private static ConditionalWeakTable<ThreadLocal<T>, ValueHolder> _table;
+
+         // Factory callback
+         private readonly Func<T> _factory;
+
+         public ThreadLocal()
+            : this( () => default( T ) )
+         {
+
+         }
+
+         public ThreadLocal( Func<T> factory )
+         {
+            CommonUtils.ArgumentValidator.ValidateNotNull( "Threadlocal value factory", factory );
+            this._factory = factory;
+         }
+
+         public T Value
+         {
+            get
+            {
+               ValueHolder holder;
+               T retVal;
+               if ( _table != null && _table.TryGetValue( this, out holder ) )
+               {
+                  retVal = holder._value;
+               }
+               else
+               {
+                  retVal = this._factory();
+                  this.Value = retVal;
+               }
+               return retVal;
+            }
+            set
+            {
+               if ( _table == null )
+               {
+                  _table = new ConditionalWeakTable<ThreadLocal<T>, ValueHolder>();
+               }
+               _table.GetOrCreateValue( this )._value = value;
+            }
+         }
+      }
+
+#endif
 
    public class InvocationInfoImpl : InvocationInfo
    {
@@ -191,9 +256,9 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
-#if !WINDOWS_PHONE_APP
+      private readonly Lazy<MethodInfo[]> _compositeMethods;
       private readonly Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>> _methodsToModels;
-#endif
+
 
       private Int32 _isPrototype;
 
@@ -211,7 +276,7 @@ namespace Qi4CS.Core.Runtime.Instance
          CompositeModel model,
          IEnumerable<Type> publicCompositeTypes,
          UsesContainerQuery usesContainer,
-         ThreadLocal<Object[]> tlPublicCtorArgs
+         MainCompositeConstructorArguments publicCtorArgsObject
          )
       {
          ArgumentValidator.ValidateNotNull( "Structure owner", structureOwner );
@@ -263,62 +328,57 @@ namespace Qi4CS.Core.Runtime.Instance
          Action prePrototypeAction = null;
          var publicCtorArgs = new Object[publicTypeGenResult.MaxParamCountForCtors];
          Object[] compositeCtorParams = null;
-
          foreach ( var genType in publicTypeGenResult.GeneratedPublicTypes )
          {
             var isMainType = genType.GeneratedType.Equals( this._modelInfo.Types.GeneratedMainPublicType );
             var curCtorArgs = isMainType ? publicCtorArgs : compositeCtorParams;
             this.SetCompositeCtorArgs( ref curCtorArgs, cProps.AO, cEvents.AO );
             var publicComposite = factory.CreateInstance( genType.GeneratedTypeID, gArgs, curCtorArgs );
-            foreach ( var cType in this.GetTypeKeysForGeneratedType( publicComposite.GetType(), true ) )
+            foreach ( var cType in this.GetTypeKeysForGeneratedType( publicComposite.GetType(), true, isMainType ) )
             {
                composites[cType] = publicComposite;
             }
 
             if ( isMainType )
             {
-               if ( tlPublicCtorArgs != null )
+               if ( publicCtorArgsObject != null )
                {
-                  tlPublicCtorArgs.Value = curCtorArgs;
+                  publicCtorArgsObject.Arguments = curCtorArgs;
                }
                prePrototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX];
                this._prototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 1];
                this._checkStateFunc = (Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>>) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 2];
+               this._compositeMethods = new Lazy<MethodInfo[]>( () => ( (CompositeCallbacks) publicComposite ).GetCompositeMethods(), LazyThreadSafetyMode.ExecutionAndPublication );
             }
          }
 
          this._isPrototypeTransitionInProgress = null;
 
          this.SetCompositeCtorArgs( ref compositeCtorParams, cProps.AO, cEvents.AO );
+
          foreach ( var typeGenResult in publicTypeGenResult.PrivateCompositeGenerationResults )
          {
-            var composite = factory.CreateInstance( typeGenResult.GeneratedTypeID, gArgs, compositeCtorParams );
-            foreach ( var cTypeOrParent in this.GetTypeKeysForGeneratedType( composite.GetType(), false ) )
+            var privateComposite = factory.CreateInstance( typeGenResult.GeneratedTypeID, gArgs, compositeCtorParams );
+            foreach ( var cTypeOrParent in this.GetTypeKeysForGeneratedType( privateComposite.GetType(), false, false ) )
             {
-               composites.Add( cTypeOrParent, composite );
+               composites.Add( cTypeOrParent, privateComposite );
             }
          }
 
-#if !WINDOWS_PHONE_APP
+         this._composites = composites.CQ;
+
          this._methodsToModels = new Lazy<DictionaryQuery<MethodInfo, CompositeMethodModel>>( () =>
          {
-            return application.CollectionsFactory.NewDictionaryProxy(
-               this._modelInfo.Model.Methods.ToDictionary( m =>
-               {
-                  return m.NativeInfo.DeclaringType.ContainsGenericParameters() ?
-                     (MethodInfo) MethodBase.GetMethodFromHandle(
-                        m.NativeInfo.MethodHandle,
-                     // TODO use .Single here to catch possible scenarios when there is none or too many matching composites
-                     // *should* never happen since if there are any overlapping types, the .Add methods to 'composites' above
-                     // would throw.
-                        composites.CQ.Keys.Single( t => t.GetGenericDefinitionIfGenericType().Equals( m.NativeInfo.DeclaringType.GetGenericTypeDefinition() ) ).TypeHandle ) :
-                        m.NativeInfo;
-               }, m => m )
-               ).CQ;
+            var retVal = new Dictionary<MethodInfo, CompositeMethodModel>();
+            var cMethods = this._compositeMethods.Value;
+            for ( var i = 0; i < cMethods.Length; ++i )
+            {
+               var cm = cMethods[i];
+               retVal.Add( cm, this._modelInfo.Model.Methods[i] );
+            }
+            return application.CollectionsFactory.NewDictionaryProxy( retVal ).CQ;
          }, LazyThreadSafetyMode.ExecutionAndPublication );
-#endif
 
-         this._composites = composites.CQ;
          this._state = new CompositeStateImpl( this._structureOwner.Application.CollectionsFactory, cProps.CQ, cEvents.CQ );
 
          this._fragmentInstancePools = this.CreatePoolDictionary<FragmentTypeGenerationResult, FragmentInstance>(
@@ -365,12 +425,16 @@ namespace Qi4CS.Core.Runtime.Instance
          }
       }
 
-      private IEnumerable<Type> GetTypeKeysForGeneratedType( Type generatedCompositeType, Boolean includeObject )
+      private IEnumerable<Type> GetTypeKeysForGeneratedType( Type generatedCompositeType, Boolean includeObject, Boolean mainCompositeType )
       {
          var result = generatedCompositeType.GetAllParentTypes();
          if ( !includeObject )
          {
-            result = result.Except( new Type[] { typeof( Object ) } );
+            result = result.Where( t => !t.Equals( typeof( Object ) ) );
+         }
+         if ( mainCompositeType )
+         {
+            result = result.Where( t => !t.Equals( typeof( CompositeCallbacks ) ) );
          }
          return result;
       }
@@ -516,13 +580,13 @@ namespace Qi4CS.Core.Runtime.Instance
          }
       }
 
-      public void DisablePrototype( MethodInfo compositeMethod, AbstractFragmentMethodModel nextMethod )
+      public void DisablePrototype( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo, AbstractFragmentMethodModel nextMethod )
       {
          ApplicationSkeleton.ThreadsafeStateTransition( ref this._isPrototype, (Int32) PrototypeState.PROTOTYPE, (Int32) PrototypeState.IN_TRANSITION_RUNNING_ACTION, (Int32) PrototypeState.NOT_PROTOTYPE, true, ref this._isPrototypeTransitionInProgress, ApplicationSkeleton.WAIT_TIME, () =>
          {
-            this.RunPrototypeAction( compositeMethod, nextMethod );
+            this.RunPrototypeAction( compositeMethodIndex, gArgsInfo, nextMethod );
             Interlocked.Exchange( ref this._isPrototype, (Int32) PrototypeState.IN_TRANSITION_CHECKING_STATE );
-            this.CheckCompositeState( compositeMethod, nextMethod );
+            this.CheckCompositeState( compositeMethodIndex, gArgsInfo, nextMethod );
             ( (CompositeModelImmutable) this.ModelInfo.Model ).InvokeCompositeInstantiated( this );
          } );
       }
@@ -537,10 +601,12 @@ namespace Qi4CS.Core.Runtime.Instance
       }
 #endif
 
-      private void RunPrototypeAction( MethodInfo compositeMethod, AbstractFragmentMethodModel nextMethod )
+      private void RunPrototypeAction( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo, AbstractFragmentMethodModel nextMethod )
       {
          if ( this._prototypeAction != null )
          {
+            var compositeMethod = this.GetCompositeMethodInfo( compositeMethodIndex, gArgsInfo );
+
             if ( compositeMethod != null )
             {
                this._invocationInfos.Value.Value.Push( new InvocationInfoImpl( compositeMethod, nextMethod ) );
@@ -559,7 +625,7 @@ namespace Qi4CS.Core.Runtime.Instance
          }
       }
 
-      private void CheckCompositeState( MethodInfo compositeMethod, AbstractFragmentMethodModel nextMethod )
+      private void CheckCompositeState( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo, AbstractFragmentMethodModel nextMethod )
       {
          if ( this._checkStateFunc != null )
          {
@@ -646,6 +712,19 @@ namespace Qi4CS.Core.Runtime.Instance
          return result.CQ;
       }
 
+      protected MethodInfo GetCompositeMethodInfo( Int32 compositeMethodIndex, MethodGenericArgumentsInfo gArgsInfo )
+      {
+         var retVal = compositeMethodIndex >= 0 ?
+            this._compositeMethods.Value[compositeMethodIndex] :
+            null;
+
+         if ( retVal != null && gArgsInfo != null )
+         {
+            retVal = retVal.MakeGenericMethod( gArgsInfo.GetGenericArguments() );
+         }
+         return retVal;
+      }
+
       //private void CopyState( CompositeState from, CompositeState to )
       //{
       //   foreach ( KeyValuePair<QualifiedName, CompositeProperty> kvp in from.Properties )
@@ -653,6 +732,34 @@ namespace Qi4CS.Core.Runtime.Instance
       //      to.Properties[kvp.Key].PropertyValueAsObject = kvp.Value.PropertyValueAsObject;
       //   }
       //}
+   }
+
+   public class MainCompositeConstructorArguments
+   {
+      public Object[] Arguments { get; set; }
+   }
+
+
+   public sealed class MethodGenericArgumentsInfo
+   {
+      private readonly RuntimeTypeHandle _typeHandle;
+      private readonly RuntimeMethodHandle _methodHandle;
+
+      public MethodGenericArgumentsInfo( RuntimeMethodHandle methodHandle, RuntimeTypeHandle typeHandle )
+      {
+         this._typeHandle = typeHandle;
+         this._methodHandle = methodHandle;
+      }
+
+      internal Type[] GetGenericArguments()
+      {
+         return MethodBase.GetMethodFromHandle( this._methodHandle, this._typeHandle ).GetGenericArguments();
+      }
+   }
+
+   public interface CompositeCallbacks
+   {
+      System.Reflection.MethodInfo[] GetCompositeMethods();
    }
 }
 
