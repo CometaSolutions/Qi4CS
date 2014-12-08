@@ -239,7 +239,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                   {
                      return new System.Text.RegularExpressions.Regex( element.Value );
                   }
-                     // TODO parse XElement here.
+                  // TODO parse XElement here.
                   else
                   {
                      var isGeneric = type.IsGenericType;
@@ -359,11 +359,13 @@ namespace Qi4CS.Extensions.Configuration.XML
             case TypeCode.Int64:
             case TypeCode.SByte:
             case TypeCode.Single:
-            case TypeCode.String:
             case TypeCode.UInt16:
             case TypeCode.UInt32:
             case TypeCode.UInt64:
-               result.Value = obj.ToString();
+               result.Value = obj.ToStringSafe();
+               break;
+            case TypeCode.String:
+               result.Value = obj.ToStringSafe();
                break;
             case TypeCode.Object:
                var isGeneric = type.IsGenericType;
@@ -410,7 +412,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                   if ( !serialized )
                   {
                      // Serialize recursively all properties
-                     foreach ( var prop in type.GetProperties( BindingFlags.Instance | BindingFlags.Public ) )
+                     foreach ( var prop in type.GetAllParentTypes().SelectMany( t => t.GetProperties( BindingFlags.Instance | BindingFlags.Public ) ) )
                      {
                         result.Add( this.Serialize( prop.GetGetMethod().Invoke( obj, null ), prop.PropertyType, prop.Name, prop ) );
                      }
