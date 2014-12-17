@@ -313,7 +313,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                            // Parse recursively all content.
                            var resultBuilder = this._ssp.NewPlainCompositeBuilder( type );
                            var proto = resultBuilder.PrototypeFor( type );
-                           foreach ( var prop in type.GetAllParentTypes().SelectMany( t => t.GetProperties( System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public ) ) )
+                           foreach ( var prop in proto.GetType().GetAllParentTypes( false ).SelectMany( t => t.GetProperties( System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly ) ) )
                            {
                               var propElement = element.Element( prop.Name );
                               if ( propElement != null )
@@ -417,7 +417,8 @@ namespace Qi4CS.Extensions.Configuration.XML
                      if ( !serialized )
                      {
                         // Serialize recursively all properties
-                        foreach ( var prop in type.GetAllParentTypes().SelectMany( t => t.GetProperties( BindingFlags.Instance | BindingFlags.Public ) ) )
+                        // Assume that this is Qi4CS composite instance -> get properties of all parent types (since this type is Qi4CS generated)
+                        foreach ( var prop in obj.GetType().GetAllParentTypes( false ).SelectMany( t => t.GetProperties( BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly ) ) )
                         {
                            result.AddIfNotNull( this.Serialize( prop.GetGetMethod().Invoke( obj, null ), prop.PropertyType, prop.Name, prop ) );
                         }
