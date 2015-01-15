@@ -25,13 +25,13 @@ namespace Qi4CS.Core.Runtime.Instance
    public class CompositeBuilderImpl : CompositeBuilder
    {
 
-//      private readonly IEnumerable<Type> _compositeTypes;
+      //      private readonly IEnumerable<Type> _compositeTypes;
       private readonly CompositeInstanceImpl _instance;
       private readonly UsesContainerMutable _usesContainer;
 
       public CompositeBuilderImpl( IEnumerable<Type> actualCompositeTypes, UsesContainerMutable usings, CompositeInstanceImpl compositeInstance )
       {
-//         this._compositeTypes = actualCompositeTypes;
+         //         this._compositeTypes = actualCompositeTypes;
          this._usesContainer = usings;
          this._instance = compositeInstance;
       }
@@ -63,7 +63,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public Object InstantiateWithType( Type other )
       {
-         this._instance.DisablePrototype( null, null );
+         this._instance.DisablePrototype( -1, null, null );
          return this._instance.GetCompositeForType( other );
       }
 

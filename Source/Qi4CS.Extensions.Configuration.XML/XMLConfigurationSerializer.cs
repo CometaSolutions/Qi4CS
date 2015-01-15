@@ -185,14 +185,16 @@ namespace Qi4CS.Extensions.Configuration.XML
       private Object Deserialize( Type type, XElement element, Object curVal, out Boolean replace )
       {
          replace = true;
-         if ( type.IsEnum )
+         if ( type.IsNullable( out type ) && String.IsNullOrEmpty( element.Value ) )
+         {
+            return null;
+         }
+         else if ( type.IsEnum )
          {
             return Enum.Parse( type, element.Value, true );
          }
          else
          {
-            type.IsNullable( out type );
-
             switch ( Type.GetTypeCode( type ) )
             {
                case TypeCode.Boolean:
@@ -239,7 +241,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                   {
                      return new System.Text.RegularExpressions.Regex( element.Value );
                   }
-                     // TODO parse XElement here.
+                  // TODO parse XElement here.
                   else
                   {
                      var isGeneric = type.IsGenericType;
@@ -311,7 +313,7 @@ namespace Qi4CS.Extensions.Configuration.XML
                            // Parse recursively all content.
                            var resultBuilder = this._ssp.NewPlainCompositeBuilder( type );
                            var proto = resultBuilder.PrototypeFor( type );
-                           foreach ( var prop in type.GetAllParentTypes().SelectMany( t => t.GetProperties( System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public ) ) )
+                           foreach ( var prop in proto.GetType().GetAllParentTypes( false ).SelectMany( t => t.GetProperties( System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.DeclaredOnly ) ) )
                            {
                               var propElement = element.Element( prop.Name );
                               if ( propElement != null )
@@ -337,88 +339,99 @@ namespace Qi4CS.Extensions.Configuration.XML
 
       private XElement Serialize( Object obj, Type type, String elName, PropertyInfo currentProperty )
       {
-         var result = new XElement( elName );
-
-         if ( typeof( System.Text.RegularExpressions.Regex ).Equals( type ) )
+         XElement result;
+         if ( obj != null )
          {
-            type = typeof( String );
+            result = new XElement( elName );
+
+            if ( typeof( System.Text.RegularExpressions.Regex ).Equals( type ) )
+            {
+               type = typeof( String );
+            }
+
+            type.IsNullable( out type );
+
+            switch ( Type.GetTypeCode( type ) )
+            {
+               case TypeCode.Boolean:
+               case TypeCode.Byte:
+               case TypeCode.Char:
+               case TypeCode.DateTime:
+               case TypeCode.Decimal:
+               case TypeCode.Double:
+               case TypeCode.Int16:
+               case TypeCode.Int32:
+               case TypeCode.Int64:
+               case TypeCode.SByte:
+               case TypeCode.Single:
+               case TypeCode.UInt16:
+               case TypeCode.UInt32:
+               case TypeCode.UInt64:
+                  result.Value = obj.ToStringSafe();
+                  break;
+               case TypeCode.String:
+                  result.Value = obj.ToStringSafe();
+                  break;
+               case TypeCode.Object:
+                  var isGeneric = type.IsGenericType;
+
+                  if ( type.IsArray && type.GetArrayRank() == 1 )
+                  {
+                     var itemType = type.GetElementType();
+                     foreach ( var item in (Array) obj )
+                     {
+                        result.AddIfNotNull( this.Serialize( item, itemType, GetItemTypeName( itemType, currentProperty ), null ) );
+                     }
+                  }
+                  else if ( isGeneric && typeof( IList<> ).Equals( type.GetGenericTypeDefinition() ) )
+                  {
+                     var itemType = type.GetGenericArguments()[0];
+                     foreach ( var item in (System.Collections.IEnumerable) obj )
+                     {
+                        result.AddIfNotNull( this.Serialize( item, itemType, GetItemTypeName( itemType, currentProperty ), null ) );
+                     }
+                  }
+                  else if ( isGeneric && typeof( IDictionary<,> ).Equals( type.GetGenericTypeDefinition() ) )
+                  {
+                     var itemType = type.GetGenericArguments()[1];
+                     var itemGetter = MethodBase.GetMethodFromHandle( DIC_ITEM_GETTER.MethodHandle, type.TypeHandle );
+                     foreach ( var key in (System.Collections.IEnumerable) MethodBase.GetMethodFromHandle( DIC_KEYS_GETTER.MethodHandle, type.TypeHandle ).Invoke( obj, null ) )
+                     {
+                        result.AddIfNotNull( this.Serialize( itemGetter.Invoke( obj, new[] { key } ), itemType, key.ToString(), null ) );
+                     }
+                  }
+                  else
+                  {
+                     // Check custom serializers
+                     var serialized = false;
+                     foreach ( var cs in this._customSerializers )
+                     {
+                        if ( cs.CanSerialize( obj, type ) )
+                        {
+                           cs.Serialize( obj, type, result );
+                           serialized = true;
+                           break;
+                        }
+                     }
+
+                     if ( !serialized )
+                     {
+                        // Serialize recursively all properties
+                        // Assume that this is Qi4CS composite instance -> get properties of all parent types (since this type is Qi4CS generated)
+                        foreach ( var prop in obj.GetType().GetAllParentTypes( false ).SelectMany( t => t.GetProperties( BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly ) ) )
+                        {
+                           result.AddIfNotNull( this.Serialize( prop.GetGetMethod().Invoke( obj, null ), prop.PropertyType, prop.Name, prop ) );
+                        }
+                     }
+                  }
+                  break;
+               default:
+                  throw new NotSupportedException( "Unsupported type code: " + Type.GetTypeCode( type ) + "." );
+            }
          }
-
-         type.IsNullable( out type );
-
-         switch ( Type.GetTypeCode( type ) )
+         else
          {
-            case TypeCode.Boolean:
-            case TypeCode.Byte:
-            case TypeCode.Char:
-            case TypeCode.DateTime:
-            case TypeCode.Decimal:
-            case TypeCode.Double:
-            case TypeCode.Int16:
-            case TypeCode.Int32:
-            case TypeCode.Int64:
-            case TypeCode.SByte:
-            case TypeCode.Single:
-            case TypeCode.String:
-            case TypeCode.UInt16:
-            case TypeCode.UInt32:
-            case TypeCode.UInt64:
-               result.Value = obj.ToString();
-               break;
-            case TypeCode.Object:
-               var isGeneric = type.IsGenericType;
-
-               if ( type.IsArray && type.GetArrayRank() == 1 )
-               {
-                  var itemType = type.GetElementType();
-                  foreach ( var item in (Array) obj )
-                  {
-                     result.Add( this.Serialize( item, itemType, GetItemTypeName( itemType, currentProperty ), null ) );
-                  }
-               }
-               else if ( isGeneric && typeof( IList<> ).Equals( type.GetGenericTypeDefinition() ) )
-               {
-                  var itemType = type.GetGenericArguments()[0];
-                  foreach ( var item in (System.Collections.IEnumerable) obj )
-                  {
-                     result.Add( this.Serialize( item, itemType, GetItemTypeName( itemType, currentProperty ), null ) );
-                  }
-               }
-               else if ( isGeneric && typeof( IDictionary<,> ).Equals( type.GetGenericTypeDefinition() ) )
-               {
-                  var itemType = type.GetGenericArguments()[1];
-                  var itemGetter = MethodBase.GetMethodFromHandle( DIC_ITEM_GETTER.MethodHandle, type.TypeHandle );
-                  foreach ( var key in (System.Collections.IEnumerable) MethodBase.GetMethodFromHandle( DIC_KEYS_GETTER.MethodHandle, type.TypeHandle ).Invoke( obj, null ) )
-                  {
-                     result.Add( this.Serialize( itemGetter.Invoke( obj, new[] { key } ), itemType, key.ToString(), null ) );
-                  }
-               }
-               else
-               {
-                  // Check custom serializers
-                  var serialized = false;
-                  foreach ( var cs in this._customSerializers )
-                  {
-                     if ( cs.CanSerialize( obj, type ) )
-                     {
-                        cs.Serialize( obj, type, result );
-                        serialized = true;
-                        break;
-                     }
-                  }
-
-                  if ( !serialized )
-                  {
-                     // Serialize recursively all properties
-                     foreach ( var prop in type.GetProperties( BindingFlags.Instance | BindingFlags.Public ) )
-                     {
-                        result.Add( this.Serialize( prop.GetGetMethod().Invoke( obj, null ), prop.PropertyType, prop.Name, prop ) );
-                     }
-                  }
-               }
-               break;
-            default:
-               throw new NotSupportedException( "Unsupported type code: " + Type.GetTypeCode( type ) + "." );
+            result = null;
          }
 
          return result;
@@ -555,6 +568,17 @@ namespace Qi4CS.Extensions.Configuration.XML
             isSerializing ? FileAccess.Write : FileAccess.Read,
             isSerializing ? FileShare.None : FileShare.Read ) : null;
          return retVal;
+      }
+   }
+}
+
+public static partial class E_Qi4CSConfigurationXML
+{
+   internal static void AddIfNotNull( this XContainer container, XElement element )
+   {
+      if ( element != null )
+      {
+         container.Add( element );
       }
    }
 }

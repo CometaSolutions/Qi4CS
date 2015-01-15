@@ -534,7 +534,7 @@ namespace Qi4CS.Core.Runtime.Model
 
    public interface CompositeMethodGenerationInfo : CompositeMethodBaseGenerationInfo<CILMethod>, MethodGenerationInfo
    {
-
+      AbstractTypeGenerationInfoForComposites DeclaringTypeGenInfo { get; }
    }
 
    public static class CompositeTypeGenerationUtils
@@ -739,6 +739,7 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly CILMethod _methodToOverride;
       private readonly CILMethod _methodFromModel;
       private readonly Boolean _hasByRefParams;
+      private readonly AbstractTypeGenerationInfoForComposites _declaringTypeGenInfo;
 
       public CompositeMethodGenerationInfoImpl(
          CILMethod mb,
@@ -760,7 +761,8 @@ namespace Qi4CS.Core.Runtime.Model
       public CompositeMethodGenerationInfoImpl(
          CILMethod mb,
          CILMethod methodFromModel,
-         CILMethod methodToOverride )
+         CILMethod methodToOverride,
+         AbstractTypeGenerationInfoForComposites declaringTypeGenInfo = null )
          : base( mb )
       {
          CompositeTypeGenerationUtils.DoCompositeMethodOrConstructorGenerationInfoCtor(
@@ -770,6 +772,7 @@ namespace Qi4CS.Core.Runtime.Model
             methodToOverride,
             methodFromModel
          );
+         this._declaringTypeGenInfo = declaringTypeGenInfo;
       }
 
       public CILMethod OverriddenMethod
@@ -796,7 +799,13 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-
+      public AbstractTypeGenerationInfoForComposites DeclaringTypeGenInfo
+      {
+         get
+         {
+            return this._declaringTypeGenInfo;
+         }
+      }
    }
 
    public interface CompositeConstructorGenerationInfo : CompositeMethodBaseGenerationInfo<CILConstructor>, ConstructorGenerationInfo

@@ -30,8 +30,10 @@ using Qi4CS.Extensions.Functional.Model;
 using Qi4CS.Core.Runtime.Instance;
 #endif
 
+
 namespace Qi4CS.Extensions.Functional.Instance
 {
+
 
    internal static class RoleMapHolder
    {

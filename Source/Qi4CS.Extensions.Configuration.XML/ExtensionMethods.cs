@@ -26,7 +26,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 /// <summary>
 /// Class containing extensions methods for XML (de)serialization support of Qi4CS configuration composites.
 /// </summary>
-public static class E_Qi4CSConfigurationXML
+public static partial class E_Qi4CSConfigurationXML
 {
    /// <summary>
    /// Adds XML serialization support for configuration composite represented by this <see cref="ConfigurationCompositeDefaultInfo"/>.
@@ -46,7 +46,7 @@ public static class E_Qi4CSConfigurationXML
    /// <param name="xpath">The optional textual XPath expression to retrieve the actual element within the XML document to (de)serialize the configuration.</param>
    /// <returns>The <paramref name="info"/>.</returns>
    /// <exception cref="ArgumentException">If <paramref name="documentPath"/> is <c>null</c> or empty string.</exception>
-   public static ConfigurationCompositeDefaultInfo LocatedInXMLDocument(this ConfigurationCompositeDefaultInfo info, String documentPath, String xpath = null)
+   public static ConfigurationCompositeDefaultInfo LocatedInXMLDocument( this ConfigurationCompositeDefaultInfo info, String documentPath, String xpath = null )
    {
       return info.SetDefaultLocationInfo( new XMLConfigurationResource( documentPath, xpath ) );
    }
