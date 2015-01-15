@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Qi4CSBaseDir Condition=" '$(Qi4CSBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSBaseDir>
+    <Qi4CSConfiguration Condition=" '$(Qi4CSConfiguration)' == '' ">Debug</Qi4CSConfiguration>
+    <Qi4CSPlatform Condition=" '$(Qi4CSPlatform)' == '' ">AnyCPU</Qi4CSPlatform>
+    <Qi4CSBuildTargets Condition=" '$(Qi4CSBuildTargets)' == '' ">Build</Qi4CSBuildTargets>
+    <Qi4CSBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSBuildTargets)</Qi4CSBuildTargets>
+    <Qi4CSBuildTargets>GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSBuildTargets)</Qi4CSBuildTargets>
+    
+    <Qi4CSConfiguration_SDK>$(Qi4CSConfiguration)_SDK</Qi4CSConfiguration_SDK>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Qi4CSCoreBuildFile Include="$(MSBuildThisFileDirectory)Qi4CS.Core.build" />
+    
+    <Qi4CSProjectFile Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
+    <Qi4CSProjectFile Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
+    <Qi4CSProjectFile Condition=" '$(Qi4CSConfiguration)' != 'Debug_SL' and '$(Qi4CSConfiguration)' != 'Release_SL' " Include="$(Qi4CSBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
+  </ItemGroup>
+   
+  <Target Name="Build">
+    <!-- Build Normal version of everything first -->
+    <MSBuild Projects="@(Qi4CSCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSConfiguration);Qi4CSCorePlatform=$(Qi4CSPlatform)" />
+    <MSBuild Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform)" />
+    
+    <!-- Build SDK version of everything then -->
+    <MSBuild Condition=" '$(Qi4CSConfiguration)' == 'Debug' or '$(Qi4CSConfiguration)' == 'Release' " Projects="@(Qi4CSCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSConfiguration_SDK);Qi4CSCorePlatform=$(Qi4CSPlatform)" />
+    <MSBuild Condition=" '$(Qi4CSConfiguration)' == 'Debug' or '$(Qi4CSConfiguration)' == 'Release' " Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration_SDK);Platform=$(Qi4CSPlatform)" />
+  </Target>
+</Project>

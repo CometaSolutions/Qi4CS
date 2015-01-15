@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A402E6FC-5E90-4970-A148-24E07D803A50}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Qi4CS.Tests</RootNamespace>
+    <AssemblyName>Qi4CS.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\dotNET\SDK\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>bin\Release\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
+    <OutputPath>bin\Release\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CILAssemblyManipulator.Portable">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.6.3\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Qi4CS.Extensions.Configuration">
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Qi4CS.Extensions.Configuration.XML">
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.dll</HintPath>
+    </Reference>
+    <Reference Include="Qi4CS.Extensions.Functional">
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Extensions.Functional.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="Qi4CS.Core">
+      <HintPath>..\..\Output\Debug\dotNET\SDK\Qi4CS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UtilPack">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AbstractInstanceTest.cs" />
+    <Compile Include="AbstractModelTest.cs" />
+    <Compile Include="Core\Architecture\Layered\AbstractLayeredArchitectureInstanceTest.cs" />
+    <Compile Include="Core\Architecture\Layered\AbstractLayeredArchitectureModelTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Instance\LayerVisibilityTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Instance\MixinVisiblityTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Instance\ServiceActivationOrderTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Instance\UsesVisibilityTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Model\LayerUsageTest.cs" />
+    <Compile Include="Core\Architecture\Layered\Model\ServiceInjectionVisibilityTest.cs" />
+    <Compile Include="Core\Instance\AbstractSingletonInstanceTest.cs" />
+    <Compile Include="Core\Instance\AgnosticismTest.cs" />
+    <Compile Include="Core\Instance\AppliesTo\AppliesToFilterTest.cs" />
+    <Compile Include="Core\Instance\AppliesTo\AppliesToMultipleFiltersTest.cs" />
+    <Compile Include="Core\Instance\AppliesTo\AppliesToTest.cs" />
+    <Compile Include="Core\Instance\AppliesTo\FragmentAppliesToTest.cs" />
+    <Compile Include="Core\Instance\Assembling\DefaultFragmentsTest.cs" />
+    <Compile Include="Core\Instance\CodeGen\InternalFragmentTest.cs" />
+    <Compile Include="Core\Instance\Common\InvokingCompositeMethodWithinMixinTest.cs" />
+    <Compile Include="Core\Instance\Common\OptionalTest.cs" />
+    <Compile Include="Core\Instance\Common\UseDefaultsOnAssemblyLevelTest.cs" />
+    <Compile Include="Core\Instance\Common\UseDefaultsTest.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\AbstractObject.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\CollectionsFactory.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\CollectionWithRoles.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\Int32Object.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\LeafObject.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\ListWithRoles.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\Mutable.cs" />
+    <Compile Include="Core\Instance\Composite\Domain\ObjectsFactory.cs" />
+    <Compile Include="Core\Instance\Composite\GenericCompositeTestWithArrayTypes.cs" />
+    <Compile Include="Core\Instance\Composite\NonPublicCompositeMethodsTest.cs" />
+    <Compile Include="Core\Instance\Event\AbstractEventTest.cs" />
+    <Compile Include="Core\Instance\Event\EventTest.cs" />
+    <Compile Include="Core\Instance\Composite\GenericComposite.cs" />
+    <Compile Include="Core\Instance\Composite\GenericCompositeTest.cs" />
+    <Compile Include="Core\Instance\Composite\GenericCompositeWithClosedArgsTest.cs" />
+    <Compile Include="Core\Instance\Composite\InheritanceTest.cs" />
+    <Compile Include="Core\Instance\Composite\MultipleComplexCompositesTest.cs" />
+    <Compile Include="Core\Instance\Composite\ParameterModificationsTest.cs" />
+    <Compile Include="Core\Instance\Composite\PrivateCompositeTest.cs" />
+    <Compile Include="Core\Instance\Composite\ReferencingSamePrivateCompositeTest.cs" />
+    <Compile Include="Core\Instance\Composite\RoleTest.cs" />
+    <Compile Include="Core\Instance\Composite\SpecificCompositeTest.cs" />
+    <Compile Include="Core\Instance\Concern\ConcernTest.cs" />
+    <Compile Include="Core\Instance\Concern\GenericConcernTest.cs" />
+    <Compile Include="Core\Instance\Constraint\ConstraintOnReadOnlyPropertyTest.cs" />
+    <Compile Include="Core\Instance\Constraint\ConstraintTest.cs" />
+    <Compile Include="Core\Instance\Enums\EnumAutoPropertyTest.cs" />
+    <Compile Include="Core\Instance\Event\WeakEventTest.cs" />
+    <Compile Include="Core\Instance\Injection\InvocationInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\InvocationScopeInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\LazyInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\ParameterInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\ServiceInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\StructureInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\ThisInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\UsesInjectionTest.cs" />
+    <Compile Include="Core\Instance\Injection\UsesInjectionTestWithServiceComposite.cs" />
+    <Compile Include="Core\Instance\Lifecycle\InitializeTest.cs" />
+    <Compile Include="Core\Instance\Lifecycle\ProtectedSpecialMethodTest.cs" />
+    <Compile Include="Core\Instance\Lifecycle\PrototypeTest.cs" />
+    <Compile Include="Core\Instance\Lifecycle\PrototypeWithActivationTest.cs" />
+    <Compile Include="Core\Instance\Mixin\GenericMixinTest.cs" />
+    <Compile Include="Core\Instance\Mixin\MixinCallingCompositeMethodTest.cs" />
+    <Compile Include="Core\Instance\Mixin\NoOpMixinTest.cs" />
+    <Compile Include="Core\Instance\MultipleApplicationActivationsTest.cs" />
+    <Compile Include="Core\Instance\Objects\ComplexObjectTest.cs" />
+    <Compile Include="Core\Instance\Objects\ObjectTest.cs" />
+    <Compile Include="Core\Instance\Performance\CompositeCreationPerformanceTest.cs" />
+    <Compile Include="Core\Instance\Performance\InvocationPerformanceTest.cs" />
+    <Compile Include="Core\Instance\Property\AutoPropertyTest.cs" />
+    <Compile Include="Core\Instance\Property\CompositePropertyTest.cs" />
+    <Compile Include="Core\Instance\Property\ImmutablePropertyTest.cs" />
+    <Compile Include="Core\Instance\Property\PropertyOptionalityTest.cs" />
+    <Compile Include="Core\Instance\Property\PropertyTest.cs" />
+    <Compile Include="Core\Instance\Property\SameNamedPropertiesTest.cs" />
+    <Compile Include="Core\Instance\Property\StructPropertyTest.cs" />
+    <Compile Include="Core\Instance\SameNamedCompositesInDifferentNamespaceTest.cs" />
+    <Compile Include="Core\Instance\Services\ActivatableServiceTest.cs" />
+    <Compile Include="Core\Instance\Services\CallMethodsWhilePassivatingTest.cs" />
+    <Compile Include="Core\Instance\Services\MultiplePassivateMethodsTest.cs" />
+    <Compile Include="Core\Instance\Services\PassivatableTest.cs" />
+    <Compile Include="Core\Instance\Services\QualifierTest.cs" />
+    <Compile Include="Core\Instance\SideEffect\GenericSideEffectTest.cs" />
+    <Compile Include="Core\Instance\SideEffect\SideEffectTest.cs" />
+    <Compile Include="Core\Instance\Mixin\MixinTest.cs" />
+    <Compile Include="Core\Instance\Structures\CompositeBuilderTest.cs" />
+    <Compile Include="Core\Instance\Structures\ServiceFinderTest.cs" />
+    <Compile Include="Core\Instance\Transients\EqualsHashCodeTest.cs" />
+    <Compile Include="Core\Model\AbstractSingletonModelTest.cs" />
+    <Compile Include="Core\Model\Validation\SingleCompositeValidationTest.cs" />
+    <Compile Include="Extensions\Configuration\ConfigurationTest.cs" />
+    <Compile Include="Extensions\Functional\Domain1Test.cs" />
+    <Compile Include="Extensions\Functional\Domain1\MyData.cs" />
+    <Compile Include="Extensions\Functional\Domain1\MyFunction.cs" />
+    <Compile Include="Extensions\Functional\Domain1\TestData.cs" />
+    <Compile Include="Extensions\Functional\Domain1\TestFunction.cs" />
+    <Compile Include="Extensions\Functional\Domain2Test.cs" />
+    <Compile Include="Extensions\Functional\Domain2\TestData.cs" />
+    <Compile Include="Extensions\Functional\Domain2\TestDataImpl.cs" />
+    <Compile Include="Extensions\Functional\Domain2\TestFunction.cs" />
+    <Compile Include="Extensions\Functional\Domain2\TestFunctionImpl.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Qi4CSTestUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">
+      <Project>{7be33f23-3f8a-4b25-ad6c-43647e592108}</Project>
+      <Name>Qi4CS.CodeGeneration.DotNET</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test_db_setup.xml">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- This is after Import since ProjectDir is set there -->
+  <PropertyGroup>
+    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.Tests.snk</KeyFilePath>
+    <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <!-- Create .snk file if it doesn't exist to ensure smooth build -->
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
+</Project>

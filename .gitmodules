@@ -1,0 +1,3 @@
+[submodule "CommonBuildTools"]
+	path = CommonBuildTools
+	url = https://github.com/CometaSolutions/CommonBuildTools.git

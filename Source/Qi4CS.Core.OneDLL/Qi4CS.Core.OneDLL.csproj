@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{EF53DA96-AC98-4D07-9867-68E6CA57D800}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Qi4CS.Core</RootNamespace>
+    <AssemblyName>Qi4CS.Core</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Qi4CSSDKBuild Condition=" '$(Configuration.EndsWith(`_SDK`))' == 'true' ">True</Qi4CSSDKBuild>
+    <!-- .NET & Windows 8 -->
+    <TargetFrameworkProfile Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">Profile5</TargetFrameworkProfile>
+    <TargetFrameworkVersion Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">{786C830F-07A1-408B-BD7F-6EE04809D6DB};$(ProjectTypeGuids)</ProjectTypeGuids>
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">portable-net40+win</NuGetFrameworkString>
+    <!-- SL5 & WPSL 8 -->
+    <TargetFrameworkProfile Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">Profile158</TargetFrameworkProfile>
+    <TargetFrameworkVersion Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">{786C830F-07A1-408B-BD7F-6EE04809D6DB};$(ProjectTypeGuids)</ProjectTypeGuids>
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">portable-net45+sl50+win+wp80</NuGetFrameworkString>
+    <!-- WP 8.1 -->
+    <TargetPlatformIdentifier Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">WindowsPhoneApp</TargetPlatformIdentifier>
+    <TargetPlatformVersion Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">8.1</TargetPlatformVersion>
+    <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">{76F1466A-8B6D-4E39-A767-685A06062A39};$(ProjectTypeGuids)</ProjectTypeGuids>
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">wpa81</NuGetFrameworkString>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;QI4CS_SDK</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE;QI4CS_SDK</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WINDOWS_PHONE_APP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
+    <OutputPath>..\..\Output\Release\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_SL|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\SL\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_SL|AnyCPU'">
+    <OutputPath>..\..\Output\Release\SL\Normal\</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.Core.Architectures\Qi4CS.Core.Architectures.csproj">
+      <Project>{EE51D59F-EA79-47A8-8531-9446E0C15DA8}</Project>
+      <Name>Qi4CS.Core.Architectures</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\AssemblyInfo\$(AssemblyName).cs">
+      <Link>Properties\$(AssemblyName).AssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Condition=" '$(TargetPlatformIdentifier)' != 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Condition=" '$(TargetPlatformIdentifier)' == 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+
+  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+  <PropertyGroup>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
+  <!-- This is after Import since ProjectDir is set there -->
+  <PropertyGroup>
+    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.Core.snk</KeyFilePath>
+  </PropertyGroup>
+  <!-- Create .snk file if it doesn't exist to ensure smooth build -->
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
+  <!-- Assembly information -->
+  <PropertyGroup>
+    <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
+    <AssemblyInfoDescription>Qi4CS Core</AssemblyInfoDescription>
+    <AssemblyInfoDescription Condition=" '$(Configuration.EndsWith(`_SDK`))' != 'true' ">$(AssemblyInfoDescription) SDK</AssemblyInfoDescription>
+    <AssemblyInfoDescription>$(AssemblyInfoDescription).</AssemblyInfoDescription>
+    <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
+    <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
+    <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
+    <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>
+    <AssemblyInfoAssemblyInceptionYear>2011</AssemblyInfoAssemblyInceptionYear>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/AssemblyInfo.targets" />
+  <Import Project="..\..\packages\CILMerge.MSBuild.0.9.6.5\build\CILMerge.MSBuild.targets" Condition="Exists('..\..\packages\CILMerge.MSBuild.0.9.6.5\build\CILMerge.MSBuild.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\CILMerge.MSBuild.0.9.6.5\build\CILMerge.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\CILMerge.MSBuild.0.9.6.5\build\CILMerge.MSBuild.targets'))" />
+  </Target>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' or '$(Configuration)' == 'Release_SDK' or '$(Configuration)' == 'Release_WP' ">
+    <CILMergeNoDebug>True</CILMergeNoDebug>
+  </PropertyGroup>
+  <Target Name="AfterBuild">
+    <!-- TODO Output logging info when all projects have XML document files -->
+    <CILMerge.MSBuild.CILMergeTask InputAssemblies="@(IntermediateAssembly);$(ProjectDir)$(OutputPath)Qi4CS.Core.*.dll" AllowWildCards="True" OutDir="$(ProjectDir)$(OutputPath)" Union="True" Closed="False" XmlDocs="True" UseFullPublicKeyForRefs="True" DoLogging="False" NoDebug="$(CILMergeNoDebug)" KeyFile="$(KeyFilePath)" />
+  </Target>
+</Project>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Qi4CSCoreBaseDir Condition=" '$(Qi4CSCoreBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSCoreBaseDir>
+    <Qi4CSCoreConfiguration Condition=" '$(Qi4CSCoreConfiguration)' == '' ">Debug</Qi4CSCoreConfiguration>
+    <Qi4CSCorePlatform Condition=" '$(Qi4CSCorePlatform)' == '' ">AnyCPU</Qi4CSCorePlatform>
+    <Qi4CSCoreBuildTargets Condition=" '$(Qi4CSCoreBuildTargets)' == '' ">Build</Qi4CSCoreBuildTargets>
+    <Qi4CSCoreBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSCoreBuildTargets)</Qi4CSCoreBuildTargets>
+    <Qi4CSCoreFinalAssemblyTargets Condition=" '$(Qi4CSCoreFinalAssemblyTargets)' == '' ">GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSCoreBuildTargets)</Qi4CSCoreFinalAssemblyTargets>
+    
+    <!-- NuGet stuff -->
+    <NuGetRestore_RepositoriesFile>$(Qi4CSCoreBaseDir)/packages/repositories.config</NuGetRestore_RepositoriesFile>
+  </PropertyGroup>
+  
+  <!-- Projects to build, each item kind in build order -->
+  <ItemGroup>
+    <Qi4CSCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Core.Architectures/Qi4CS.Core.Architectures.csproj" />
+    
+    <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.DotNET/Qi4CS.CodeGeneration.DotNET.csproj" />
+    <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.csproj" />
+  </ItemGroup>
+  
+  <!-- Import target for restoring NuGet packages -->
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/RestoreNuGetPackages.targets" />
+
+  <Target Name="Build">
+    <!-- Build build tools -->
+    <MSBuild Projects="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/Build/CommonBuildTools.build" />
+    
+    <!-- Restore all NuGet packages -->
+    <CallTarget Targets="RestoreNuGetPackages" />
+
+    <!-- Build Qi4CS Core projects -->
+    <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSCoreBuildTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+
+    <!-- Build Qi4CS Core merged DLL -->
+    <MSBuild Projects="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Core.OneDLL/Qi4CS.Core.OneDLL.csproj" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+
+    <!-- Build Qi4CS SDK, if needed -->
+    <MSBuild Condition=" '$(Qi4CSCoreConfiguration.EndsWith(`_SDK`))' == 'true' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+    
+  </Target>
+  
+
+  
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/ReadVersionFromFile.targets" />
+  
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/NuSpec.targets" />
+  
+  <!-- <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildtools/CLR/MSBuild/PEVerify.targets" /> -->
+  
+  <Target Name="InitializeNuSpecProperties" BeforeTargets="Qi4CSCoreNuSpec">
+    <!-- Read UtilPack version -->
+    <CommonBuildTools.ReadVersionFromFileTask
+      VersionFilePath="$(Qi4CSCoreBaseDir)/Dependencies/UtilPackVersion.txt">
+      <Output TaskParameter="VersionString" PropertyName="Qi4CSCoreUtilPackVersion" />
+    </CommonBuildTools.ReadVersionFromFileTask>
+      <!-- NuSpec file information -->
+    <PropertyGroup>
+      <Qi4CSCoreBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSCoreBaseDir)))</Qi4CSCoreBaseDirNuSpec>
+      <NuSpec_OutputPath>$(Qi4CSCoreBaseDir)/NuSpec/Qi4CS.Core.nuspec</NuSpec_OutputPath>
+      <NuSpec_ID>Qi4CS.Core</NuSpec_ID>
+      <NuSpec_VersionFilename>$(Qi4CSCoreBaseDir)/Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
+      <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
+      <NuSpec_Description>Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the core package required for all projects using Qi4CS.</NuSpec_Description>
+      <NuSpec_Title>Qi4CS Core</NuSpec_Title>
+      <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
+      <NuSpec_CopyrightInceptionYear>2011</NuSpec_CopyrightInceptionYear>
+      <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
+      <NuSpec_ProjectURL>https://github.com/CometaSolutions/Qi4CS</NuSpec_ProjectURL>
+      <NuSpec_RequireLicenseAcceptance>false</NuSpec_RequireLicenseAcceptance>
+      <NuSpec_Summary>Qi4CS Core provides the minimal functionality required for COP, AOP and DI -oriented programming.</NuSpec_Summary>
+      <NuSpec_Tags>qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity</NuSpec_Tags>
+      <NuSpec_FilesXML><![CDATA[
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.dll" target="lib\portable-net40+win\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Core.xml" target="lib\portable-net40+win\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Normal\Qi4CS.Core.dll" target="lib\portable-net40+sl50+win+wp80\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\SL\Normal\Qi4CS.Core.xml" target="lib\portable-net40+sl50+win+wp80\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.dll" target="lib\wpa81\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.xml" target="lib\wpa81\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Core.pri" target="lib\wpa81\Qi4CS.Core.pri" />
+
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Source\Qi4CS.CodeGeneration.MSBuild\Qi4CS.CodeGeneration.MSBuild.targets" target="build\Qi4CS.Core.targets" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\UtilPack.dll" target="build\UtilPack.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\CILAssemblyManipulator.Portable.dll" target="build\CILAssemblyManipulator.Portable.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\CILAssemblyManipulator.DotNET.dll" target="build\CILAssemblyManipulator.DotNET.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Core.dll" target="build\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.CodeGeneration.DotNET.dll" target="build\Qi4CS.CodeGeneration.DotNET.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.CodeGeneration.MSBuild.dll" target="build\Qi4CS.CodeGeneration.MSBuild.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.dll" target="build\Qi4CS.Extensions.Configuration.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.dll" target="build\Qi4CS.Extensions.Configuration.XML.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Functional.dll" target="build\Qi4CS.Extensions.Functional.dll" />
+      ]]></NuSpec_FilesXML>
+      <NuSpec_DependenciesXML><![CDATA[
+      <group>
+        <dependency id="UtilPack" version="$(Qi4CSCoreUtilPackVersion)"/>
+      </group>
+      ]]></NuSpec_DependenciesXML>
+    </PropertyGroup>
+  </Target>
+  
+  <Target Name="Qi4CSCoreNuSpec">
+    <!-- Generate .nuspec file -->
+    <CallTarget Targets="GenerateNuSpecFile" />
+    
+  </Target>
+</Project>

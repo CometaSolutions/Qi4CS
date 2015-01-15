@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AB903B13-AA87-42B7-940E-8FF2ECEAD2C0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Qi4CS.Extensions.Configuration.XML</RootNamespace>
+    <AssemblyName>Qi4CS.Extensions.Configuration.XML</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <Qi4CSSDKBuild Condition=" '$(Configuration.EndsWith(`_SDK`))' == 'true' ">True</Qi4CSSDKBuild>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <!-- .NET & Windows 8 -->
+    <TargetFrameworkProfile Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">v4.0</TargetFrameworkVersion>
+    <!-- <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">{786C830F-07A1-408B-BD7F-6EE04809D6DB};$(ProjectTypeGuids)</ProjectTypeGuids> -->
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release' or '$(Qi4CSSDKBuild)' != '' ">portable-net40+win</NuGetFrameworkString>
+    <!-- SL5 & WPSL 8 -->
+    <TargetFrameworkProfile Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">Profile158</TargetFrameworkProfile>
+    <TargetFrameworkVersion Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">{786C830F-07A1-408B-BD7F-6EE04809D6DB};$(ProjectTypeGuids)</ProjectTypeGuids>
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug_SL' or '$(Configuration)' == 'Release_SL' ">portable-net45+sl50+win+wp80</NuGetFrameworkString>
+    <!-- WP 8.1 -->
+    <TargetPlatformIdentifier Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">WindowsPhoneApp</TargetPlatformIdentifier>
+    <TargetPlatformVersion Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">8.1</TargetPlatformVersion>
+    <ProjectTypeGuids Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">{76F1466A-8B6D-4E39-A767-685A06062A39};$(ProjectTypeGuids)</ProjectTypeGuids>
+    <NuGetFrameworkString Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">wpa81</NuGetFrameworkString>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
+    <OutputPath>..\..\Output\Release\WP\Normal\</OutputPath>
+    <DefineConstants>TRACE;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_SL|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\Output\Debug\SL\Normal\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_SL|AnyCPU'">
+    <OutputPath>..\..\Output\Release\SL\Normal\</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Qi4CS.Core">
+      <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UtilPack">
+      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\AssemblyInfo\$(AssemblyName).cs">
+      <Link>Properties\$(AssemblyName).AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="ConfigurationMeta.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="XMLConfigurationResource.cs" />
+    <Compile Include="XMLConfigurationSerializer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.Extensions.Configuration\Qi4CS.Extensions.Configuration.csproj">
+      <Project>{3a78aac7-7998-471c-a413-147be7b0ce1b}</Project>
+      <Name>Qi4CS.Extensions.Configuration</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+  <PropertyGroup>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
+  <!-- This is after Import since ProjectDir is set there -->
+  <PropertyGroup>
+    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.Extensions.snk</KeyFilePath>
+    <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <!-- Create .snk file if it doesn't exist to ensure smooth build -->
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
+  <!-- Assembly information -->
+  <PropertyGroup>
+    <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
+    <AssemblyInfoDescription>Adds XML (de)serialization support for Qi4CS Configuration Extension.</AssemblyInfoDescription>
+    <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
+    <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
+    <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
+    <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>
+    <AssemblyInfoAssemblyInceptionYear>2014</AssemblyInfoAssemblyInceptionYear>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/AssemblyInfo.targets" />
+</Project>

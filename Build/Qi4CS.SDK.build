@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Qi4CSSDKBaseDir Condition=" '$(Qi4CSSDKBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSSDKBaseDir>
+    <Qi4CSSDKConfiguration Condition=" '$(Qi4CSSDKConfiguration)' == '' ">Debug</Qi4CSSDKConfiguration>
+    <Qi4CSSDKPlatform Condition=" '$(Qi4CSSDKPlatform)' == '' ">AnyCPU</Qi4CSSDKPlatform>
+    <Qi4CSSDKBuildTargets Condition=" '$(Qi4CSSDKBuildTargets)' == '' ">Build</Qi4CSSDKBuildTargets>
+    <Qi4CSSDKBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSSDKBuildTargets)</Qi4CSSDKBuildTargets>
+    <Qi4CSSDKBuildTargets>GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSSDKBuildTargets)</Qi4CSSDKBuildTargets>
+    
+    <Qi4CSSDKProjectConfiguration>$(Qi4CSSDKConfiguration)_SDK</Qi4CSSDKProjectConfiguration>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Qi4CSSDKCoreBuildFile Include="$(MSBuildThisFileDirectory)Qi4CS.Core.build" />
+    
+    <Qi4CSSDKProjectFile Include="$(Qi4CSSDKBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" />
+    <Qi4CSSDKProjectFile Include="$(Qi4CSSDKBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" />
+    <Qi4CSSDKProjectFile Include="$(Qi4CSSDKBaseDir)/Source/Qi4CS.Extensions.Configuration.XML/Qi4CS.Extensions.Configuration.XML.csproj" />
+  </ItemGroup>
+   
+  <Target Name="Build">
+    <MSBuild Projects="@(Qi4CSSDKCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSSDKProjectConfiguration);Qi4CSCorePlatform=$(Qi4CSSDKPlatform)" />
+    <MSBuild Projects="@(Qi4CSSDKProjectFile)" Targets="$(Qi4CSSDKBuildTargets)" Properties="Configuration=$(Qi4CSSDKProjectConfiguration);Platform=$(Qi4CSSDKPlatform)" />
+  </Target>
+  
+  <!-- NuSpec generation related -->
+  <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildTools/CLR/MSBuild/ReadVersionFromFile.targets" />
+  
+  <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildTools/CLR/MSBuild/NuSpec.targets" />
+  
+  <!-- <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildtools/CLR/MSBuild/PEVerify.targets" /> -->
+  
+  <Target Name="InitializeNuSpecProperties" BeforeTargets="Qi4CSSDKNuSpec">
+    <!-- Read UtilPack & CAM versions -->
+    <CommonBuildTools.ReadVersionFromFileTask
+      VersionFilePath="$(Qi4CSSDKBaseDir)/Dependencies/UtilPackVersion.txt">
+      <Output TaskParameter="VersionString" PropertyName="Qi4CSSDKUtilPackVersion" />
+    </CommonBuildTools.ReadVersionFromFileTask>
+    <CommonBuildTools.ReadVersionFromFileTask
+      VersionFilePath="$(Qi4CSSDKBaseDir)/Dependencies/CAMVersion.txt">
+      <Output TaskParameter="VersionString" PropertyName="Qi4CSSDKCAMVersion" />
+    </CommonBuildTools.ReadVersionFromFileTask>
+    
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <Qi4CSCoreBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSSDKBaseDir)))</Qi4CSCoreBaseDirNuSpec>
+      <NuSpec_OutputPath>$(Qi4CSSDKBaseDir)/NuSpec/Qi4CS.SDK.nuspec</NuSpec_OutputPath>
+      <NuSpec_ID>Qi4CS.SDK</NuSpec_ID>
+      <NuSpec_VersionFilename>$(Qi4CSSDKBaseDir)/Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
+      <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
+      <NuSpec_Description>Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the SDK package allowing generating Qi4CS assemblies at runtime.</NuSpec_Description>
+      <NuSpec_Title>Qi4CS SDK</NuSpec_Title>
+      <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
+      <NuSpec_CopyrightInceptionYear>2014</NuSpec_CopyrightInceptionYear>
+      <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
+      <NuSpec_ProjectURL>https://github.com/CometaSolutions/Qi4CS</NuSpec_ProjectURL>
+      <NuSpec_RequireLicenseAcceptance>false</NuSpec_RequireLicenseAcceptance>
+      <NuSpec_Summary>Qi4CS SDK allows programmatically generate Qi4CS assemblies.</NuSpec_Summary>
+      <NuSpec_Tags>qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity cil generation dynamic runtime</NuSpec_Tags>
+      <NuSpec_FilesXML><![CDATA[
+      <!-- Files for PCL edition -->
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Core.dll" target="lib\portable-net40+win\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Core.xml" target="lib\portable-net40+win\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Functional.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Functional.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.xml" />
+      
+      <!-- Files for .NET edition -->
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Core.dll" target="lib\net40-client\Qi4CS.Core.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Core.xml" target="lib\net40-client\Qi4CS.Core.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.CodeGeneration.DotNET.dll" target="lib\net40-client\Qi4CS.CodeGeneration.DotNET.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.CodeGeneration.DotNET.xml" target="lib\net40-client\Qi4CS.CodeGeneration.DotNET.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.dll" target="lib\net40-client\Qi4CS.Extensions.Configuration.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.xml" target="lib\net40-client\Qi4CS.Extensions.Configuration.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.dll" target="lib\net40-client\Qi4CS.Extensions.Configuration.XML.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Configuration.XML.xml" target="lib\net40-client\Qi4CS.Extensions.Configuration.XML.xml" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Functional.dll" target="lib\net40-client\Qi4CS.Extensions.Functional.dll" />
+      <file src="$(Qi4CSCoreBaseDirNuSpec)\Output\Release\dotNET\SDK\Qi4CS.Extensions.Functional.xml" target="lib\net40-client\Qi4CS.Extensions.Functional.xml" />
+
+      ]]></NuSpec_FilesXML>
+      <NuSpec_DependenciesXML><![CDATA[
+      <group>
+        <dependency id="UtilPack" version="$(Qi4CSSDKUtilPackVersion)"/>
+        <dependency id="CILAssemblyManipulator.Portable" version="$(Qi4CSSDKCAMVersion)"/>
+      </group>
+      <group targetFramework="net40-client">
+        <dependency id="UtilPack" version="$(Qi4CSSDKUtilPackVersion)"/>
+        <dependency id="CILAssemblyManipulator.Portable" version="$(Qi4CSSDKCAMVersion)"/>
+        <dependency id="CILAssemblyManipulator.DotNET" version="$(Qi4CSSDKCAMVersion)"/>
+      </group>
+      ]]></NuSpec_DependenciesXML>
+    </PropertyGroup>
+  </Target>
+  
+  <Target Name="Qi4CSSDKNuSpec">
+    <!-- Generate .nuspec file -->
+    <CallTarget Targets="GenerateNuSpecFile" />
+    
+  </Target>
+</Project>

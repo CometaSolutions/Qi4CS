@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="DeleteTargetFrameworkFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{101EB834-0762-48FB-A9A1-A42893A6A254}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Qi4CS.CodeGeneration.MSBuild</RootNamespace>
+    <AssemblyName>Qi4CS.CodeGeneration.MSBuild</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CILAssemblyManipulator.DotNET">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.7.0\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
+    </Reference>
+    <Reference Include="CILAssemblyManipulator.Portable">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.0\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="Qi4CS.Core" />
+    <Reference Include="System" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UtilPack">
+      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\AssemblyInfo\$(AssemblyName).cs">
+      <Link>Properties\$(AssemblyName).AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="GenerateQi4CSAssemblies.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Qi4CS.CodeGeneration.MSBuild.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">
+      <Project>{7be33f23-3f8a-4b25-ad6c-43647e592108}</Project>
+      <Name>Qi4CS.CodeGeneration.DotNET</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+  <PropertyGroup>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
+  <!-- This is after Import since ProjectDir is set there -->
+  <PropertyGroup>
+    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.CodeGen.snk</KeyFilePath>
+    <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <!-- Create .snk file if it doesn't exist to ensure smooth build -->
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
+  <!-- Assembly information -->
+  <PropertyGroup>
+    <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
+    <AssemblyInfoDescription>MSBuild task for generating Qi4CS assemblies.</AssemblyInfoDescription>
+    <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
+    <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
+    <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
+    <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>
+    <AssemblyInfoAssemblyInceptionYear>2013</AssemblyInfoAssemblyInceptionYear>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/AssemblyInfo.targets" />
+</Project>
