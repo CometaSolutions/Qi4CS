@@ -127,13 +127,13 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos,
          CompositeTypeGenerationInfo thisGenerationInfo,
-         ConstructorGenerationInfo ctorGenerationInfo,
-         Int32 firstAdditionalParameterIndex
+         CompositeConstructorGenerationInfo ctorGenerationInfo
          )
       {
-         base.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, ctorGenerationInfo, firstAdditionalParameterIndex );
+         base.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, ctorGenerationInfo );
 
-         Int32 baseAdditionalParamsCount = base.GetAmountOfAdditionalArgumentsForPublicCompositeConstructor();
+         var baseAdditionalParamsCount = base.GetAmountOfAdditionalArgumentsForPublicCompositeConstructor();
+         var firstAdditionalParameterIndex = ctorGenerationInfo.FirstAdditionalParamIndex;
 
          this.EmitSetActionMethod<ActivateAttribute>(
             codeGenerationInfo,

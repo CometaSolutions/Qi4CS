@@ -333,7 +333,7 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         // Phase 1: Emit empty types
+         // Phase 1: Emit types
          System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
          {
             foreach ( var model in models )
@@ -344,58 +344,25 @@ namespace Qi4CS.Core.Runtime.Model
             }
          } );
 
-         // Phase 2: Emit fragment methods
+         // Phase 2: Emit members signatures (and possibly any small simple IL bodies)
          System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
          {
             foreach ( var model in models )
             {
                var tuple1 = codeGens[model.ModelType];
                var tuple2 = cResults[model];
-               tuple1.Item1.EmitFragmentMethods( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
+               tuple1.Item1.EmitMembersForModel( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
             }
          } );
 
-         // Phase 3: Emit composite methods and concern & side-effect invocation types
+         // Phase 3: Emit IL bodies of methods
          System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
          {
             foreach ( var model in models )
             {
                var tuple1 = codeGens[model.ModelType];
                var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeMethosAndInvocationInfos( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 4: Emit all composite extra methods (state check, pre-prototype, etc)
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeExtraMethods( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 5: Emit all composite constructors
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeConstructors( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 6: Emit all composite factory types
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeFactory( model, currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
+               tuple1.Item1.EmitILForModel( model, typeModelDic[model], currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
             }
          } );
 

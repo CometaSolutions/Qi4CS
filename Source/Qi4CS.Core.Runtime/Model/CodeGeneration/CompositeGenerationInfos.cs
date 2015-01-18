@@ -810,7 +810,7 @@ namespace Qi4CS.Core.Runtime.Model
 
    public interface CompositeConstructorGenerationInfo : CompositeMethodBaseGenerationInfo<CILConstructor>, ConstructorGenerationInfo
    {
-
+      Int32 FirstAdditionalParamIndex { get; }
    }
 
    public class ConstructorGenerationInfoImpl : MethodBaseGenerationInfoImpl<CILConstructor>, ConstructorGenerationInfo
@@ -835,6 +835,7 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly CILConstructor _methodToOverride;
       private readonly CILConstructor _methodFromModel;
       private readonly Boolean _hasByRefParams;
+      private readonly Int32 _firstAdditionalParamIndex;
 
       public CompositeConstructorGenerationInfoImpl(
          CILAssemblyManipulator.API.MethodAttributes ctorAttributes,
@@ -842,7 +843,8 @@ namespace Qi4CS.Core.Runtime.Model
          IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.API.ParameterAttributes, String>> parameters,
          AbstractTypeGenerationInfoForComposites typeGenerationInfo,
          CILConstructor ctorFromModel,
-         CILConstructor ctorToOverride
+         CILConstructor ctorToOverride,
+         Int32 firstAdditionalParamIndex = 0
          )
          : base( typeGenerationInfo.Builder, ctorAttributes, callingConventions, parameters )
       {
@@ -853,6 +855,7 @@ namespace Qi4CS.Core.Runtime.Model
             ctorToOverride,
             ctorFromModel
             );
+         this._firstAdditionalParamIndex = firstAdditionalParamIndex;
       }
 
       public CILConstructor OverriddenMethod
@@ -876,6 +879,14 @@ namespace Qi4CS.Core.Runtime.Model
          get
          {
             return this._hasByRefParams;
+         }
+      }
+
+      public Int32 FirstAdditionalParamIndex
+      {
+         get
+         {
+            return this._firstAdditionalParamIndex;
          }
       }
    }
