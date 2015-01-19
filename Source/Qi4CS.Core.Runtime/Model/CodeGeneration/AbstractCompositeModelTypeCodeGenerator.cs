@@ -26,328 +26,245 @@ using Qi4CS.Core.API.Common;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Model;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractCompositeModelTypeCodeGenerator : CompositeModelTypeCodeGenerator
    {
-      #region CompositeModelTypeCodeGenerator Members
-
-      public void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
+      public void EmitCodeForCompositeModel( CompositeModelEmittingArgs args )
       {
-         if ( model.PublicTypes.Any( pType => pType.Assembly.Equals( assemblyBeingProcessed ) )
-            || typeModel.FragmentTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-            || typeModel.PrivateCompositeTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-            || typeModel.ConcernInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-            || typeModel.SideEffectInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-            )
+         var assemblies = args.Assemblies;
+         var publicTypeGens = new Dictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo>();
+         // TODO some of these phases may be combined into one, I think...
+         // Phase 1. Types
+         foreach ( var kvp in assemblies )
          {
-            var collectionsFactory = model.ApplicationModel.CollectionsFactory;
-
-            // Define public composite type
-            var publicCompositeTypeGenInfo = this.EmitPublicCompositeType( codeGenerationInfo, model, typeModel, assemblyBeingProcessed, mob, collectionsFactory, emittingInfo );
-            // Define all private composite types.
-            foreach ( var pcInfo in this.GetBindings( typeModel.PrivateCompositeTypeInfos.Values, assemblyBeingProcessed ) )
-            {
-               foreach ( var bindings in this.GetForEachBinding( pcInfo ) )
-               {
-                  this.EmitPrivateCompositeType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, pcInfo, bindings, publicCompositeTypeGenInfo.Builder, emittingInfo, collectionsFactory );
-               }
-            }
-
-            foreach ( var fInfo in this.GetBindings( typeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
-            {
-               foreach ( var bindings in this.GetForEachBinding( fInfo ) )
-               {
-                  var fID = emittingInfo.NewFragmentID( model );
-                  var fragmentGenerationInfo = this.EmitFragmentType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, fInfo, bindings, publicCompositeTypeGenInfo.Builder, fID, emittingInfo, collectionsFactory );
-                  this.EmitCreateFragmentMethod( codeGenerationInfo, model, publicCompositeTypeGenInfo, fID, fragmentGenerationInfo, emittingInfo );
-               }
-            }
+            publicTypeGens.Add( kvp.Key, this.EmitTypesForModel( args, kvp.Key ) );
          }
+
+         // Phase 2. Fragment methods
+         foreach ( var kvp in assemblies )
+         {
+            this.EmitFragmentMethods( args, kvp.Key, publicTypeGens[kvp.Key] );
+         }
+
+         // Phase 3. Composite methods and invocation info types
+         foreach ( var kvp in assemblies )
+         {
+            this.EmitCompositeMethosAndInvocationInfos( args, kvp.Key, publicTypeGens[kvp.Key] );
+         }
+
+         // Phase 4. Any extra methods
+         foreach ( var kvp in assemblies )
+         {
+            this.EmitCompositeExtraMethods( args, kvp.Key, publicTypeGens[kvp.Key] );
+         }
+
+         // Phase 5. Composite constructors
+         foreach ( var kvp in assemblies )
+         {
+            this.EmitCompositeConstructors( args, kvp.Key, publicTypeGens[kvp.Key] );
+         }
+
+         // Phase 6. Composite factory type
+         var mainAssembly = args.Model.MainCodeGenerationType.Assembly;
+         this.EmitCompositeFactory( args, mainAssembly, publicTypeGens[mainAssembly] );
       }
 
-      public void EmitMembersForModel( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
-      {
-         var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-         if ( publicCompositeTypeGenInfo != null )
-         {
-            // Emit fragment methods signatures and IL (IL is very simple)
-            this.EmitFragmentMethods( model, typeModel, assemblyBeingProcessed, codeGenerationInfo, emittingInfo );
 
-            // Emit composite method members
-            var genericEventMixinType = model.ApplicationModel.GenericEventMixinType;
-            var genericPropertyMixinType = model.ApplicationModel.GenericPropertyMixinType;
-
-            this.DoForCompositeMethosAndInvocationInfos( model, typeModel, assemblyBeingProcessed, codeGenerationInfo, emittingInfo, ( cInfo, cMethod ) =>
-            {
-               var cMethodGen = this.EmitCompositeMethodMember( publicCompositeTypeGenInfo, emittingInfo, cMethod );
-
-               if ( cMethod.EventModel != null )
-               {
-                  this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
-               }
-               if ( cMethod.PropertyModel != null )
-               {
-                  this.EmitPropertyRelatedThings( codeGenerationInfo, publicCompositeTypeGenInfo, cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
-               }
-            } );
-
-            // Emit composite contructor members
-            foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
-            {
-               if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
-               {
-                  var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
-                  this.EmitCompositeConstructorMember( codeGenerationInfo, emittingInfo, cInfo, isMainCtor );
-               }
-            }
-         }
-      }
-
-      public void EmitILForModel(
-         CompositeModel model,
-         CompositeTypeModel typeModel,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CILModule module,
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         CompositeEmittingInfo emittingInfo
+      private CompositeTypeGenerationInfo EmitTypesForModel(
+         CompositeModelEmittingArgs args,
+         System.Reflection.Assembly assemblyBeingProcessed
          )
       {
-         var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-         if ( publicCompositeTypeGenInfo != null )
+         var model = args.Model;
+         var typeModel = args.TypeModel;
+         var emittingInfo = args.EmittingInfo;
+         var codeGenerationInfo = args.CodeGenerationInfo;
+         var collectionsFactory = model.ApplicationModel.CollectionsFactory;
+
+         // Define public composite type
+         var publicCompositeTypeGenInfo = this.EmitPublicCompositeType( codeGenerationInfo, model, typeModel, assemblyBeingProcessed, args.Assemblies[assemblyBeingProcessed], collectionsFactory, emittingInfo );
+         // Define all private composite types.
+         foreach ( var pcInfo in this.GetBindings( typeModel.PrivateCompositeTypeInfos.Values, assemblyBeingProcessed ) )
          {
-            var collectionsFactory = model.ApplicationModel.CollectionsFactory;
-
-            var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 ).ToArray();
-            this.DoForCompositeMethosAndInvocationInfos( model, typeModel, assemblyBeingProcessed, codeGenerationInfo, emittingInfo, ( cInfo, cMethod ) =>
+            foreach ( var bindings in this.GetForEachBinding( pcInfo ) )
             {
-               this.EmitCompositeMethodIL( codeGenerationInfo, fragmentTypeGenerationInfos, publicCompositeTypeGenInfo, cInfo, emittingInfo, cMethod, typeModel );
-            } );
-
-            // Emit types that handle control flow when invoking the [ConcernFor] targets
-            foreach ( var bindingInfo in this.GetBindings( typeModel.ConcernInvocationTypeInfos.Values, assemblyBeingProcessed ) )
-            {
-               foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
-               {
-                  this.EmitConcernInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, bindings, emittingInfo, publicCompositeTypeGenInfo, fragmentTypeGenerationInfos, collectionsFactory );
-               }
-            }
-
-            // Emit types that handle control flow when invoking the [SideEffectFor] targets
-            foreach ( var bindingInfo in this.GetBindings( typeModel.SideEffectInvocationTypeInfos.Values, assemblyBeingProcessed ) )
-            {
-               foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
-               {
-                  this.EmitSideEffectInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, publicCompositeTypeGenInfo.Builder, bindings, emittingInfo, collectionsFactory );
-               }
-            }
-
-            // Emit methods that check the state before and after instantiating composite
-            // Also, emit methods for equality and hashcode
-            foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
-            {
-               if ( emittingInfo.TryAddTypeWithExtraMethods( cInfo ) )
-               {
-
-                  this.EmitCheckStateMethod( codeGenerationInfo, model, cInfo, CHECK_STATE_METHOD_NAME );
-                  this.EmitPrePrototypeMethod( codeGenerationInfo, model, cInfo, SET_DEFAULTS_METHOD_NAME );
-
-                  // Emit equals and hashcode -implementations, if necessary
-                  // TODO these are not yet fully working
-                  if ( Object.ReferenceEquals( cInfo, publicCompositeTypeGenInfo ) )
-                  {
-                     this.EmitPublicCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                     this.EmitPublicCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                  }
-                  else
-                  {
-                     this.EmitPrivateCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                     this.EmitPrivateCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                  }
-               }
-            }
-
-            // Emit composite contructor IL
-            foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
-            {
-               if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
-               {
-                  var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
-                  this.EmitCompositeConstructorIL( codeGenerationInfo, model, typeModel, emittingInfo, cInfo, isMainCtor );
-                  if ( isMainCtor )
-                  {
-                     this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
-                  }
-               }
-            }
-
-            if ( emittingInfo.IsMainCompositeGenerationInfo( publicCompositeTypeGenInfo, assemblyBeingProcessed ) )
-            {
-               this.EmitCompositeFactory( model, assemblyBeingProcessed, module, codeGenerationInfo, emittingInfo, publicCompositeTypeGenInfo );
-            }
-
-         }
-      }
-
-      private void EmitFragmentMethods( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
-      {
-         var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-         if ( publicCompositeTypeGenInfo != null )
-         {
-            foreach ( var binding in this.GetBindings( typeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
-            {
-               foreach ( var fGenInfo in emittingInfo.FragmentTypeGenerationInfos[binding].Item1 )
-               {
-                  this.EmitFragmentMethods( codeGenerationInfo, model, publicCompositeTypeGenInfo, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
-               }
+               this.EmitPrivateCompositeType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, pcInfo, bindings, publicCompositeTypeGenInfo.Builder, emittingInfo, collectionsFactory );
             }
          }
+
+         foreach ( var fInfo in this.GetBindings( typeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
+         {
+            foreach ( var bindings in this.GetForEachBinding( fInfo ) )
+            {
+               var fID = emittingInfo.NewFragmentID();
+               var fragmentGenerationInfo = this.EmitFragmentType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, fInfo, bindings, publicCompositeTypeGenInfo.Builder, fID, emittingInfo, collectionsFactory );
+               this.EmitCreateFragmentMethod( codeGenerationInfo, model, publicCompositeTypeGenInfo, fID, fragmentGenerationInfo, emittingInfo );
+            }
+         }
+
+         return publicCompositeTypeGenInfo;
       }
 
-      private void DoForCompositeMethosAndInvocationInfos(
-         CompositeModel model,
-         CompositeTypeModel typeModel,
+      private void EmitFragmentMethods(
+         CompositeModelEmittingArgs args,
          System.Reflection.Assembly assemblyBeingProcessed,
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         CompositeEmittingInfo emittingInfo,
-         Action<CompositeTypeGenerationInfo, CompositeMethodModel> action
-         )
-      {
-         var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-         if ( publicCompositeTypeGenInfo != null )
-         {
-            var collectionsFactory = model.ApplicationModel.CollectionsFactory;
-
-            var compositeTypeGenerationInfos = emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) );
-            var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
-
-            var genericEventMixinType = model.ApplicationModel.GenericEventMixinType;
-            var genericPropertyMixinType = model.ApplicationModel.GenericPropertyMixinType;
-
-            foreach ( var cInfo in compositeTypeGenerationInfos )
-            {
-               Boolean actuallyEmit = false, actuallyEmitSet = false;
-               foreach ( var cMethod in model.Methods )
-               {
-                  if ( cInfo.Parents.ContainsKey( cMethod.NativeInfo.DeclaringType.NewWrapperAsType( this.ctx ) ) )
-                  {
-                     if ( !actuallyEmitSet )
-                     {
-                        actuallyEmit = emittingInfo.TryAddTypeWithCompositeMethods( cInfo );
-                        actuallyEmitSet = true;
-                     }
-                     if ( actuallyEmit )
-                     {
-
-                        action( cInfo, cMethod );
-
-                        //   // Define a composite method, utilizing required constraints, concerns, mixins, and side-effects
-                        //   var cMethodGen = this.EmitCompositeMethod(
-                        //      codeGenerationInfo,
-                        //      fragmentTypeGenerationInfos,
-                        //      publicCompositeTypeGenInfo,
-                        //      cInfo,
-                        //      emittingInfo,
-                        //      cMethod,
-                        //      typeModel
-                        //      );
-                        //   if ( cMethod.EventModel != null )
-                        //   {
-                        //      this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
-                        //   }
-                        //   if ( cMethod.PropertyModel != null )
-                        //   {
-                        //      this.EmitPropertyRelatedThings( codeGenerationInfo, publicCompositeTypeGenInfo, cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
-                        //   }
-                     }
-                  }
-               }
-            }
-
-            //foreach ( var bindingInfo in this.GetBindings( typeModel.ConcernInvocationTypeInfos.Values, assemblyBeingProcessed ) )
-            //{
-            //   foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
-            //   {
-            //      this.EmitConcernInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, bindings, emittingInfo, publicCompositeTypeGenInfo, fragmentTypeGenerationInfos, collectionsFactory );
-            //   }
-            //}
-
-            //foreach ( var bindingInfo in this.GetBindings( typeModel.SideEffectInvocationTypeInfos.Values, assemblyBeingProcessed ) )
-            //{
-            //   foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
-            //   {
-            //      this.EmitSideEffectInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, publicCompositeTypeGenInfo.Builder, bindings, emittingInfo, collectionsFactory );
-            //   }
-            //}
-         }
-      }
-
-      //public void EmitCompositeExtraMethods( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
-      //{
-      //   var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-      //   if ( publicCompositeTypeGenInfo != null )
-      //   {
-      //      var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
-      //      foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
-      //      {
-      //         if ( emittingInfo.TryAddTypeWithExtraMethods( cInfo ) )
-      //         {
-
-      //            this.EmitCheckStateMethod( codeGenerationInfo, model, cInfo, CHECK_STATE_METHOD_NAME );
-      //            this.EmitPrePrototypeMethod( codeGenerationInfo, model, cInfo, SET_DEFAULTS_METHOD_NAME );
-
-      //            // Emit equals and hashcode -implementations, if necessary
-      //            if ( Object.ReferenceEquals( cInfo, publicCompositeTypeGenInfo ) )
-      //            {
-      //               this.EmitPublicCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-      //               this.EmitPublicCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-      //            }
-      //            else
-      //            {
-      //               this.EmitPrivateCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-      //               this.EmitPrivateCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-      //            }
-      //         }
-      //      }
-      //   }
-      //}
-
-      //public void EmitCompositeConstructors( CompositeModel model, CompositeTypeModel typeModel, System.Reflection.Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo )
-      //{
-      //   var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-      //   if ( publicCompositeTypeGenInfo != null )
-      //   {
-      //      foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
-      //      {
-      //         if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
-      //         {
-      //            var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
-      //            this.EmitCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, cInfo, isMainCtor );
-      //            if ( isMainCtor )
-      //            {
-      //               this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
-      //            }
-      //         }
-      //      }
-      //   }
-      //}
-
-      private void EmitCompositeFactory(
-         CompositeModel model,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CILModule module,
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         CompositeEmittingInfo emittingInfo,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
-         //var publicCompositeTypeGenInfo = emittingInfo.GetPublicComposite( model, assemblyBeingProcessed );
-         //if ( publicCompositeTypeGenInfo != null && emittingInfo.IsMainCompositeGenerationInfo( publicCompositeTypeGenInfo, assemblyBeingProcessed ) )
-         //{
+         var emittingInfo = args.EmittingInfo;
+         foreach ( var binding in this.GetBindings( args.TypeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
+         {
+            foreach ( var fGenInfo in emittingInfo.FragmentTypeGenerationInfos[binding].Item1 )
+            {
+               this.EmitFragmentMethods( args.CodeGenerationInfo, args.Model, publicCompositeTypeGenInfo, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
+            }
+         }
+      }
+
+      private void EmitCompositeMethosAndInvocationInfos(
+         CompositeModelEmittingArgs args,
+         System.Reflection.Assembly assemblyBeingProcessed,
+         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         )
+      {
+         var model = args.Model;
+         var emittingInfo = args.EmittingInfo;
+         var typeModel = args.TypeModel;
+         var codeGenerationInfo = args.CodeGenerationInfo;
+
+         var collectionsFactory = model.ApplicationModel.CollectionsFactory;
+
+         var compositeTypeGenerationInfos = emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) );
+         var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
+
+         var genericEventMixinType = model.ApplicationModel.GenericEventMixinType;
+         var genericPropertyMixinType = model.ApplicationModel.GenericPropertyMixinType;
+
+         foreach ( var cInfo in compositeTypeGenerationInfos )
+         {
+            Boolean actuallyEmit = false, actuallyEmitSet = false;
+            foreach ( var cMethod in model.Methods )
+            {
+               if ( cInfo.Parents.ContainsKey( cMethod.NativeInfo.DeclaringType.NewWrapperAsType( this.ctx ) ) )
+               {
+                  if ( !actuallyEmitSet )
+                  {
+                     actuallyEmit = emittingInfo.TryAddTypeWithCompositeMethods( cInfo );
+                     actuallyEmitSet = true;
+                  }
+                  if ( actuallyEmit )
+                  {
+                     // Define a composite method, utilizing required constraints, concerns, mixins, and side-effects
+                     var cMethodGen = this.EmitCompositeMethod(
+                        codeGenerationInfo,
+                        fragmentTypeGenerationInfos,
+                        publicCompositeTypeGenInfo,
+                        cInfo,
+                        emittingInfo,
+                        cMethod,
+                        typeModel
+                        );
+                     if ( cMethod.EventModel != null )
+                     {
+                        this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
+                     }
+                     if ( cMethod.PropertyModel != null )
+                     {
+                        this.EmitPropertyRelatedThings( codeGenerationInfo, publicCompositeTypeGenInfo, cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
+                     }
+                  }
+               }
+            }
+         }
+
+         foreach ( var bindingInfo in this.GetBindings( typeModel.ConcernInvocationTypeInfos.Values, assemblyBeingProcessed ) )
+         {
+            foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
+            {
+               this.EmitConcernInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, bindings, emittingInfo, publicCompositeTypeGenInfo, fragmentTypeGenerationInfos, collectionsFactory );
+            }
+         }
+
+         foreach ( var bindingInfo in this.GetBindings( typeModel.SideEffectInvocationTypeInfos.Values, assemblyBeingProcessed ) )
+         {
+            foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
+            {
+               this.EmitSideEffectInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, publicCompositeTypeGenInfo.Builder, bindings, emittingInfo, collectionsFactory );
+            }
+         }
+      }
+
+      private void EmitCompositeExtraMethods(
+         CompositeModelEmittingArgs args,
+         System.Reflection.Assembly assemblyBeingProcessed,
+         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         )
+      {
+         var emittingInfo = args.EmittingInfo;
+         var model = args.Model;
+         var typeModel = args.TypeModel;
+         var codeGenerationInfo = args.CodeGenerationInfo;
+
+         var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
+         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
+         {
+            if ( emittingInfo.TryAddTypeWithExtraMethods( cInfo ) )
+            {
+
+               this.EmitCheckStateMethod( codeGenerationInfo, model, cInfo, CHECK_STATE_METHOD_NAME );
+               this.EmitPrePrototypeMethod( codeGenerationInfo, model, cInfo, SET_DEFAULTS_METHOD_NAME );
+
+               // Emit equals and hashcode -implementations, if necessary
+               if ( Object.ReferenceEquals( cInfo, publicCompositeTypeGenInfo ) )
+               {
+                  this.EmitPublicCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+                  this.EmitPublicCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+               }
+               else
+               {
+                  this.EmitPrivateCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+                  this.EmitPrivateCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+               }
+            }
+         }
+      }
+
+      private void EmitCompositeConstructors(
+         CompositeModelEmittingArgs args,
+         System.Reflection.Assembly assemblyBeingProcessed,
+         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         )
+      {
+         var emittingInfo = args.EmittingInfo;
+         var model = args.Model;
+         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
+         {
+            if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
+            {
+               var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
+               this.EmitCompositeConstructor( args.CodeGenerationInfo, model, args.TypeModel, emittingInfo, cInfo, isMainCtor );
+               if ( isMainCtor )
+               {
+                  this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
+               }
+            }
+         }
+      }
+
+      private void EmitCompositeFactory(
+         CompositeModelEmittingArgs args,
+         System.Reflection.Assembly assemblyBeingProcessed,
+         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         )
+      {
+         var emittingInfo = args.EmittingInfo;
+         var model = args.Model;
          var typeIDDic = emittingInfo.GetGenerationInfosByTypeID( model );
 
-         var factory = module.AddType( publicCompositeTypeGenInfo.Builder.Name + codeGenerationInfo.CompositeFactorySuffix, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
+         var factory = args.Assemblies[assemblyBeingProcessed].AddType( publicCompositeTypeGenInfo.Builder.Name + args.CodeGenerationInfo.CompositeFactorySuffix, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
 
          // Define default constructor
          factory.AddDefaultConstructor( MethodAttributes.Public );
@@ -462,10 +379,7 @@ namespace Qi4CS.Core.Runtime.Model
 
          // Make it explicit implementation
          method.AddOverriddenMethods( COMPOSITE_FACTORY_METHOD );
-         //}
       }
-
-      #endregion
 
       protected void ImplementCompositeCallbacks(
          CompositeModel model,
@@ -576,10 +490,14 @@ namespace Qi4CS.Core.Runtime.Model
          return new CompositeMethodGenerationInfoImpl( result.Item1, methodToCopy, result.Item2, thisGenInfo );
       }
 
-      protected virtual CompositeMethodGenerationInfo EmitCompositeMethodMember(
+      protected virtual CompositeMethodGenerationInfo EmitCompositeMethod(
+         CompositeCodeGenerationInfo codeGenerationInfo,
+         IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
+         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
-         CompositeMethodModel compositeMethod
+         CompositeMethodModel compositeMethod,
+         CompositeTypeModel typeModel
          )
       {
          var method = compositeMethod.NativeInfo.NewWrapper( this.ctx );
@@ -592,26 +510,7 @@ namespace Qi4CS.Core.Runtime.Model
             true
            );
          emittingInfo.RegisterCompositeMethodGenerationInfo( compositeMethod, methodGenInfo );
-         if ( useExplicitImplementation )
-         {
-            methodGenInfo.Builder.AddOverriddenMethods( methodGenInfo.OverriddenMethod );
-         }
 
-         return methodGenInfo;
-      }
-
-      protected virtual CompositeMethodGenerationInfo EmitCompositeMethodIL(
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
-         CompositeTypeGenerationInfo thisGenInfo,
-         CompositeEmittingInfo emittingInfo,
-         CompositeMethodModel compositeMethod,
-         CompositeTypeModel typeModel
-         )
-      {
-         var method = compositeMethod.NativeInfo.NewWrapper( this.ctx );
-         var methodGenInfo = emittingInfo.GetCompositeMethodGenerationInfo( compositeMethod );
          var actualMethod = methodGenInfo.OverriddenMethod;
          thisGenInfo.NormalMethodBuilders.Add( method, methodGenInfo );
          var mb = methodGenInfo.Builder;
@@ -623,6 +522,9 @@ namespace Qi4CS.Core.Runtime.Model
             null
             );
 
+#if DEBUG
+         //mb.SetCustomAttribute( new CustomAttributeBuilder( type-of( DebuggableAttribute ).GetConstructor( Type.EmptyTypes ), EMPTY_OBJECTS ) );
+#endif
 
          var il = methodGenInfo.IL;
 
@@ -743,7 +645,10 @@ namespace Qi4CS.Core.Runtime.Model
             il.EmitLoadLocal( resultB );
          }
          il.EmitReturn();
-
+         if ( useExplicitImplementation )
+         {
+            methodGenInfo.Builder.AddOverriddenMethods( actualMethod );
+         }
 
          return methodGenInfo;
       }
@@ -2909,8 +2814,10 @@ namespace Qi4CS.Core.Runtime.Model
          return tb.AddField( codeGenerationInfo.CompositeInstanceFieldName, codeGenerationInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ), FieldAttributes.InitOnly | FieldAttributes.Private );
       }
 
-      protected virtual void EmitCompositeConstructorMember(
+      protected virtual void EmitCompositeConstructor(
          CompositeCodeGenerationInfo codeGenerationInfo,
+         CompositeModel compositeModel,
+         CompositeTypeModel typeModel,
          CompositeEmittingInfo emittingInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          Boolean isPublicCompositeCtor
@@ -2926,31 +2833,18 @@ namespace Qi4CS.Core.Runtime.Model
          var baseCtor = thisGenerationInfo.Builder.BaseType.Constructors.Single( ctor => !ctor.Attributes.IsStatic() && ctor.Parameters.Count == 0 );
          //var baseCtor = TypeGenerationUtils.GetMethodForEmitting( thisGenerationInfo.Parents, ctorFromModel );
 
-         CompositeConstructorGenerationInfo cInfo =
-         emittingInfo.CompositeConstructors[thisGenerationInfo] = new CompositeConstructorGenerationInfoImpl(
+         CompositeConstructorGenerationInfo cInfo = new CompositeConstructorGenerationInfoImpl(
             MethodAttributes.Public,
             CallingConventions.Standard | CallingConventions.HasThis,
             ctorParamTypes.Select( ct => Tuple.Create( (CILTypeBase) ct, ParameterAttributes.None, "" ) ),
             thisGenerationInfo,
             null,//ctorFromModel,
-            baseCtor,
-            firstAdditionalParamIndex
-            );
+            baseCtor );
 
-      }
+         var propertiesB = cInfo.Parameters[1];
+         var eventsB = cInfo.Parameters[2];
 
-      protected virtual void EmitCompositeConstructorIL(
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         CompositeModel compositeModel,
-         CompositeTypeModel typeModel,
-         CompositeEmittingInfo emittingInfo,
-         CompositeTypeGenerationInfo thisGenerationInfo,
-         Boolean isPublicCompositeCtor
-         )
-      {
-         var baseCtor = thisGenerationInfo.Builder.BaseType.Constructors.Single( ctor => !ctor.Attributes.IsStatic() && ctor.Parameters.Count == 0 );
-         var ctorB = thisGenerationInfo.Builder.Constructors[0];
-         var il = ctorB.MethodIL;
+         var il = cInfo.IL;
 
          // Load 'this' and call base constructor (Object)
          il.EmitLoadArg( 0 );
@@ -2964,7 +2858,7 @@ namespace Qi4CS.Core.Runtime.Model
          // Emit composite property creation code
          this.EmitCompositePropertyCreation(
             thisGenerationInfo,
-            ctorB.Parameters[1],
+            propertiesB,
             COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE,
             il
             );
@@ -2972,7 +2866,7 @@ namespace Qi4CS.Core.Runtime.Model
          // Emit composite event addition code
          this.EmitCompositeEventCreation(
             thisGenerationInfo,
-            ctorB.Parameters[2],
+            eventsB,
             COMPOSITE_CTOR_EVENTS_PARAM_TYPE,
             il
             );
@@ -2980,7 +2874,7 @@ namespace Qi4CS.Core.Runtime.Model
          if ( isPublicCompositeCtor )
          {
             var fragmentGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
-            this.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, compositeModel, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, emittingInfo.CompositeConstructors[thisGenerationInfo] );
+            this.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, compositeModel, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, cInfo, firstAdditionalParamIndex );
          }
 
          // Constructor ends
@@ -2994,10 +2888,10 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos,
          CompositeTypeGenerationInfo thisGenerationInfo,
-         CompositeConstructorGenerationInfo ctorGenerationInfo
+         ConstructorGenerationInfo ctorGenerationInfo,
+         Int32 firstAdditionalParamIndex
          )
       {
-         var firstAdditionalParamIndex = ctorGenerationInfo.FirstAdditionalParamIndex;
 
          this.EmitSetPrePrototypeMethod(
             codeGenerationInfo,
@@ -3654,7 +3548,7 @@ namespace Qi4CS.Core.Runtime.Model
          CollectionsFactory collectionsFactory
          )
       {
-         var generatedName = this.GetGeneratedClassName( codeGenerationInfo.PrivateCompositePrefix, emittingInfo.NewPrivateCompositeID( compositeModel ) );
+         var generatedName = this.GetGeneratedClassName( codeGenerationInfo.PrivateCompositePrefix, emittingInfo.NewPrivateCompositeID() );
          var info = this.CreateTypeGenerationInfo(
             codeGenerationInfo,
             compositeModel,
@@ -3693,7 +3587,7 @@ namespace Qi4CS.Core.Runtime.Model
          var isPublicComposite = publicCompositeBuilder == null;
          var tb = isPublicComposite ? mob.AddType( typeName, TypeAttributes.Class | TypeAttributes.Public ) : publicCompositeBuilder.AddType( typeName, TypeAttributes.Class | TypeAttributes.NestedPublic );
 
-         var typeID = emittingInfo.NewCompositeTypeID( compositeModel );
+         var typeID = emittingInfo.NewCompositeTypeID();
          tb.AddNewCustomAttributeTypedParams( COMPOSITE_TYPE_ID_CTOR, CILCustomAttributeFactory.NewTypedArgument( INT32_TYPE, typeID ) );
 
          var typeGArgs = typeModel.PublicCompositeGenericArguments.ToArray();
@@ -3772,7 +3666,7 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( isPublicComposite )
          {
-            emittingInfo.AddPublicCompositeGenerationInfo( assemblyToProcess, compositeModel, (CompositeTypeGenerationInfo) result );
+            emittingInfo.AddPublicCompositeGenerationInfo( assemblyToProcess, (CompositeTypeGenerationInfo) result );
          }
          else
          {
@@ -3951,6 +3845,9 @@ namespace Qi4CS.Core.Runtime.Model
                MethodAttributes.Public | MethodAttributes.HideBySig,
                false
                );
+#if DEBUG
+            //result.MethodBuilder.SetCustomAttribute( new CustomAttributeBuilder( type-of( DebuggerStepperBoundaryAttribute ).GetConstructor( Type.EmptyTypes ), EMPTY_OBJECTS ) );
+#endif
             var il = result.IL;
 
             // Load 'this'
@@ -4025,7 +3922,7 @@ namespace Qi4CS.Core.Runtime.Model
             emittingInfo,
             emittingInfo.ConcernTypeGenerationInfos,
             codeGenerationInfo.ConcernInvocationPrefix,
-            emittingInfo.NewConcernInvocationID( instanceableModel ),
+            emittingInfo.NewConcernInvocationID(),
             ( genInfo, fInstanceB ) =>
             {
                this.EmitGenericConcernInvocationMethod(
@@ -4750,7 +4647,7 @@ namespace Qi4CS.Core.Runtime.Model
             emittingInfo,
             emittingInfo.SideEffectTypeGenerationInfos,
             codeGenerationInfo.SideEffectInvocationPrefix,
-            emittingInfo.NewSideEffectInvocationID( compositeModel ),
+            emittingInfo.NewSideEffectInvocationID(),
             ( genInfo, fInstanceB ) =>
             {
                this.EmitGenericSideEffectMethod(

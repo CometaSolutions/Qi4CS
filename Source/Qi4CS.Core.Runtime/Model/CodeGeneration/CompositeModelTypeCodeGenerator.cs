@@ -25,14 +25,15 @@ using System.Threading;
 using CILAssemblyManipulator.API;
 using CommonUtils;
 using Qi4CS.Core.SPI.Model;
+using Qi4CS.Core.Runtime.Instance;
 
 namespace Qi4CS.Core.Runtime.Model
 {
    public interface CompositeModelTypeCodeGenerator
    {
-      void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      void EmitMembersForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      void EmitILForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule module, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
+      //void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
+      //void EmitMembersForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
+      //void EmitILForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule module, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
 
       // TODO move CompositeEmittingInfo to AbstractCompositeModelTypeCodeGenerator constructor.
       //void EmitFragmentMethods( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
@@ -40,6 +41,73 @@ namespace Qi4CS.Core.Runtime.Model
       //void EmitCompositeExtraMethods( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
       //void EmitCompositeConstructors( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
       //void EmitCompositeFactory( CompositeModel model, Assembly assemblyBeingProcessed, CILModule module, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
+
+      void EmitCodeForCompositeModel( CompositeModelEmittingArgs args );
+   }
+
+   public sealed class CompositeModelEmittingArgs
+   {
+      private readonly CompositeModel _model;
+      private readonly CompositeTypeModel _typeModel;
+      private readonly CompositeCodeGenerationInfo _codeGenerationInfo;
+      private readonly IDictionary<System.Reflection.Assembly, CILModule> _assemblies;
+      private readonly CompositeEmittingInfo _emittingInfo;
+
+      public CompositeModelEmittingArgs(
+         CompositeModel model,
+         CompositeTypeModel typeModel,
+         CompositeCodeGenerationInfo codeGenerationInfo,
+         IDictionary<Assembly, CILModule> assemblies,
+         CompositeEmittingInfo emittingInfo )
+      {
+         ArgumentValidator.ValidateNotNull( "Composite model", model );
+         ArgumentValidator.ValidateNotNull( "Composite type model", typeModel );
+         ArgumentValidator.ValidateNotNull( "Code generation info", codeGenerationInfo );
+         ArgumentValidator.ValidateNotNull( "Assembles", assemblies );
+         ArgumentValidator.ValidateNotNull( "Emitting information", emittingInfo );
+
+         this._model = model;
+         this._typeModel = typeModel;
+         this._codeGenerationInfo = codeGenerationInfo;
+         this._assemblies = assemblies;
+         this._emittingInfo = emittingInfo;
+      }
+
+      public CompositeModel Model
+      {
+         get
+         {
+            return this._model;
+         }
+      }
+      public CompositeTypeModel TypeModel
+      {
+         get
+         {
+            return this._typeModel;
+         }
+      }
+      public CompositeCodeGenerationInfo CodeGenerationInfo
+      {
+         get
+         {
+            return this._codeGenerationInfo;
+         }
+      }
+      public IDictionary<System.Reflection.Assembly, CILModule> Assemblies
+      {
+         get
+         {
+            return this._assemblies;
+         }
+      }
+      public CompositeEmittingInfo EmittingInfo
+      {
+         get
+         {
+            return this._emittingInfo;
+         }
+      }
    }
 
    public class CompositeEmittingInfo
@@ -63,13 +131,13 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       //private CompositeTypeGenerationInfo _firstPublicTypeGenInfo;
-      private readonly ConcurrentDictionary<Tuple<Assembly, CompositeModel>, CompositeTypeGenerationInfo> _publicCompositeGenerationInfo;
+      private readonly ConcurrentDictionary<Assembly, CompositeTypeGenerationInfo> _publicCompositeGenerationInfo;
       private readonly ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> _compositeTypeGenerationInfos;
       private readonly ConcurrentDictionary<TypeBindingInformation, Tuple<IList<FragmentTypeGenerationInfo>, Object>> _fragmentTypeGenerationInfos;
       private readonly ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> _concernInvocationTypeGenInfos;
       private readonly ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> _sideEffectInvocationTypeGenInfos;
       private readonly ConcurrentDictionary<FragmentTypeGenerationInfo, CompositeMethodGenerationInfo> _fragmentCreationMethods;
-      private readonly IDictionary<CompositeModel, CompositeEmittingIDInfo> _idInfos;
+      private readonly CompositeEmittingIDInfo _idInfo;
       private readonly ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo> _typesWithExtraMethods;
       private readonly ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo> _typesWithCtors;
       private readonly ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo> _typesWithCompositeMethods;
@@ -79,16 +147,16 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeConstructorGenerationInfo> _compositeCtors;
       private readonly CILReflectionContext _ctx;
 
-      public CompositeEmittingInfo( CILReflectionContext ctx, IEnumerable<CompositeModel> models )
+      public CompositeEmittingInfo( CILReflectionContext ctx )
       {
          this._ctx = ctx;
-         this._publicCompositeGenerationInfo = new ConcurrentDictionary<Tuple<Assembly, CompositeModel>, CompositeTypeGenerationInfo>( EqualityComparer<Tuple<Assembly, CompositeModel>>.Default );
+         this._publicCompositeGenerationInfo = new ConcurrentDictionary<Assembly, CompositeTypeGenerationInfo>();
          this._compositeTypeGenerationInfos = new ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>>( ReferenceEqualityComparer<TypeBindingInformation>.ReferenceBasedComparer );
          this._fragmentTypeGenerationInfos = new ConcurrentDictionary<TypeBindingInformation, Tuple<IList<FragmentTypeGenerationInfo>, Object>>( ReferenceEqualityComparer<TypeBindingInformation>.ReferenceBasedComparer );
          this._concernInvocationTypeGenInfos = new ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>>( ReferenceEqualityComparer<TypeBindingInformation>.ReferenceBasedComparer );
          this._sideEffectInvocationTypeGenInfos = new ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>>( ReferenceEqualityComparer<TypeBindingInformation>.ReferenceBasedComparer );
          this._fragmentCreationMethods = new ConcurrentDictionary<FragmentTypeGenerationInfo, CompositeMethodGenerationInfo>();
-         this._idInfos = models.ToDictionary( model => model, model => new CompositeEmittingIDInfo() );
+         this._idInfo = new CompositeEmittingIDInfo();
          this._typesWithExtraMethods = new ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo>( ReferenceEqualityComparer<CompositeTypeGenerationInfo>.ReferenceBasedComparer );
          this._typesWithCtors = new ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo>( ReferenceEqualityComparer<CompositeTypeGenerationInfo>.ReferenceBasedComparer );
          this._typesWithCompositeMethods = new ConcurrentDictionary<CompositeTypeGenerationInfo, CompositeTypeGenerationInfo>( ReferenceEqualityComparer<CompositeTypeGenerationInfo>.ReferenceBasedComparer );
@@ -118,9 +186,9 @@ namespace Qi4CS.Core.Runtime.Model
          return this._allGenerationInfos[compositeModel];
       }
 
-      public void AddPublicCompositeGenerationInfo( Assembly assembly, CompositeModel compositeModel, CompositeTypeGenerationInfo typeGenInfo )
+      public void AddPublicCompositeGenerationInfo( Assembly assembly, CompositeTypeGenerationInfo typeGenInfo )
       {
-         this._publicCompositeGenerationInfo.TryAdd( Tuple.Create( assembly, compositeModel ), typeGenInfo );
+         this._publicCompositeGenerationInfo.TryAdd( assembly, typeGenInfo );
          //Interlocked.CompareExchange( ref this._firstPublicTypeGenInfo, typeGenInfo, null );
       }
 
@@ -199,42 +267,34 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-
-      public CompositeTypeGenerationInfo GetPublicComposite( CompositeModel model, Assembly assembly )
+      public IEnumerable<Tuple<Assembly, CompositeTypeGenerationInfo>> GetAllPublicComposites()
       {
-         CompositeTypeGenerationInfo result;
-         this._publicCompositeGenerationInfo.TryGetValue( Tuple.Create( assembly, model ), out result );
-         return result;
+         return this._publicCompositeGenerationInfo.Select( kvp => Tuple.Create( kvp.Key, kvp.Value ) );
       }
 
-      public IEnumerable<Tuple<Assembly, CompositeTypeGenerationInfo>> GetAllPublicComposites( CompositeModel model )
+      public Int32 NewPrivateCompositeID()
       {
-         return this._publicCompositeGenerationInfo.Where( kvp => model.Equals( kvp.Key.Item2 ) ).Select( kvp => Tuple.Create( kvp.Key.Item1, kvp.Value ) );
+         return Interlocked.Increment( ref this._idInfo.currentPrivateCompositeID );
       }
 
-      public Int32 NewPrivateCompositeID( CompositeModel model )
+      public Int32 NewFragmentID()
       {
-         return Interlocked.Increment( ref this._idInfos[model].currentPrivateCompositeID );
+         return Interlocked.Increment( ref this._idInfo.currentFragmentID );
       }
 
-      public Int32 NewFragmentID( CompositeModel model )
+      public Int32 NewConcernInvocationID()
       {
-         return Interlocked.Increment( ref this._idInfos[model].currentFragmentID );
+         return Interlocked.Increment( ref this._idInfo.currentConcernInvocationID );
       }
 
-      public Int32 NewConcernInvocationID( CompositeModel model )
+      public Int32 NewSideEffectInvocationID()
       {
-         return Interlocked.Increment( ref this._idInfos[model].currentConcernInvocationID );
+         return Interlocked.Increment( ref this._idInfo.currentSideEffectInvocationID );
       }
 
-      public Int32 NewSideEffectInvocationID( CompositeModel model )
+      public Int32 NewCompositeTypeID()
       {
-         return Interlocked.Increment( ref this._idInfos[model].currentSideEffectInvocationID );
-      }
-
-      public Int32 NewCompositeTypeID( CompositeModel model )
-      {
-         return Interlocked.Increment( ref this._idInfos[model].currentCompositeTypeID );
+         return Interlocked.Increment( ref this._idInfo.currentCompositeTypeID );
       }
 
       public Boolean TryAddTypeWithExtraMethods( CompositeTypeGenerationInfo type )

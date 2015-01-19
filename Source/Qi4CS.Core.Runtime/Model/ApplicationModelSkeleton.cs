@@ -279,7 +279,7 @@ namespace Qi4CS.Core.Runtime.Model
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
             kvp => kvp.Key,
             kvp => this.CollectionsFactory.NewDictionaryProxy(
-               kvp.Value.GetAllPublicComposites( kvp.Key ).ToDictionary( tuple => tuple.Item1, tuple => tuple.Item2.Builder )
+               kvp.Value.GetAllPublicComposites().ToDictionary( tuple => tuple.Item1, tuple => tuple.Item2.Builder )
                ).CQ
             ) ).CQ
             ) ) );
@@ -301,7 +301,7 @@ namespace Qi4CS.Core.Runtime.Model
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
          var models = this._models.CQ.Values.ToArray();
          var supports = this._compositeModelTypeSupport;
-         var cResults = models.ToDictionary( muudel => muudel, muudel => new CompositeEmittingInfo( reflectionContext, models ) );
+         var cResults = models.ToDictionary( muudel => muudel, muudel => new CompositeEmittingInfo( reflectionContext ) );
          cResultsOut = cResults;
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
@@ -333,38 +333,34 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         // Phase 1: Emit types
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
+         System.Threading.Tasks.Parallel.ForEach(
+            models,
+            model =>
             {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitTypesForModel( model, typeModelDic[model], currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
-            }
-         } );
+               // Assemblies dictionary will get modified, so create a local copy of it
+               var thisAssemblyDicCopy = new Dictionary<Assembly, CILModule>( assemblyDic );
 
-         // Phase 2: Emit members signatures (and possibly any small simple IL bodies)
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitMembersForModel( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
+               // First, add Qi4CS assembly to be mapped to the main type emitted assembly
+               thisAssemblyDicCopy.Add( ReflectionHelper.QI4CS_ASSEMBLY, thisAssemblyDicCopy[model.MainCodeGenerationType.GetAssembly()] );
 
-         // Phase 3: Emit IL bodies of methods
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitILForModel( model, typeModelDic[model], currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
-            }
-         } );
+               var typeModel = typeModelDic[model];
+               // Remove all assemblies not part of this model
+               foreach ( var assemblyBeingProcessed in thisAssemblyDicCopy.Keys.ToArray() )
+               {
+                  if ( !( model.PublicTypes.Any( pType => pType.Assembly.Equals( assemblyBeingProcessed ) )
+                  || typeModel.FragmentTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
+                  || typeModel.PrivateCompositeTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
+                  || typeModel.ConcernInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
+                  || typeModel.SideEffectInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
+                  ) )
+                  {
+                     thisAssemblyDicCopy.Remove( assemblyBeingProcessed );
+                  }
+               }
+               var codeGenInfo = codeGens[model.ModelType];
+               codeGenInfo.Item1.EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, codeGenInfo.Item2, thisAssemblyDicCopy, cResults[model] ) );
+            } );
+
 
          return assemblyDic;
       }

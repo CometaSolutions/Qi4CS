@@ -165,7 +165,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             // Need to define event if we inherit property directly from interface
             var name = eventInfo.Name;
-            if ( thisGenerationInfo.RawPropertyInfos.Keys.Any( pInfo => pInfo.Name.Equals( name ) ) )
+            if ( thisGenerationInfo.RawEventInfos.Keys.Any( pInfo => pInfo.Name.Equals( name ) ) )
             {
                // We already have event with the same name from different type
                name = QualifiedName.FromMemberInfo( nEventInfo ).ToString();
