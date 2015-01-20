@@ -264,8 +264,12 @@ namespace Qi4CS.Core.Runtime.Model
          var model = args.Model;
          var typeIDDic = emittingInfo.GetGenerationInfosByTypeID( model );
 
-         var factory = args.Assemblies[assemblyBeingProcessed].AddType( publicCompositeTypeGenInfo.Builder.Name + args.CodeGenerationInfo.CompositeFactorySuffix, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
-
+         var emittingModule = args.Assemblies[assemblyBeingProcessed];
+         CILType factory;
+         lock ( emittingModule.DefinedTypesLock )
+         {
+            factory = emittingModule.AddType( publicCompositeTypeGenInfo.Builder.Name + args.CodeGenerationInfo.CompositeFactorySuffix, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
+         }
          // Define default constructor
          factory.AddDefaultConstructor( MethodAttributes.Public );
 
