@@ -27,6 +27,7 @@ using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.Runtime.Instance;
+using CommonUtils;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -46,28 +47,16 @@ namespace Qi4CS.Core.Runtime.Model
          }
 
          // Phase 2. Fragment methods
-         foreach ( var kvp in assemblies )
-         {
-            this.EmitFragmentMethods( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
-         }
+         this.EmitFragmentMethods( args, emittingInfo );
 
          // Phase 3. Composite methods and invocation info types
-         foreach ( var kvp in assemblies )
-         {
-            this.EmitCompositeMethosAndInvocationInfos( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
-         }
+         this.EmitCompositeMethodsAndInvocationInfos( args, emittingInfo, publicTypeGens );
 
          // Phase 4. Any extra methods
-         foreach ( var kvp in assemblies )
-         {
-            this.EmitCompositeExtraMethods( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
-         }
+         this.EmitCompositeExtraMethods( args, emittingInfo );
 
          // Phase 5. Composite constructors
-         foreach ( var kvp in assemblies )
-         {
-            this.EmitCompositeConstructors( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
-         }
+         this.EmitCompositeConstructors( args, emittingInfo );
 
          // Phase 6. Composite factory type
          var mainAssembly = args.Model.MainCodeGenerationType.Assembly;
@@ -96,7 +85,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             foreach ( var bindings in this.GetForEachBinding( pcInfo ) )
             {
-               this.EmitPrivateCompositeType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, pcInfo, bindings, publicCompositeTypeGenInfo.Builder, emittingInfo, collectionsFactory );
+               this.EmitPrivateCompositeType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, pcInfo, bindings, publicCompositeTypeGenInfo, emittingInfo, collectionsFactory );
             }
          }
 
@@ -105,7 +94,7 @@ namespace Qi4CS.Core.Runtime.Model
             foreach ( var bindings in this.GetForEachBinding( fInfo ) )
             {
                var fID = emittingInfo.NewFragmentID();
-               var fragmentGenerationInfo = this.EmitFragmentType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, fInfo, bindings, publicCompositeTypeGenInfo.Builder, fID, emittingInfo, collectionsFactory );
+               var fragmentGenerationInfo = this.EmitFragmentType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, fInfo, bindings, publicCompositeTypeGenInfo, fID, emittingInfo, collectionsFactory );
                this.EmitCreateFragmentMethod( codeGenerationInfo, model, publicCompositeTypeGenInfo, fID, fragmentGenerationInfo, emittingInfo );
             }
          }
@@ -115,25 +104,22 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitFragmentMethods(
          CompositeModelEmittingArgs args,
-         CompositeEmittingInfo emittingInfo,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         CompositeEmittingInfo emittingInfo
          )
       {
-         foreach ( var binding in this.GetBindings( args.TypeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
+         foreach ( var binding in args.TypeModel.FragmentTypeInfos.Values )
          {
             foreach ( var fGenInfo in emittingInfo.FragmentTypeGenerationInfos[binding].Item1 )
             {
-               this.EmitFragmentMethods( args.CodeGenerationInfo, args.Model, publicCompositeTypeGenInfo, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
+               this.EmitFragmentMethods( args.CodeGenerationInfo, args.Model, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
             }
          }
       }
 
-      private void EmitCompositeMethosAndInvocationInfos(
+      private void EmitCompositeMethodsAndInvocationInfos(
          CompositeModelEmittingArgs args,
          CompositeEmittingInfo emittingInfo,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         IDictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo> publicCompositeGenInfos
          )
       {
          var model = args.Model;
@@ -142,71 +128,62 @@ namespace Qi4CS.Core.Runtime.Model
 
          var collectionsFactory = model.ApplicationModel.CollectionsFactory;
 
-         var compositeTypeGenerationInfos = emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) );
          var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
 
          var genericEventMixinType = model.ApplicationModel.GenericEventMixinType;
          var genericPropertyMixinType = model.ApplicationModel.GenericPropertyMixinType;
 
-         foreach ( var cInfo in compositeTypeGenerationInfos )
+         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos )
          {
-            Boolean actuallyEmit = false, actuallyEmitSet = false;
             foreach ( var cMethod in model.Methods )
             {
                if ( cInfo.Parents.ContainsKey( cMethod.NativeInfo.DeclaringType.NewWrapperAsType( this.ctx ) ) )
                {
-                  if ( !actuallyEmitSet )
+                  // Define a composite method, utilizing required constraints, concerns, mixins, and side-effects
+                  var cMethodGen = this.EmitCompositeMethod(
+                     codeGenerationInfo,
+                     fragmentTypeGenerationInfos,
+                     cInfo,
+                     emittingInfo,
+                     cMethod,
+                     typeModel
+                     );
+                  if ( cMethod.EventModel != null )
                   {
-                     actuallyEmit = emittingInfo.TryAddTypeWithCompositeMethods( cInfo );
-                     actuallyEmitSet = true;
+                     this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
                   }
-                  if ( actuallyEmit )
+                  if ( cMethod.PropertyModel != null )
                   {
-                     // Define a composite method, utilizing required constraints, concerns, mixins, and side-effects
-                     var cMethodGen = this.EmitCompositeMethod(
-                        codeGenerationInfo,
-                        fragmentTypeGenerationInfos,
-                        publicCompositeTypeGenInfo,
-                        cInfo,
-                        emittingInfo,
-                        cMethod,
-                        typeModel
-                        );
-                     if ( cMethod.EventModel != null )
-                     {
-                        this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
-                     }
-                     if ( cMethod.PropertyModel != null )
-                     {
-                        this.EmitPropertyRelatedThings( codeGenerationInfo, publicCompositeTypeGenInfo, cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
-                     }
+                     this.EmitPropertyRelatedThings( codeGenerationInfo, cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
                   }
                }
             }
          }
 
-         foreach ( var bindingInfo in this.GetBindings( typeModel.ConcernInvocationTypeInfos.Values, assemblyBeingProcessed ) )
+         foreach ( var kvp in typeModel.ConcernInvocationTypeInfos )
          {
+            var currentAssembly = kvp.Key.Assembly;
+            var bindingInfo = kvp.Value;
             foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
             {
-               this.EmitConcernInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, bindings, emittingInfo, publicCompositeTypeGenInfo, fragmentTypeGenerationInfos, collectionsFactory );
+               this.EmitConcernInvocationType( codeGenerationInfo, model, typeModel, bindingInfo, bindings, emittingInfo, publicCompositeGenInfos[currentAssembly], fragmentTypeGenerationInfos, collectionsFactory );
             }
          }
 
-         foreach ( var bindingInfo in this.GetBindings( typeModel.SideEffectInvocationTypeInfos.Values, assemblyBeingProcessed ) )
+         foreach ( var kvp in typeModel.SideEffectInvocationTypeInfos )
          {
+            var currentAssembly = kvp.Key.Assembly;
+            var bindingInfo = kvp.Value;
             foreach ( var bindings in this.GetForEachBinding( bindingInfo ) )
             {
-               this.EmitSideEffectInvocationType( codeGenerationInfo, model, assemblyBeingProcessed, typeModel, bindingInfo, publicCompositeTypeGenInfo.Builder, bindings, emittingInfo, collectionsFactory );
+               this.EmitSideEffectInvocationType( codeGenerationInfo, model, typeModel, bindingInfo, publicCompositeGenInfos[currentAssembly], bindings, emittingInfo, collectionsFactory );
             }
          }
       }
 
       private void EmitCompositeExtraMethods(
          CompositeModelEmittingArgs args,
-         CompositeEmittingInfo emittingInfo,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         CompositeEmittingInfo emittingInfo
          )
       {
          var model = args.Model;
@@ -214,47 +191,37 @@ namespace Qi4CS.Core.Runtime.Model
          var codeGenerationInfo = args.CodeGenerationInfo;
 
          var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
-         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
+         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos )
          {
-            if ( emittingInfo.TryAddTypeWithExtraMethods( cInfo ) )
+            this.EmitCheckStateMethod( codeGenerationInfo, model, cInfo, CHECK_STATE_METHOD_NAME );
+            this.EmitPrePrototypeMethod( codeGenerationInfo, model, cInfo, SET_DEFAULTS_METHOD_NAME );
+
+            // Emit equals and hashcode -implementations, if necessary
+            if ( cInfo.IsPublicCompositeType() )
             {
-
-               this.EmitCheckStateMethod( codeGenerationInfo, model, cInfo, CHECK_STATE_METHOD_NAME );
-               this.EmitPrePrototypeMethod( codeGenerationInfo, model, cInfo, SET_DEFAULTS_METHOD_NAME );
-
-               // Emit equals and hashcode -implementations, if necessary
-               if ( Object.ReferenceEquals( cInfo, publicCompositeTypeGenInfo ) )
-               {
-                  this.EmitPublicCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                  this.EmitPublicCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-               }
-               else
-               {
-                  this.EmitPrivateCompositeEquals( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-                  this.EmitPrivateCompositeHashCode( codeGenerationInfo, model, typeModel, publicCompositeTypeGenInfo, cInfo, emittingInfo, fragmentTypeGenerationInfos );
-               }
+               this.EmitPublicCompositeEquals( codeGenerationInfo, model, typeModel, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+               this.EmitPublicCompositeHashCode( codeGenerationInfo, model, typeModel, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+            }
+            else
+            {
+               this.EmitPrivateCompositeEquals( codeGenerationInfo, model, typeModel, cInfo.PublicCompositeTypeGen, cInfo, emittingInfo, fragmentTypeGenerationInfos );
+               this.EmitPrivateCompositeHashCode( codeGenerationInfo, model, typeModel, cInfo.PublicCompositeTypeGen, cInfo, emittingInfo, fragmentTypeGenerationInfos );
             }
          }
       }
 
       private void EmitCompositeConstructors(
          CompositeModelEmittingArgs args,
-         CompositeEmittingInfo emittingInfo,
-         System.Reflection.Assembly assemblyBeingProcessed,
-         CompositeTypeGenerationInfo publicCompositeTypeGenInfo
+         CompositeEmittingInfo emittingInfo
          )
       {
          var model = args.Model;
-         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
+         foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos )
          {
-            if ( emittingInfo.TryAddTypeWithCtor( cInfo ) )
+            this.EmitCompositeConstructor( args.CodeGenerationInfo, model, args.TypeModel, emittingInfo, cInfo );
+            if ( cInfo.IsMainCompositeType )
             {
-               var isMainCtor = emittingInfo.IsMainCompositeGenerationInfo( cInfo, MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR.DeclaringType );
-               this.EmitCompositeConstructor( args.CodeGenerationInfo, model, args.TypeModel, emittingInfo, cInfo, isMainCtor );
-               if ( isMainCtor )
-               {
-                  this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
-               }
+               this.ImplementCompositeCallbacks( model, cInfo, emittingInfo );
             }
          }
       }
@@ -502,7 +469,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual CompositeMethodGenerationInfo EmitCompositeMethod(
          CompositeCodeGenerationInfo codeGenerationInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          CompositeMethodModel compositeMethod,
@@ -600,7 +566,6 @@ namespace Qi4CS.Core.Runtime.Model
                   compositeMethod,
                   typeModel,
                   fragmentTypeGenerationInfos,
-                  publicCompositeGenInfo,
                   thisGenInfo,
                   emittingInfo,
                   methodGenInfo
@@ -756,7 +721,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeMethodModel compositeMethodModel,
          CompositeTypeModel typeModel,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          CompositeMethodGenerationInfo methodGenInfo
@@ -796,7 +760,7 @@ namespace Qi4CS.Core.Runtime.Model
                if ( compositeMethodModel.PropertyModel == null || !compositeMethodModel.PropertyModel.IsPartOfCompositeState() )
                {
                   // Pre-process in-parameters. Inject values and check constraints if necessary.
-                  this.EmitProcessParameters( codeGenerationInfo, compositeMethodModel, true, publicCompositeGenInfo, thisGenInfo, methodGenInfo );
+                  this.EmitProcessParameters( codeGenerationInfo, compositeMethodModel, true, thisGenInfo, methodGenInfo );
 
                   // Throw if constraint violations
                   if ( hasInConstraints )
@@ -816,7 +780,6 @@ namespace Qi4CS.Core.Runtime.Model
                this.EmitCallFragmentModel(
                   codeGenerationInfo,
                   fragmentTypeGenerationInfos,
-                  publicCompositeGenInfo,
                   thisGenInfo,
                   methodGenInfo,
                   emittingInfo,
@@ -833,10 +796,10 @@ namespace Qi4CS.Core.Runtime.Model
                if ( compositeMethodModel.PropertyModel == null || !compositeMethodModel.PropertyModel.IsPartOfCompositeState() )
                {
                   // Post-process out-parameters
-                  this.EmitProcessParameters( codeGenerationInfo, compositeMethodModel, false, publicCompositeGenInfo, thisGenInfo, methodGenInfo );
+                  this.EmitProcessParameters( codeGenerationInfo, compositeMethodModel, false, thisGenInfo, methodGenInfo );
 
                   // Post-process result
-                  this.EmitProcessResult( codeGenerationInfo, compositeMethodModel, publicCompositeGenInfo, thisGenInfo, methodGenInfo );
+                  this.EmitProcessResult( codeGenerationInfo, compositeMethodModel, thisGenInfo, methodGenInfo );
 
                   if ( hasOutConstraints && hasResult )
                   {
@@ -883,7 +846,6 @@ namespace Qi4CS.Core.Runtime.Model
                   this.EmitCallFragmentModel(
                      codeGenerationInfo,
                      fragmentTypeGenerationInfos,
-                     publicCompositeGenInfo,
                      thisGenInfo,
                      methodGenInfo,
                      emittingInfo,
@@ -995,7 +957,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitCallAllSpecialMethods<AttributeType>(
          CompositeCodeGenerationInfo codeGenerationInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeMethodGenerationInfo thisCompositeMethodGenerationInfo,
          CompositeEmittingInfo emittingInfo,
@@ -1015,7 +976,6 @@ namespace Qi4CS.Core.Runtime.Model
                this.EmitUseFragmentPool(
                   codeGenerationInfo,
                   fragmentTypeGenerationInfos,
-                  publicCompositeGenInfo,
                   thisGenerationInfo,
                   thisCompositeMethodGenerationInfo,
                   emittingInfo,
@@ -1047,7 +1007,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeMethodModel compositeMethodModel,
          Boolean acceptIn,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo
          )
@@ -1056,7 +1015,7 @@ namespace Qi4CS.Core.Runtime.Model
          {
             if ( acceptIn != paramModel.NativeInfo.IsOut )
             {
-               this.EmitProcessCompositeMethodParameter( codeGenerationInfo, compositeMethodModel, paramModel, publicCompositeGenInfo, thisGenInfo, thisMethodGenInfo, false );
+               this.EmitProcessCompositeMethodParameter( codeGenerationInfo, compositeMethodModel, paramModel, thisGenInfo, thisMethodGenInfo, false );
             }
          }
       }
@@ -1065,7 +1024,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeMethodModel compositeMethodModel,
          ParameterModel paramModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          Boolean paramIsResult
@@ -1074,7 +1032,6 @@ namespace Qi4CS.Core.Runtime.Model
          this.EmitProcessParameter(
             codeGenerationInfo,
             paramModel,
-            publicCompositeGenInfo,
             thisGenInfo,
             thisMethodGenInfo,
             paramIsResult ? thisMethodGenInfo.GetLocalOrThrow( LB_RESULT ) : null,
@@ -1101,7 +1058,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitProcessParameter(
          CompositeCodeGenerationInfo codeGenerationInfo,
          ParameterModel paramModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          AbstractTypeGenerationInfoForComposites thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          LocalBuilder paramAsLocalOuter,
@@ -1262,7 +1218,6 @@ namespace Qi4CS.Core.Runtime.Model
                shouldEmitConstraintCheckHere = this.EmitUseInjectionProvider(
                   codeGenerationInfo,
                   paramModel,
-                  publicCompositeGenInfo,
                   thisGenInfo,
                   thisMethodGenInfo,
                   loadParameterModel,
@@ -1353,7 +1308,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual Boolean EmitUseInjectionProvider(
          CompositeCodeGenerationInfo codeGenerationInfo,
          AbstractInjectableModel injectableModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          AbstractTypeGenerationInfoForComposites thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          Action<MethodIL> loadInjectableModelAction,
@@ -1370,6 +1324,7 @@ namespace Qi4CS.Core.Runtime.Model
          var isLazy = typeToGive.IsLazy( out actualTypeToGive );
          if ( isLazy )
          {
+            var publicCompositeGenInfo = thisGenInfo.PublicCompositeTypeGen;
             Tuple<CILType, CILConstructor, CILMethod, CILField, CILField, CILField, IList<CILField>> lambdaInfo;
             if ( !publicCompositeGenInfo.LazyInjectionLambdaClasses.TryGetValue( injectableModel, out lambdaInfo ) )
             {
@@ -1637,14 +1592,13 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitProcessResult(
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeMethodModel compositeMethodModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo
          )
       {
          if ( thisMethodGenInfo.HasLocal( LB_RESULT ) )
          {
-            this.EmitProcessCompositeMethodParameter( codeGenerationInfo, compositeMethodModel, compositeMethodModel.Result, publicCompositeGenInfo, thisGenInfo, thisMethodGenInfo, true );
+            this.EmitProcessCompositeMethodParameter( codeGenerationInfo, compositeMethodModel, compositeMethodModel.Result, thisGenInfo, thisMethodGenInfo, true );
          }
       }
 
@@ -1668,7 +1622,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitUseFragmentPool(
          CompositeCodeGenerationInfo codeGenerationInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          CompositeEmittingInfo emittingInfo,
@@ -1786,7 +1739,7 @@ namespace Qi4CS.Core.Runtime.Model
                   }
                   );
 
-               this.EmitInjectAllInvocationScopes( codeGenerationInfo, compositeModel, publicCompositeGenInfo, thisGenInfo, thisMethodGenInfo, fragmentGenInfo );
+               this.EmitInjectAllInvocationScopes( codeGenerationInfo, compositeModel, thisGenInfo, thisMethodGenInfo, fragmentGenInfo );
 
                // Use fragment
                callMethodAction( fragmentType, fragmentGenInfo );
@@ -1845,7 +1798,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitInjectAllInvocationScopes(
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          FragmentTypeGenerationInfo fragmentGenInfo
@@ -1860,14 +1812,13 @@ namespace Qi4CS.Core.Runtime.Model
          // Provide per-invocation injections.
          foreach ( FieldModel fieldModel in this.FindFieldsWithInjectionTime( compositeModel, fragmentGenInfo, InjectionTime.ON_METHOD_INVOKATION ) )
          {
-            this.EmitInjectToField( codeGenerationInfo, fieldModel, publicCompositeGenInfo, thisGenInfo, thisMethodGenInfo, fragmentGenInfo, null, null );
+            this.EmitInjectToField( codeGenerationInfo, fieldModel, thisGenInfo, thisMethodGenInfo, fragmentGenInfo, null, null );
          }
       }
 
       protected virtual void EmitInjectToField(
          CompositeCodeGenerationInfo codeGenerationInfo,
          FieldModel fieldModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          FragmentTypeGenerationInfo fragmentGenInfo,
@@ -1906,7 +1857,6 @@ namespace Qi4CS.Core.Runtime.Model
             var shouldEmitNullCheckAction = this.EmitUseInjectionProvider(
                codeGenerationInfo,
                fieldModel,
-               publicCompositeGenInfo,
                thisGenInfo,
                thisMethodGenInfo,
                loadInjModel,
@@ -1979,7 +1929,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitCallFragmentModel(
          CompositeCodeGenerationInfo codeGenerationInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          CompositeEmittingInfo emittingInfo,
@@ -1996,7 +1945,6 @@ namespace Qi4CS.Core.Runtime.Model
          this.EmitUseFragmentPool(
             codeGenerationInfo,
             fragmentTypeGenerationInfos,
-            publicCompositeGenInfo,
             thisGenInfo,
             thisMethodGenInfo,
             emittingInfo,
@@ -2013,7 +1961,6 @@ namespace Qi4CS.Core.Runtime.Model
                {
                   this.EmitSetupSideEffects(
                      fragmentMethodModel.CompositeMethod,
-                     publicCompositeGenInfo,
                      thisMethodGenInfo
                      );
                }
@@ -2021,7 +1968,6 @@ namespace Qi4CS.Core.Runtime.Model
                {
                   this.EmitSetupConcerns(
                      fragmentMethodModel,
-                     publicCompositeGenInfo,
                      thisMethodGenInfo,
                      concernIndexB
                      );
@@ -2045,7 +1991,6 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected virtual void EmitSetupConcerns(
          AbstractFragmentMethodModel fragmentMethodModel,
-         CompositeTypeGenerationInfo publicCompositeTypeGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo,
          LocalBuilder concernIndexB
          )
@@ -2070,6 +2015,7 @@ namespace Qi4CS.Core.Runtime.Model
             il.EmitCall( F_INSTANCE_SET_NEXT_INFO_METHOD );
          }
 
+         var publicCompositeTypeGenInfo = thisMethodGenInfo.DeclaringTypeGenInfo.PublicCompositeTypeGen;
          this.ForEachParameterWithInjection<ConcernForAttribute>( fragmentMethodModel.CompositeMethod, pModel => this.EmitSetFragmentForFragmentDependantInjectableParameter( pModel, publicCompositeTypeGenInfo, thisMethodGenInfo ) );
       }
 
@@ -2088,7 +2034,6 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected virtual void EmitSetupSideEffects(
          CompositeMethodModel compositeMethodModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeMethodGenerationInfo thisMethodGenInfo
          )
       {
@@ -2122,6 +2067,7 @@ namespace Qi4CS.Core.Runtime.Model
               .EmitCall( F_INSTANCE_SET_METHOD_RESULT_METHOD );
          }
 
+         var publicCompositeGenInfo = thisMethodGenInfo.DeclaringTypeGenInfo.PublicCompositeTypeGen;
          this.ForEachParameterWithInjection<SideEffectForAttribute>( compositeMethodModel, pModel => this.EmitSetFragmentForFragmentDependantInjectableParameter( pModel, publicCompositeGenInfo, thisMethodGenInfo ) );
       }
 
@@ -2431,7 +2377,6 @@ namespace Qi4CS.Core.Runtime.Model
             compositeModel,
             ( publicCompositeGenerationInfo.GenericArguments.Any() ? fragmentGenerationInfo.Builder.MakeGenericType( publicCompositeGenerationInfo.GenericArguments.ToArray() ) : fragmentGenerationInfo.Builder ),
             publicCompositeGenerationInfo,
-            publicCompositeGenerationInfo,
             thisMethodGenInfo,
             methodID,
             fragmentGenerationInfo );
@@ -2440,7 +2385,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitLoadLocal( fInstanceB )
             .EmitReturn();
 
-         if ( !emittingInfo.FragmentCreationMethods.TryAdd( fragmentGenerationInfo, thisMethodGenInfo ) )
+         if ( !emittingInfo.FragmentCreationMethods.TryAdd_NotThreadSafe( fragmentGenerationInfo, thisMethodGenInfo ) )
          {
             throw new InternalException( "Method for creating fragment generation info " + fragmentGenerationInfo + " already emitted?" );
          }
@@ -2450,7 +2395,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel instanceableModel,
          CILType resolvedFragmentType,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeMethodGenerationInfo thisCompositeMethodGenerationInfo,
          Int32 methodID,
@@ -2524,7 +2468,6 @@ namespace Qi4CS.Core.Runtime.Model
                            this.EmitProcessParameter(
                               codeGenerationInfo,
                               pModel,
-                              publicCompositeGenInfo,
                               thisGenerationInfo,
                               thisCompositeMethodGenerationInfo,
                               tempStorageB,
@@ -2572,7 +2515,6 @@ namespace Qi4CS.Core.Runtime.Model
                         this.EmitInjectToField(
                            codeGenerationInfo,
                            fieldModel,
-                           publicCompositeGenInfo,
                            thisGenerationInfo,
                            thisCompositeMethodGenerationInfo,
                            fragmentGenerationInfo,
@@ -2683,7 +2625,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual CompositeMethodGenerationInfo EmitFragmentSpecialMethod(
          CompositeCodeGenerationInfo codeGenerationInfo,
          SpecialMethodModel specialMethodModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          FragmentTypeGenerationInfo thisGenInfo
          )
       {
@@ -2740,7 +2681,6 @@ namespace Qi4CS.Core.Runtime.Model
                this.EmitProcessParameter(
                   codeGenerationInfo,
                   paramModel,
-                  publicCompositeGenInfo,
                   thisGenInfo,
                   mb,
                   argBuilder,
@@ -2828,13 +2768,12 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
          CompositeEmittingInfo emittingInfo,
-         CompositeTypeGenerationInfo thisGenerationInfo,
-         Boolean isPublicCompositeCtor
+         CompositeTypeGenerationInfo thisGenerationInfo
          )
       {
          var ctorParamTypes = new CILType[] { codeGenerationInfo.CompositeInstanceFieldType.NewWrapperAsType( this.ctx ), COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE, COMPOSITE_CTOR_EVENTS_PARAM_TYPE };
          Int32 firstAdditionalParamIndex = ctorParamTypes.Length;
-         if ( isPublicCompositeCtor )
+         if ( thisGenerationInfo.IsMainCompositeType )
          {
             ctorParamTypes = ctorParamTypes.Concat( this.GetPublicCompositeAdditionalArguments( thisGenerationInfo ) ).ToArray();
          }
@@ -2880,7 +2819,7 @@ namespace Qi4CS.Core.Runtime.Model
             il
             );
 
-         if ( isPublicCompositeCtor )
+         if ( thisGenerationInfo.IsMainCompositeType )
          {
             var fragmentGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
             this.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, compositeModel, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, cInfo, firstAdditionalParamIndex );
@@ -2915,7 +2854,6 @@ namespace Qi4CS.Core.Runtime.Model
             model,
             typeModel,
             fragmentGenerationInfos,
-            thisGenerationInfo,
             thisGenerationInfo,
             emittingInfo,
             ctorGenerationInfo,
@@ -3371,7 +3309,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeEmittingInfo emittingInfo,
          ConstructorGenerationInfo ctorGenerationInfo,
@@ -3401,7 +3338,6 @@ namespace Qi4CS.Core.Runtime.Model
                this.EmitCallAllSpecialMethods<AttributeType>(
                   codeGenerationInfo,
                   fragmentGenerationInfos,
-                  publicCompositeGenInfo,
                   thisGenerationInfo,
                   actionGenInfo,
                   emittingInfo,
@@ -3518,6 +3454,7 @@ namespace Qi4CS.Core.Runtime.Model
             }
             else
             {
+
                info = this.CreateTypeGenerationInfo(
                   codeGenerationInfo,
                   compositeModel,
@@ -3531,13 +3468,13 @@ namespace Qi4CS.Core.Runtime.Model
                   emittingInfo,
                   null,
                   collectionsFactory,
-                  ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, compositeModel )
+                  ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, compositeModel, null, compositeModel.MainCodeGenerationType.Assembly.Equals( assemblyBeingProcessed ) )
                );
 
                // Make public composite more friendly in debug view
                this.EmitToStringMethod( info, "Composite of type " );
             }
-            if ( compositeModel.MainCodeGenerationType.Assembly.Equals( assemblyBeingProcessed ) )
+            if ( info.IsMainCompositeType )
             {
                info.Builder.AddNewCustomAttributeTypedParams( MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR );
             }
@@ -3552,7 +3489,7 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeTypeModel typeModel,
          TypeBindingInformation typeInfo,
          ListQuery<AbstractGenericTypeBinding> bindings,
-         CILType publicCompositeBuilder,
+         CompositeTypeGenerationInfo publicCompositeTypeGen,
          CompositeEmittingInfo emittingInfo,
          CollectionsFactory collectionsFactory
          )
@@ -3563,7 +3500,7 @@ namespace Qi4CS.Core.Runtime.Model
             compositeModel,
             assemblyBeingProcessed,
             null,
-            publicCompositeBuilder,
+            publicCompositeTypeGen.Builder,
             generatedName,
             typeModel,
             typeInfo,
@@ -3571,7 +3508,7 @@ namespace Qi4CS.Core.Runtime.Model
             emittingInfo,
             emittingInfo.CompositeTypeGenerationInfos,
             collectionsFactory,
-            ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, compositeModel )
+            ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, compositeModel, publicCompositeTypeGen, false )
             );
          this.EmitToStringMethod( info, "Private composite, public composite is of type " );
       }
@@ -3587,7 +3524,7 @@ namespace Qi4CS.Core.Runtime.Model
          TypeBindingInformation bindingInfo,
          ListQuery<AbstractGenericTypeBinding> bindings,
          CompositeEmittingInfo emittingInfo,
-         ConcurrentDictionary<TypeBindingInformation, Tuple<IList<TTypeGenerationInfo>, Object>> typeGenerationInfos,
+         IDictionary<TypeBindingInformation, Tuple<IList<TTypeGenerationInfo>, Object>> typeGenerationInfos,
          CollectionsFactory collectionsFactory,
          Func<CILType, Int32, CILField, TTypeGenerationInfo> creatorFunc
          )
@@ -3621,12 +3558,19 @@ namespace Qi4CS.Core.Runtime.Model
          System.Reflection.Assembly assemblyToProcess,
          CompositeTypeModel typeModel,
          CompositeEmittingInfo emittingInfo,
-         ConcurrentDictionary<TypeBindingInformation, Tuple<IList<TTypeGenerationInfo>, Object>> typeGenerationInfos
+         IDictionary<TypeBindingInformation, Tuple<IList<TTypeGenerationInfo>, Object>> typeGenerationInfos
          )
          where TTypeGenerationInfo : class, AbstractTypeGenerationInfoForComposites
       {
+         if ( isPublicComposite )
+         {
+            ArgumentValidator.ValidateNotNull( "Assembly", assemblyToProcess );
+         }
+
          var typeGArgs = typeModel.PublicCompositeGenericArguments.Select( arg => arg.NewWrapperAsTypeParameter( this.ctx ) ).ToArray();
-         var publicTypesToProcess = compositeModel.PublicTypes
+         var publicTypesToProcess = assemblyToProcess == null ?
+            Empty<CILType>.Array :
+            compositeModel.PublicTypes
             .Where( pType => pType.Assembly.Equals( assemblyToProcess ) )
             .Select( pType => pType.NewWrapperAsType( this.ctx ) )
             .ToArray();
@@ -3675,11 +3619,11 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( isPublicComposite )
          {
-            emittingInfo.AddPublicCompositeGenerationInfo( assemblyToProcess, (CompositeTypeGenerationInfo) result );
+            emittingInfo.AddPublicCompositeGenerationInfo( (CompositeTypeGenerationInfo) result );
          }
          else
          {
-            var tuple = typeGenerationInfos.GetOrAdd( bindingInfo, existing => Tuple.Create( (IList<TTypeGenerationInfo>) new List<TTypeGenerationInfo>(), new Object() ) );
+            var tuple = typeGenerationInfos.GetOrAdd_NotThreadSafe( bindingInfo, existing => Tuple.Create( (IList<TTypeGenerationInfo>) new List<TTypeGenerationInfo>(), new Object() ) );
             lock ( tuple.Item2 )
             {
                tuple.Item1.Add( result );
@@ -3710,7 +3654,7 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeTypeModel typeModel,
          TypeBindingInformation typeInfo,
          ListQuery<AbstractGenericTypeBinding> bindings,
-         CILType compositeBuilder,
+         CompositeTypeGenerationInfo compositeGenInfo,
          Int32 typeID,
          CompositeEmittingInfo emittingInfo,
          CollectionsFactory collectionsFactory
@@ -3736,7 +3680,7 @@ namespace Qi4CS.Core.Runtime.Model
             compositeModel,
             assemblyBeingProcessed,
             null,
-            compositeBuilder,
+            compositeGenInfo.Builder,
             generatedName,
             typeModel,
             typeInfo,
@@ -3744,7 +3688,7 @@ namespace Qi4CS.Core.Runtime.Model
             emittingInfo,
             emittingInfo.FragmentTypeGenerationInfos,
             collectionsFactory,
-            ( tb, amountOfGArgs, compositeField ) => new FragmentTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, instancePoolRequired )
+            ( tb, amountOfGArgs, compositeField ) => new FragmentTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, instancePoolRequired, compositeGenInfo )
             );
 
          if ( !instancePoolRequired )
@@ -3773,7 +3717,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitFragmentMethods(
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          FragmentTypeGenerationInfo thisGenInfo,
          IEnumerable<CompositeTypeGenerationInfo> compositeTypeGenerationInfos
          )
@@ -3804,7 +3747,6 @@ namespace Qi4CS.Core.Runtime.Model
             CompositeMethodGenerationInfo generatedMethod = this.EmitFragmentSpecialMethod(
                codeGenerationInfo,
                sMethod,
-               publicCompositeGenInfo,
                thisGenInfo
                );
             thisGenInfo.SpecialMethodBuilders.Add( sMethod.NativeInfo, generatedMethod );
@@ -3910,7 +3852,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitConcernInvocationType(
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel instanceableModel,
-         System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeModel typeModel,
          TypeBindingInformation typeInfo,
          ListQuery<AbstractGenericTypeBinding> bindings,
@@ -3923,10 +3864,10 @@ namespace Qi4CS.Core.Runtime.Model
          this.EmitInvocationType(
             codeGenerationInfo,
             instanceableModel,
-            assemblyBeingProcessed,
+            null,
             typeModel,
             typeInfo,
-            publicCompositeGenInfo.Builder,
+            publicCompositeGenInfo,
             bindings,
             emittingInfo,
             emittingInfo.ConcernTypeGenerationInfos,
@@ -3937,7 +3878,6 @@ namespace Qi4CS.Core.Runtime.Model
                this.EmitGenericConcernInvocationMethod(
                   codeGenerationInfo,
                   fragmentTypeGenerationInfos,
-                  publicCompositeGenInfo,
                   genInfo,
                   emittingInfo,
                   instanceableModel,
@@ -3952,7 +3892,6 @@ namespace Qi4CS.Core.Runtime.Model
                   compositeMethodModel,
                   typeModel,
                   fragmentTypeGenerationInfos,
-                  publicCompositeGenInfo,
                   genInfo,
                   emittingInfo,
                   fInstanceB
@@ -3968,10 +3907,10 @@ namespace Qi4CS.Core.Runtime.Model
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeModel typeModel,
          TypeBindingInformation typeInfo,
-         CILType compositeBuilder,
+         CompositeTypeGenerationInfo compositeTypeGen,
          ListQuery<AbstractGenericTypeBinding> bindings,
          CompositeEmittingInfo emittingInfo,
-         ConcurrentDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> typeGenerationInfos,
+         IDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> typeGenerationInfos,
          String prefix,
          Int32 typeID,
          Action<CompositeTypeGenerationInfo, CILField> emitGenericMethod,
@@ -3984,7 +3923,7 @@ namespace Qi4CS.Core.Runtime.Model
             instanceableModel,
             assemblyBeingProcessed,
             null,
-            compositeBuilder,
+            compositeTypeGen.Builder,
             this.GetGeneratedClassName( prefix, typeID ),
             typeModel,
             typeInfo,
@@ -3992,7 +3931,7 @@ namespace Qi4CS.Core.Runtime.Model
             emittingInfo,
             typeGenerationInfos,
             collectionsFactory,
-            ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, instanceableModel )
+            ( tb, amountOfGArgs, compositeField ) => new CompositeTypeGenerationInfoImpl( tb, amountOfGArgs, compositeField, instanceableModel, compositeTypeGen, false )
             );
          if ( genInfo != null )
          {
@@ -4113,7 +4052,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeMethodModel methodModel,
          CompositeTypeModel typeModel,
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisInfo,
          CompositeEmittingInfo emittingInfo,
          CILField fInstanceB
@@ -4144,7 +4082,6 @@ namespace Qi4CS.Core.Runtime.Model
                   this.EmitCallFragmentModel(
                      codeGenerationInfo,
                      fragmentTypeGenerationInfos,
-                     publicCompositeGenInfo,
                      thisInfo,
                      methodGenInfo,
                      emittingInfo,
@@ -4258,7 +4195,6 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitGenericConcernInvocationMethod(
          CompositeCodeGenerationInfo codeGenerationInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisInfo,
          CompositeEmittingInfo emittingInfo,
          CompositeModel instanceableModel,
@@ -4292,7 +4228,6 @@ namespace Qi4CS.Core.Runtime.Model
                  this.EmitCallFragmentModel(
                     codeGenerationInfo,
                     fragmentGenerationInfos,
-                    publicCompositeGenInfo,
                     thisInfo,
                     methodGenInfo,
                     emittingInfo,
@@ -4636,10 +4571,9 @@ namespace Qi4CS.Core.Runtime.Model
       protected virtual void EmitSideEffectInvocationType(
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
-         System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeModel typeModel,
          TypeBindingInformation typeInfo,
-         CILType compositeBuilder,
+         CompositeTypeGenerationInfo compositeTypeGen,
          ListQuery<AbstractGenericTypeBinding> bindings,
          CompositeEmittingInfo emittingInfo,
          CollectionsFactory collectionsFactory
@@ -4648,10 +4582,10 @@ namespace Qi4CS.Core.Runtime.Model
          this.EmitInvocationType(
             codeGenerationInfo,
             compositeModel,
-            assemblyBeingProcessed,
+            null,
             typeModel,
             typeInfo,
-            compositeBuilder,
+            compositeTypeGen,
             bindings,
             emittingInfo,
             emittingInfo.SideEffectTypeGenerationInfos,
@@ -4886,7 +4820,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
@@ -4900,7 +4833,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
          CompositeTypeGenerationInfo publicCompositeGenInfo,
-         CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
          )
@@ -4926,7 +4858,6 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos,
@@ -4965,7 +4896,6 @@ namespace Qi4CS.Core.Runtime.Model
             this.EmitUseFragmentPool(
                codeGenerationInfo,
                fragmentGenerationInfos,
-               publicCompositeGenInfo,
                thisGenInfo,
                methodGenInfo,
                emittingInfo,
