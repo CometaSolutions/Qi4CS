@@ -32,55 +32,60 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractCompositeModelTypeCodeGenerator : CompositeModelTypeCodeGenerator
    {
-      public void EmitCodeForCompositeModel( CompositeModelEmittingArgs args )
+      public IDictionary<System.Reflection.Assembly, CILType> EmitCodeForCompositeModel( CompositeModelEmittingArgs args )
       {
          var assemblies = args.Assemblies;
          var publicTypeGens = new Dictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo>();
+         var emittingInfo = new CompositeEmittingInfo( this.ctx );
+
          // TODO some of these phases may be combined into one, I think...
          // Phase 1. Types
          foreach ( var kvp in assemblies )
          {
-            publicTypeGens.Add( kvp.Key, this.EmitTypesForModel( args, kvp.Key ) );
+            publicTypeGens.Add( kvp.Key, this.EmitTypesForModel( args, emittingInfo, kvp.Key ) );
          }
 
          // Phase 2. Fragment methods
          foreach ( var kvp in assemblies )
          {
-            this.EmitFragmentMethods( args, kvp.Key, publicTypeGens[kvp.Key] );
+            this.EmitFragmentMethods( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
          }
 
          // Phase 3. Composite methods and invocation info types
          foreach ( var kvp in assemblies )
          {
-            this.EmitCompositeMethosAndInvocationInfos( args, kvp.Key, publicTypeGens[kvp.Key] );
+            this.EmitCompositeMethosAndInvocationInfos( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
          }
 
          // Phase 4. Any extra methods
          foreach ( var kvp in assemblies )
          {
-            this.EmitCompositeExtraMethods( args, kvp.Key, publicTypeGens[kvp.Key] );
+            this.EmitCompositeExtraMethods( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
          }
 
          // Phase 5. Composite constructors
          foreach ( var kvp in assemblies )
          {
-            this.EmitCompositeConstructors( args, kvp.Key, publicTypeGens[kvp.Key] );
+            this.EmitCompositeConstructors( args, emittingInfo, kvp.Key, publicTypeGens[kvp.Key] );
          }
 
          // Phase 6. Composite factory type
          var mainAssembly = args.Model.MainCodeGenerationType.Assembly;
-         this.EmitCompositeFactory( args, mainAssembly, publicTypeGens[mainAssembly] );
+         this.EmitCompositeFactory( args, emittingInfo, mainAssembly, publicTypeGens[mainAssembly] );
+
+         return publicTypeGens.ToDictionary( kvp => kvp.Key, kvp => kvp.Value.Builder );
+
       }
 
 
       private CompositeTypeGenerationInfo EmitTypesForModel(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed
          )
       {
          var model = args.Model;
          var typeModel = args.TypeModel;
-         var emittingInfo = args.EmittingInfo;
          var codeGenerationInfo = args.CodeGenerationInfo;
          var collectionsFactory = model.ApplicationModel.CollectionsFactory;
 
@@ -110,11 +115,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitFragmentMethods(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
-         var emittingInfo = args.EmittingInfo;
          foreach ( var binding in this.GetBindings( args.TypeModel.FragmentTypeInfos.Values, assemblyBeingProcessed ) )
          {
             foreach ( var fGenInfo in emittingInfo.FragmentTypeGenerationInfos[binding].Item1 )
@@ -126,12 +131,12 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitCompositeMethosAndInvocationInfos(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
          var model = args.Model;
-         var emittingInfo = args.EmittingInfo;
          var typeModel = args.TypeModel;
          var codeGenerationInfo = args.CodeGenerationInfo;
 
@@ -199,11 +204,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitCompositeExtraMethods(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
-         var emittingInfo = args.EmittingInfo;
          var model = args.Model;
          var typeModel = args.TypeModel;
          var codeGenerationInfo = args.CodeGenerationInfo;
@@ -234,11 +239,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitCompositeConstructors(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
-         var emittingInfo = args.EmittingInfo;
          var model = args.Model;
          foreach ( var cInfo in emittingInfo.AllCompositeGenerationInfos.Where( info => info.Equals( publicCompositeTypeGenInfo ) || publicCompositeTypeGenInfo.Builder.Equals( info.Builder.DeclaringType ) ) )
          {
@@ -256,11 +261,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       private void EmitCompositeFactory(
          CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
          System.Reflection.Assembly assemblyBeingProcessed,
          CompositeTypeGenerationInfo publicCompositeTypeGenInfo
          )
       {
-         var emittingInfo = args.EmittingInfo;
          var model = args.Model;
          var typeIDDic = emittingInfo.GetGenerationInfosByTypeID( model );
 
@@ -3532,7 +3537,7 @@ namespace Qi4CS.Core.Runtime.Model
                // Make public composite more friendly in debug view
                this.EmitToStringMethod( info, "Composite of type " );
             }
-            if ( emittingInfo.IsMainCompositeGenerationInfo( info, assemblyBeingProcessed ) )
+            if ( compositeModel.MainCodeGenerationType.Assembly.Equals( assemblyBeingProcessed ) )
             {
                info.Builder.AddNewCustomAttributeTypedParams( MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR );
             }

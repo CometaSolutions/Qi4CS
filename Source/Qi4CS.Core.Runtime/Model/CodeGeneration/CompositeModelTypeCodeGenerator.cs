@@ -31,18 +31,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public interface CompositeModelTypeCodeGenerator
    {
-      //void EmitTypesForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule mob, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitMembersForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitILForModel( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CILModule module, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-
-      // TODO move CompositeEmittingInfo to AbstractCompositeModelTypeCodeGenerator constructor.
-      //void EmitFragmentMethods( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitCompositeMethosAndInvocationInfos( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitCompositeExtraMethods( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitCompositeConstructors( CompositeModel model, CompositeTypeModel typeModel, Assembly assemblyBeingProcessed, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-      //void EmitCompositeFactory( CompositeModel model, Assembly assemblyBeingProcessed, CILModule module, CompositeCodeGenerationInfo codeGenerationInfo, CompositeEmittingInfo emittingInfo );
-
-      void EmitCodeForCompositeModel( CompositeModelEmittingArgs args );
+      IDictionary<Assembly, CILType> EmitCodeForCompositeModel( CompositeModelEmittingArgs args );
    }
 
    public sealed class CompositeModelEmittingArgs
@@ -51,26 +40,23 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly CompositeTypeModel _typeModel;
       private readonly CompositeCodeGenerationInfo _codeGenerationInfo;
       private readonly IDictionary<System.Reflection.Assembly, CILModule> _assemblies;
-      private readonly CompositeEmittingInfo _emittingInfo;
 
       public CompositeModelEmittingArgs(
          CompositeModel model,
          CompositeTypeModel typeModel,
          CompositeCodeGenerationInfo codeGenerationInfo,
-         IDictionary<Assembly, CILModule> assemblies,
-         CompositeEmittingInfo emittingInfo )
+         IDictionary<Assembly, CILModule> assemblies
+         )
       {
          ArgumentValidator.ValidateNotNull( "Composite model", model );
          ArgumentValidator.ValidateNotNull( "Composite type model", typeModel );
          ArgumentValidator.ValidateNotNull( "Code generation info", codeGenerationInfo );
          ArgumentValidator.ValidateNotNull( "Assembles", assemblies );
-         ArgumentValidator.ValidateNotNull( "Emitting information", emittingInfo );
 
          this._model = model;
          this._typeModel = typeModel;
          this._codeGenerationInfo = codeGenerationInfo;
          this._assemblies = assemblies;
-         this._emittingInfo = emittingInfo;
       }
 
       public CompositeModel Model
@@ -99,13 +85,6 @@ namespace Qi4CS.Core.Runtime.Model
          get
          {
             return this._assemblies;
-         }
-      }
-      public CompositeEmittingInfo EmittingInfo
-      {
-         get
-         {
-            return this._emittingInfo;
          }
       }
    }
@@ -192,12 +171,6 @@ namespace Qi4CS.Core.Runtime.Model
          //Interlocked.CompareExchange( ref this._firstPublicTypeGenInfo, typeGenInfo, null );
       }
 
-      public Boolean IsMainCompositeGenerationInfo( CompositeTypeGenerationInfo typeGenInfo, Assembly assemblyBeingProcessed )
-      {
-         return typeGenInfo.CompositeModel.MainCodeGenerationType.Assembly.Equals( assemblyBeingProcessed );
-         //return Object.ReferenceEquals( this._firstPublicTypeGenInfo, typeGenInfo );
-      }
-
       public Boolean IsMainCompositeGenerationInfo( CompositeTypeGenerationInfo typeGenInfo, CILType mainCompositeTypeAttributeType )
       {
          return typeGenInfo.Builder.CustomAttributeData.Any( d => d.Constructor.DeclaringType.Equals( mainCompositeTypeAttributeType ) );
@@ -265,11 +238,6 @@ namespace Qi4CS.Core.Runtime.Model
          {
             return this._compositeCtors;
          }
-      }
-
-      public IEnumerable<Tuple<Assembly, CompositeTypeGenerationInfo>> GetAllPublicComposites()
-      {
-         return this._publicCompositeGenerationInfo.Select( kvp => Tuple.Create( kvp.Key, kvp.Value ) );
       }
 
       public Int32 NewPrivateCompositeID()

@@ -33,6 +33,7 @@ using Qi4CS.Core.Runtime.Assembling;
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
 using Qi4CS.Core.Runtime.Instance;
+using System.Collections.Concurrent;
 #endif
 
 namespace Qi4CS.Core.Runtime.Model
@@ -272,15 +273,13 @@ namespace Qi4CS.Core.Runtime.Model
          var validationResult = this.ValidationResult;
          CheckValidation( validationResult, "Tried to emit code based on application model with validation errors." );
 
-         IDictionary<CompositeModel, CompositeEmittingInfo> cResults;
+         IDictionary<CompositeModel, IDictionary<Assembly, CILType>> cResults;
          var assDic = this.PerformEmitting( isSilverlight, reflectionContext, out cResults );
 
          this.ApplicationCodeGenerationEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeGenerationArgs(
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
             kvp => kvp.Key,
-            kvp => this.CollectionsFactory.NewDictionaryProxy(
-               kvp.Value.GetAllPublicComposites().ToDictionary( tuple => tuple.Item1, tuple => tuple.Item2.Builder )
-               ).CQ
+            kvp => this.CollectionsFactory.NewDictionaryProxy( kvp.Value ).CQ
             ) ).CQ
             ) ) );
 
@@ -295,13 +294,13 @@ namespace Qi4CS.Core.Runtime.Model
       //private static readonly ConstructorInfo ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR = typeof( AssemblyDefaultAliasAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
-      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, CompositeEmittingInfo> cResultsOut )
+      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, IDictionary<Assembly, CILType>> cResultsOut )
       {
          var typeModelDic = this._typeModelDic.Value;
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
          var models = this._models.CQ.Values.ToArray();
          var supports = this._compositeModelTypeSupport;
-         var cResults = models.ToDictionary( muudel => muudel, muudel => new CompositeEmittingInfo( reflectionContext ) );
+         var cResults = new ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType>>();
          cResultsOut = cResults;
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
@@ -337,28 +336,28 @@ namespace Qi4CS.Core.Runtime.Model
             models,
             model =>
             {
-               // Assemblies dictionary will get modified, so create a local copy of it
-               var thisAssemblyDicCopy = new Dictionary<Assembly, CILModule>( assemblyDic );
-
-               // First, add Qi4CS assembly to be mapped to the main type emitted assembly
-               thisAssemblyDicCopy.Add( ReflectionHelper.QI4CS_ASSEMBLY, thisAssemblyDicCopy[model.MainCodeGenerationType.GetAssembly()] );
-
                var typeModel = typeModelDic[model];
-               // Remove all assemblies not part of this model
-               foreach ( var assemblyBeingProcessed in thisAssemblyDicCopy.Keys.ToArray() )
-               {
-                  if ( !( model.PublicTypes.Any( pType => pType.Assembly.Equals( assemblyBeingProcessed ) )
-                  || typeModel.FragmentTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-                  || typeModel.PrivateCompositeTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-                  || typeModel.ConcernInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-                  || typeModel.SideEffectInvocationTypeInfos.Keys.Any( type => type.Assembly.Equals( assemblyBeingProcessed ) )
-                  ) )
-                  {
-                     thisAssemblyDicCopy.Remove( assemblyBeingProcessed );
-                  }
-               }
+
+               // Assemblies dictionary will get modified, so create a local copy of it
+               // Also, assemblies not part of this model will not be visible
+               var thisAssemblyDicCopy = model.PublicTypes
+                 .Concat( typeModel.FragmentTypeInfos.Keys )
+                 .Concat( typeModel.PrivateCompositeTypeInfos.Keys )
+                 .Concat( typeModel.ConcernInvocationTypeInfos.Keys )
+                 .Concat( typeModel.SideEffectInvocationTypeInfos.Keys )
+                 .Select( t => t.Assembly )
+                 .Distinct()
+                 .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
+                 .ToDictionary( a => a, a => assemblyDic[a] );
+
+               // Qi4CS assembly is mapped to the main type emitted assembly
+               thisAssemblyDicCopy[ReflectionHelper.QI4CS_ASSEMBLY] = thisAssemblyDicCopy[model.MainCodeGenerationType.GetAssembly()];
+
+               // Perform emitting
                var codeGenInfo = codeGens[model.ModelType];
-               codeGenInfo.Item1.EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, codeGenInfo.Item2, thisAssemblyDicCopy, cResults[model] ) );
+               var generationResult = codeGenInfo.Item1.EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, codeGenInfo.Item2, thisAssemblyDicCopy ) );
+               generationResult.Remove( ReflectionHelper.QI4CS_ASSEMBLY );
+               cResults[model] = generationResult;
             } );
 
 
