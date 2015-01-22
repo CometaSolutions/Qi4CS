@@ -29,10 +29,10 @@ using System.Diagnostics;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.Runtime.Assembling;
+using Qi4CS.Core.Runtime.Instance;
 
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
-using Qi4CS.Core.Runtime.Instance;
 using System.Collections.Concurrent;
 #endif
 
