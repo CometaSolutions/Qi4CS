@@ -92,4 +92,30 @@ namespace Qi4CS.Core.Runtime.Model
 
       }
    }
+
+   [AttributeUsage( AttributeTargets.Assembly, AllowMultiple = true )]
+   public class CompositeTypesAttribute : Attribute
+   {
+      private readonly Int32 _compositeID;
+
+      public CompositeTypesAttribute( Int32 compositeID )
+      {
+         this._compositeID = compositeID;
+      }
+
+      public Int32 CompositeID
+      {
+         get
+         {
+            return this._compositeID;
+         }
+      }
+
+      public Type[] PublicCompositeTypes { get; set; }
+      public Type[] PrivateCompositeTypes { get; set; }
+      public Type[] FragmentTypes { get; set; }
+      public Type[] ConcernInvokationHandlerTypes { get; set; }
+      public Type[] SideEffectInvocationHandlerTypes { get; set; }
+      public Type CompositeFactoryType { get; set; }
+   }
 }

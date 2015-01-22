@@ -19,6 +19,7 @@
 using System;
 using System.Linq;
 using CILAssemblyManipulator.API;
+using CommonUtils;
 
 namespace Qi4CS.Core.Runtime.Model
 {
@@ -230,12 +231,24 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod GET_BYTES_SINGLE;
       protected readonly CILMethod BYTES_TO_INT32;
       protected readonly CILMethod BYTES_TO_SINGLE;
+      protected readonly CILConstructor COMPOSITE_TYPES_ATTRIBUTE_CTOR;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY;
+      protected readonly CILProperty COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY;
 
       protected readonly CILReflectionContext ctx;
       protected readonly Boolean isSilverLight;
+      protected readonly CompositeCodeGenerationInfo codeGenInfo;
 
-      protected AbstractCompositeModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext aCtx )
+      protected AbstractCompositeModelTypeCodeGenerator( CompositeCodeGenerationInfo codeGenInfo, Boolean isSilverlight, CILReflectionContext aCtx )
       {
+         ArgumentValidator.ValidateNotNull( "Code generation constants", codeGenInfo );
+         ArgumentValidator.ValidateNotNull( "CIL reflection context", aCtx );
+
+         this.codeGenInfo = codeGenInfo;
          this.isSilverLight = isSilverlight;
          this.ctx = aCtx;
 
@@ -444,6 +457,13 @@ namespace Qi4CS.Core.Runtime.Model
          this.GET_BYTES_SINGLE = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
          this.BYTES_TO_INT32 = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
          this.BYTES_TO_SINGLE = GET_BYTES_INT32_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_CTOR = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE.NewWrapper( ctx );
+         this.COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY = COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY_NATIVE.NewWrapper( ctx );
       }
    }
 }

@@ -46,8 +46,8 @@ namespace Qi4CS.Core.Runtime.Model
          //ACTION_CONSTRUCTOR_NATIVE = TypeUtil.TryLoadConstructor( typeof( Action<ServiceCompositeInstanceImpl> ), 2 );
       }
 
-      public ServiceModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext ctx )
-         : base( isSilverlight, ctx )
+      public ServiceModelTypeCodeGenerator( CompositeCodeGenerationInfo codeGenerationInfo, Boolean isSilverlight, CILReflectionContext ctx )
+         : base( codeGenerationInfo, isSilverlight, ctx )
       {
          this.SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD = SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE.NewWrapper( this.ctx );
          this.METHOD_GENERIC_ARGUMENTS_INFO_CTOR = METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE.NewWrapper( this.ctx );
@@ -121,7 +121,6 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       protected override void EmitTheRestOfPublicCompositeConstructor(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel model,
          CompositeTypeModel typeModel,
          CompositeEmittingInfo emittingInfo,
@@ -131,12 +130,11 @@ namespace Qi4CS.Core.Runtime.Model
          Int32 firstAdditionalParameterIndex
          )
       {
-         base.EmitTheRestOfPublicCompositeConstructor( codeGenerationInfo, model, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, ctorGenerationInfo, firstAdditionalParameterIndex );
+         base.EmitTheRestOfPublicCompositeConstructor( model, typeModel, emittingInfo, fragmentGenerationInfos, thisGenerationInfo, ctorGenerationInfo, firstAdditionalParameterIndex );
 
          Int32 baseAdditionalParamsCount = base.GetAmountOfAdditionalArgumentsForPublicCompositeConstructor();
 
          this.EmitSetActionMethod<ActivateAttribute>(
-            codeGenerationInfo,
             model,
             typeModel,
             fragmentGenerationInfos,
@@ -149,7 +147,6 @@ namespace Qi4CS.Core.Runtime.Model
             );
 
          this.EmitSetActionMethod<PassivateAttribute>(
-            codeGenerationInfo,
             model,
             typeModel,
             fragmentGenerationInfos,

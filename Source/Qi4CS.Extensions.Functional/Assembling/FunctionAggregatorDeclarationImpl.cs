@@ -257,7 +257,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
             if ( !sMethod.DeclaringType.ContainsGenericParameters && !sMethod.ContainsGenericParameters )
             {
                var typeName = this.GetInvocationHandlerName( cModel, kvp.Key );
-               var tb = args.TypeGenerationInformation[cModel][sMethod.DeclaringType.Assembly].Module.AddType( typeName, TypeAttributes.Public | TypeAttributes.Class );
+               var tb = args.TypeGenerationInformation[cModel][sMethod.DeclaringType.Assembly].Module.AddType( typeName, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
 
                tb.AddDefaultConstructor( MethodAttributes.Public | MethodAttributes.HideBySig );
 

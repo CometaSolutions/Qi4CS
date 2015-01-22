@@ -39,7 +39,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       void ValidateModelsInApplication( ApplicationModel<ApplicationSPI> appModel, ApplicationValidationResultMutable appValidation );
 
-      PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic );
+      PublicCompositeTypeGenerationResult LoadTypes(
+         CompositeModel compositeModel,
+         CompositeTypeModel tModel,
+         IList<CompositeTypesAttribute> typeAttributes
+         );
 
       CompositeModelTypeInstanceScopeSupport CreateInstanceScopeSupport();
 
@@ -90,14 +94,16 @@ namespace Qi4CS.Core.Runtime.Model
          return this.PerformValidationWithoutTypeGeneration( compositeModel );
       }
 
-      public PublicCompositeTypeGenerationResult LoadTypes( CompositeModel compositeModel, CompositeTypeModel tModel, EventHandler<AssemblyLoadingArgs> loadingEvt, IDictionary<Assembly, Assembly> assDic )
+      public virtual PublicCompositeTypeGenerationResult LoadTypes(
+         CompositeModel compositeModel,
+         CompositeTypeModel tModel,
+         IList<CompositeTypesAttribute> typeAttributes
+         )
       {
          return new PublicCompositeTypeGenerationResultImpl(
             compositeModel,
             tModel,
-            loadingEvt,
-            assDic,
-            this._codeGenerationInfo
+            typeAttributes
             );
       }
 
@@ -153,7 +159,7 @@ namespace Qi4CS.Core.Runtime.Model
 #if QI4CS_SDK
       public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
-         return new PlainCompositeModelTypeCodeGenerator( isSilverlight, reflectionContext );
+         return new PlainCompositeModelTypeCodeGenerator( this.CodeGenerationInfo, isSilverlight, reflectionContext );
       }
 #endif
    }
@@ -210,7 +216,7 @@ namespace Qi4CS.Core.Runtime.Model
 #if QI4CS_SDK
       public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
       {
-         return new ServiceModelTypeCodeGenerator( isSilverlight, reflectionContext );
+         return new ServiceModelTypeCodeGenerator( this.CodeGenerationInfo, isSilverlight, reflectionContext );
       }
 #endif
    }

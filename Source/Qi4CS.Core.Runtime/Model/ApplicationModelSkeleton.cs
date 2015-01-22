@@ -121,13 +121,62 @@ namespace Qi4CS.Core.Runtime.Model
          var validationResult = this.ValidationResult;
 
          CheckValidation( validationResult, "Tried to create new application instance from model with validation errors." );
-         var assDic = new Dictionary<Assembly, Assembly>();
-         var loadingEvt = this.GeneratedAssemblyLoadingEvent;
-         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary( model => model, model => this._compositeModelTypeSupport[model.ModelType].LoadTypes( model, ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel, loadingEvt, assDic ) ) ).CQ;
+         var assDic = this.AffectedAssemblies
+            .Where( a => !ReflectionHelper.QI4CS_ASSEMBLY.Equals( a ) )
+            .ToDictionary( a => a, a => this.LoadQi4CSGeneratedAssembly( a ) );
+         var attrDic = assDic.Values
+            .SelectMany( a => a.GetCustomAttributes().OfType<CompositeTypesAttribute>() )
+            .GroupBy( a => this.CompositeModels[a.CompositeID] )
+            .ToDictionary( g => g.Key, g => g.ToList() );
+
+         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary(
+            model => model,
+            model => this._compositeModelTypeSupport[model.ModelType].LoadTypes(
+               model,
+               ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel,
+               attrDic[model]
+               ) )
+            ).CQ;
          this.ApplicationCodeResolveEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeResolveArgs( dic, this.CollectionsFactory.NewDictionaryProxy( assDic ).CQ ) ) );
          var result = this.CreateNew( validationResult, applicationName, mode, version, dic );
          this.ApplicationInstanceCreatedEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCreationArgs( result ) ) );
          return result;
+      }
+
+      private Assembly LoadQi4CSGeneratedAssembly( Assembly originalAssembly )
+      {
+         var args = new AssemblyLoadingArgs( originalAssembly.FullName, Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( originalAssembly ) );
+         this.GeneratedAssemblyLoadingEvent.InvokeEventIfNotNull( evt => evt( this, args ) );
+
+         var an = args.Qi4CSGeneratedAssemblyName;
+         if ( args.Version != null )
+         {
+            an += ", Version=" + args.Version;
+         }
+
+         if ( !String.IsNullOrEmpty( args.Culture ) )
+         {
+            an += ", Culture=" + args.Culture;
+         }
+
+         if ( !args.PublicKey.IsNullOrEmpty() )
+         {
+            an += ", PublicKey=" + StringConversions.ByteArray2HexStr( args.PublicKey );
+         }
+         else if ( !args.PublicKeyToken.IsNullOrEmpty() )
+         {
+            an += ", PublicKeyToken=" + StringConversions.ByteArray2HexStr( args.PublicKeyToken );
+         }
+
+         return Assembly.Load(
+#if WINDOWS_PHONE_APP
+               new AssemblyName(
+#endif
+ an
+#if WINDOWS_PHONE_APP
+               )
+#endif
+ );
       }
 
       public InjectionService InjectionService
@@ -305,7 +354,7 @@ namespace Qi4CS.Core.Runtime.Model
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
             .Distinct()
-            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => Tuple.Create( mt.NewCodeGenerator( isSilverlight, reflectionContext ), mt.CodeGenerationInfo ) );
+            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => mt.NewCodeGenerator( isSilverlight, reflectionContext ) );
 
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
@@ -350,23 +399,11 @@ namespace Qi4CS.Core.Runtime.Model
                  .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
                  .ToDictionary( a => a, a => assemblyDic[a] );
 
-               // Qi4CS assembly is mapped to the main type emitted assembly
-               thisAssemblyDicCopy[ReflectionHelper.QI4CS_ASSEMBLY] = thisAssemblyDicCopy[model.MainCodeGenerationType.GetAssembly()];
-
                // Perform emitting
-               var codeGenInfo = codeGens[model.ModelType];
-               var generationResult = codeGenInfo.Item1.EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, codeGenInfo.Item2, thisAssemblyDicCopy ) );
-               generationResult.Remove( ReflectionHelper.QI4CS_ASSEMBLY );
-               cResults[model] = generationResult;
+               cResults[model] = codeGens[model.ModelType].EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, thisAssemblyDicCopy ) );
             } );
 
-
          return assemblyDic;
-      }
-
-      private static CILModule GetEmittingModule( CompositeModel cModel, Dictionary<Assembly, CILModule> dic, Assembly assembly )
-      {
-         return ReflectionHelper.QI4CS_ASSEMBLY.Equals( assembly ) ? dic[cModel.MainCodeGenerationType.Assembly] : dic[assembly];
       }
 
 #endif

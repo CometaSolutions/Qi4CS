@@ -38,24 +38,20 @@ namespace Qi4CS.Core.Runtime.Model
    {
       private readonly CompositeModel _model;
       private readonly CompositeTypeModel _typeModel;
-      private readonly CompositeCodeGenerationInfo _codeGenerationInfo;
       private readonly IDictionary<System.Reflection.Assembly, CILModule> _assemblies;
 
       public CompositeModelEmittingArgs(
          CompositeModel model,
          CompositeTypeModel typeModel,
-         CompositeCodeGenerationInfo codeGenerationInfo,
          IDictionary<Assembly, CILModule> assemblies
          )
       {
          ArgumentValidator.ValidateNotNull( "Composite model", model );
          ArgumentValidator.ValidateNotNull( "Composite type model", typeModel );
-         ArgumentValidator.ValidateNotNull( "Code generation info", codeGenerationInfo );
          ArgumentValidator.ValidateNotNull( "Assembles", assemblies );
 
          this._model = model;
          this._typeModel = typeModel;
-         this._codeGenerationInfo = codeGenerationInfo;
          this._assemblies = assemblies;
       }
 
@@ -73,13 +69,7 @@ namespace Qi4CS.Core.Runtime.Model
             return this._typeModel;
          }
       }
-      public CompositeCodeGenerationInfo CodeGenerationInfo
-      {
-         get
-         {
-            return this._codeGenerationInfo;
-         }
-      }
+
       public IDictionary<System.Reflection.Assembly, CILModule> Assemblies
       {
          get
@@ -172,7 +162,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      public IDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> CompositeTypeGenerationInfos
+      public IDictionary<TypeBindingInformation, Tuple<IList<CompositeTypeGenerationInfo>, Object>> PrivateCompositeTypeGenerationInfos
       {
          get
          {
