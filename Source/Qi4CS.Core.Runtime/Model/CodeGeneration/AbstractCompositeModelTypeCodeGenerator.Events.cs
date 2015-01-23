@@ -36,7 +36,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected const String EVENT_CHECKER_POSTFIX = "Checker";
       protected const String EVENT_FIELD_PREFIX = "_event";
 
-      protected virtual void EmitEventRelatedThings(
+      protected void EmitEventRelatedThings(
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeMethodGenerationInfo thisMethodGenerationInfo,
          EventModel eventModel,
@@ -201,7 +201,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      protected virtual Boolean IsCompositeGeneratedEvent(
+      protected Boolean IsCompositeGeneratedEvent(
          CompositeTypeGenerationInfo thisGenerationInfo,
          EventModel eventModel,
          Type genericEventMixinType
@@ -214,7 +214,7 @@ namespace Qi4CS.Core.Runtime.Model
             genericEventMixinType.Equals( eventModel.RemoveMethod.Mixin.NativeInfo.DeclaringType );
       }
 
-      protected virtual void CreateEmittingActionsForEvent(
+      protected void CreateEmittingActionsForEvent(
          EventModel eventModel,
          CILTypeBase eventType,
          out CILTypeBase fieldType,
@@ -244,7 +244,7 @@ namespace Qi4CS.Core.Runtime.Model
          //}
       }
 
-      protected virtual void EmitEventCheckMethodForStronglyReferencedEvents(
+      protected void EmitEventCheckMethodForStronglyReferencedEvents(
          CILField eventField,
          MethodIL il
          )
@@ -257,7 +257,7 @@ namespace Qi4CS.Core.Runtime.Model
            .EmitReturn();
       }
 
-      //protected virtual void EmitEventCheckMethodForWeaklyReferencedEvents(
+      //protected void EmitEventCheckMethodForWeaklyReferencedEvents(
       //   CILField eventField,
       //   MethodIL il
       //   )
@@ -271,7 +271,7 @@ namespace Qi4CS.Core.Runtime.Model
       //     .EmitReturn();
       //}
 
-      protected virtual void EmitEventInvocationMethodForStronglyReferencedEvents(
+      protected void EmitEventInvocationMethodForStronglyReferencedEvents(
          EventModel eventModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField eventField,
@@ -380,7 +380,7 @@ namespace Qi4CS.Core.Runtime.Model
             } );
       }
 
-      protected virtual void EmitEventInvocationWithTryCatchIfNeeded(
+      protected void EmitEventInvocationWithTryCatchIfNeeded(
          EventInvocation invocationStyle,
          Type exceptionType,
          CompositeMethodGenerationInfo invokeMethod,
@@ -420,7 +420,7 @@ namespace Qi4CS.Core.Runtime.Model
          );
       }
 
-      protected virtual void EmitStoreExceptionListWithinCatch(
+      protected void EmitStoreExceptionListWithinCatch(
          CompositeMethodGenerationInfo methodGenInfo
          )
       {
@@ -441,7 +441,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitCall( ADD_LAST_METHOD.ChangeDeclaringType( ( (CILType) exceptionListB.LocalType ).GenericArguments.ToArray() ) );
       }
 
-      protected virtual void EmitEventInvocationMethodCore(
+      protected void EmitEventInvocationMethodCore(
          EventModel eventModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField eventField,
@@ -509,7 +509,7 @@ namespace Qi4CS.Core.Runtime.Model
          il.EmitReturn();
       }
 
-      protected virtual void EmitThrowIfExceptionListHasAny( CompositeMethodGenerationInfo methodGenInfo, CILConstructor exceptionCtor )
+      protected void EmitThrowIfExceptionListHasAny( CompositeMethodGenerationInfo methodGenInfo, CILConstructor exceptionCtor )
       {
          var exceptionListB = methodGenInfo.GetLocalOrThrow( LB_EXCEPTION_LIST );
          var il = methodGenInfo.IL;
@@ -522,7 +522,7 @@ namespace Qi4CS.Core.Runtime.Model
             .MarkLabel( noThrowLabel );
       }
 
-      protected virtual void EmitEventModificationMethodForStronglyReferencedEvents(
+      protected void EmitEventModificationMethodForStronglyReferencedEvents(
          CILField eventField,
          MethodIL il,
          CILMethod modificationMethod
@@ -551,7 +551,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      //protected virtual void EmitEventInvocationMethodForWeaklyReferencedEvents(
+      //protected void EmitEventInvocationMethodForWeaklyReferencedEvents(
       //   EventModel eventModel,
       //   CompositeTypeGenerationInfo thisGenerationInfo,
       //   CILField eventField,
@@ -745,7 +745,7 @@ namespace Qi4CS.Core.Runtime.Model
       //      } );
       //}
 
-      //protected virtual void EmitEventAdditionMethodForWeaklyReferencedEvents(
+      //protected void EmitEventAdditionMethodForWeaklyReferencedEvents(
       //   CILField eventField,
       //   MethodIL il
       //   )
@@ -831,7 +831,7 @@ namespace Qi4CS.Core.Runtime.Model
       //   il.EmitReturn();
       //}
 
-      //protected virtual void EmitEventRemovingMethodForWeaklyReferencedEvents(
+      //protected void EmitEventRemovingMethodForWeaklyReferencedEvents(
       //   CILField eventField,
       //   MethodIL il
       //   )
@@ -871,7 +871,7 @@ namespace Qi4CS.Core.Runtime.Model
       //      .EmitReturn();
       //}
 
-      protected virtual void GetEventInvocationStyle( EventModel eventModel, out EventInvocation invocationStyle, out Type exceptionType )
+      protected void GetEventInvocationStyle( EventModel eventModel, out EventInvocation invocationStyle, out Type exceptionType )
       {
          EventInvocationStyleAttribute attr = eventModel.AllAttributes.OfType<EventInvocationStyleAttribute>().FirstOrDefault();
          if ( attr == null )

@@ -36,7 +36,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected const String PROPERTY_EXCHANGE_POSTFIX = "Exchange";
       protected const String PROPERTY_COMPARE_EXCHANGE_POSTFIX = "CompareExchange";
 
-      protected virtual void EmitPropertySetterMethod(
+      protected void EmitPropertySetterMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -77,7 +77,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      protected virtual void EmitCheckPropertyImmutability(
+      protected void EmitCheckPropertyImmutability(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          MethodIL il
@@ -104,7 +104,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      protected virtual void EmitPropertyGetterMethod(
+      protected void EmitPropertyGetterMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -142,7 +142,7 @@ namespace Qi4CS.Core.Runtime.Model
            .EmitReturn();
       }
 
-      protected virtual void EmitPropertyExchangeMethod(
+      protected void EmitPropertyExchangeMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -164,7 +164,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      protected virtual void EmitPropertyCompareExchangeMethod(
+      protected void EmitPropertyCompareExchangeMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -182,7 +182,7 @@ namespace Qi4CS.Core.Runtime.Model
          il.EmitReturn();
       }
 
-      protected virtual void EmitPropertyRelatedThings(
+      protected void EmitPropertyRelatedThings(
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeMethodGenerationInfo thisMethodGenerationInfo,
          PropertyModel propertyModel,
@@ -297,7 +297,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      protected virtual Boolean IsCompositeGeneratedProperty(
+      protected Boolean IsCompositeGeneratedProperty(
          CompositeTypeGenerationInfo thisGenerationInfo,
          PropertyModel propertyModel,
          Type genericPropertyMixinType
@@ -310,7 +310,7 @@ namespace Qi4CS.Core.Runtime.Model
               genericPropertyMixinType.Equals( propertyModel.SetterMethod.Mixin.NativeInfo.DeclaringType );
       }
 
-      protected virtual void GetReadAndWriteMethods(
+      protected void GetReadAndWriteMethods(
          CILTypeBase propertyType,
          out Action<CILField, MethodIL> read,
          out Action<CILField, MethodIL> read32,
@@ -457,12 +457,12 @@ namespace Qi4CS.Core.Runtime.Model
          };
       }
 
-      protected virtual Boolean CanEmitDefaultValueForPropertyModel( PropertyModel propModel )
+      protected Boolean CanEmitDefaultValueForPropertyModel( PropertyModel propModel )
       {
          return propModel.IsPartOfCompositeState() && ( propModel.DefaultValueCreator != null || propModel.IsUseDefaults() );
       }
 
-      protected virtual void EmitLoadDefaultValueForPropertyModel(
+      protected void EmitLoadDefaultValueForPropertyModel(
          PropertyModel propModel,
          CompositeTypeGenerationInfo propertyDeclaringTypeGenInfo,
          MethodGenerationInfo methodGenInfo
