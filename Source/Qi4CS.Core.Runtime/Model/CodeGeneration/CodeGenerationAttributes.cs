@@ -94,11 +94,11 @@ namespace Qi4CS.Core.Runtime.Model
    }
 
    [AttributeUsage( AttributeTargets.Assembly, AllowMultiple = true )]
-   public class CompositeTypesAttribute : Attribute
+   public abstract class AbstractCompositeRelatedCodeGenerationAttribute : Attribute
    {
       private readonly Int32 _compositeID;
 
-      public CompositeTypesAttribute( Int32 compositeID )
+      public AbstractCompositeRelatedCodeGenerationAttribute( Int32 compositeID )
       {
          this._compositeID = compositeID;
       }
@@ -109,6 +109,15 @@ namespace Qi4CS.Core.Runtime.Model
          {
             return this._compositeID;
          }
+      }
+   }
+
+   //[AttributeUsage( AttributeTargets.Assembly, AllowMultiple = true )]
+   public class CompositeTypesAttribute : AbstractCompositeRelatedCodeGenerationAttribute
+   {
+      public CompositeTypesAttribute( Int32 compositeID )
+         : base( compositeID )
+      {
       }
 
       public Type[] PublicCompositeTypes { get; set; }

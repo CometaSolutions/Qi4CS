@@ -543,7 +543,7 @@ namespace Qi4CS.Core.Runtime.Model
                // CompositeMethodAttribute is found, so any non-private method is ok
                methodVisiblity = CompositeMethodVisiblity.Public | CompositeMethodVisiblity.Internal | CompositeMethodVisiblity.Protected | CompositeMethodVisiblity.ProtectedAndInternal | CompositeMethodVisiblity.ProtectedOrInternal;
             }
-            result = method.DeclaringType.IsInterface() || (methodVisiblity.MethodConsideredToBeCompositeMethod(method) && !method.DeclaringType.GetImplementedInterfaces().SelectMany(iFace => iFace.GetPublicDeclaredInstanceMethods()).Any(iFaceMethod => ReflectionHelper.FindMethodImplicitlyImplementingMethod(method.DeclaringType, iFaceMethod) == method));
+            result = method.DeclaringType.IsInterface() || ( methodVisiblity.MethodConsideredToBeCompositeMethod( method ) && !method.DeclaringType.GetImplementedInterfaces().SelectMany( iFace => iFace.GetPublicDeclaredInstanceMethods() ).Any( iFaceMethod => ReflectionHelper.FindMethodImplicitlyImplementingMethod( method.DeclaringType, iFaceMethod ) == method ) );
          }
          return result;
       }
@@ -1273,7 +1273,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
          if ( compositeMethod.DeclaringType.GetAllParentTypes().Any( dType => dType.GetGenericDefinitionIfGenericType().IsAssignableFrom_IgnoreGenericArgumentsForGenericTypes( fragment ) ) )
          {
-            MethodInfo implMethod = ReflectionHelper.FindMethodImplicitlyImplementingMethod(fragment, compositeMethod);
+            MethodInfo implMethod = ReflectionHelper.FindMethodImplicitlyImplementingMethod( fragment, compositeMethod );
             if ( implMethod != null && !implMethod.IsAbstract )
             {
                result = implMethod;
@@ -1484,6 +1484,14 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected abstract void PostProcessModel( CompositeModelMutable model, CompositeAssemblyInfo info, String architectureContainerID );
 
+   }
+
+   public static class ReflectionExtensions
+   {
+      public static Object[] GetCustomAttributes( this Assembly assembly )
+      {
+         return assembly.GetCustomAttributes( true );
+      }
    }
 }
 
@@ -1781,11 +1789,6 @@ public static partial class E_Qi4CS
             ctorParamTypes,
             c.GetParameters().Select(p => p.ParameterType))
             );
-   }
-#else
-   internal static Object[] GetCustomAttributes( this Assembly assembly )
-   {
-      return assembly.GetCustomAttributes( true );
    }
 #endif
 }

@@ -222,21 +222,6 @@ namespace Qi4CS.Extensions.Functional.Instance
 #endif
    }
 
-   /// <summary>
-   /// This interface is used in code generation for Qi4CS Functional extensions.
-   /// It performs invoking of method of the aggregated object without reflection, if possible.
-   /// </summary>
-   public interface FunctionInvocationHelper
-   {
-      /// <summary>
-      /// Invokes method on target aggregated object.
-      /// </summary>
-      /// <param name="composite">The aggregated object.</param>
-      /// <param name="args">Arguments for the method.</param>
-      /// <returns>Result of the method.</returns>
-      Object InvokeMethod( Object composite, Object[] args );
-   }
-
    internal class InvocationDataHolder
    {
       private readonly KeyedRoleMap _rolemap;
