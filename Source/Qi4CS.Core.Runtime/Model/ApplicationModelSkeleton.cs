@@ -303,13 +303,13 @@ namespace Qi4CS.Core.Runtime.Model
          var validationResult = this.ValidationResult;
          CheckValidation( validationResult, "Tried to emit code based on application model with validation errors." );
 
-         IDictionary<CompositeModel, IDictionary<Assembly, CILType>> cResults;
+         IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResults;
          var assDic = this.PerformEmitting( isSilverlight, reflectionContext, out cResults );
 
          this.ApplicationCodeGenerationEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeGenerationArgs(
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
             kvp => kvp.Key,
-            kvp => this.CollectionsFactory.NewDictionaryProxy( kvp.Value ).CQ
+            kvp => this.CollectionsFactory.NewDictionaryProxy( kvp.Value.ToDictionary( kvp2 => kvp2.Key, kvp2 => this.CollectionsFactory.NewListProxy( kvp2.Value.ToList() ).CQ ) ).CQ
             ) ).CQ
             ) ) );
 
@@ -322,13 +322,13 @@ namespace Qi4CS.Core.Runtime.Model
       private static readonly ConstructorInfo ASS_DESCRIPTION_ATTRIBUTE_CTOR = typeof( AssemblyDescriptionAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
-      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, IDictionary<Assembly, CILType>> cResultsOut )
+      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResultsOut )
       {
          var typeModelDic = this._typeModelDic.Value;
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
          var models = this._models.CQ.Values.ToArray();
          var supports = this._compositeModelTypeSupport;
-         var cResults = new ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType>>();
+         var cResults = new ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType[]>>();
          cResultsOut = cResults;
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )

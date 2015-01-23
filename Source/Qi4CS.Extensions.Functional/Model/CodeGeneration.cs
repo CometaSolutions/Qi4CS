@@ -105,7 +105,7 @@ namespace Qi4CS.Extensions.Functional.Model
             {
                var compositeMethodIdx = FunctionAssemblerUtils.GetCompositeMethodIndex( cModel, kvp.Key );
                var typeName = "FunctionInvocationHandler_" + cModel.CompositeModelID + "_" + compositeMethodIdx;
-               var curModule = args.TypeGenerationInformation[cModel][sMethod.DeclaringType.Assembly].Module;
+               var curModule = args.TypeGenerationInformation[cModel][sMethod.DeclaringType.Assembly][0].Module;
                var tb = curModule.AddType( typeName, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed );
 
                tb.AddDefaultConstructor( MethodAttributes.Public | MethodAttributes.HideBySig );

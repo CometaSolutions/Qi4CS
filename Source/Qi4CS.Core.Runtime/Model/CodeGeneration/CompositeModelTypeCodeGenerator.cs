@@ -31,7 +31,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public interface CompositeModelTypeCodeGenerator
    {
-      IDictionary<Assembly, CILType> EmitCodeForCompositeModel( CompositeModelEmittingArgs args );
+      IDictionary<Assembly, CILType[]> EmitCodeForCompositeModel( CompositeModelEmittingArgs args );
    }
 
    public sealed class CompositeModelEmittingArgs

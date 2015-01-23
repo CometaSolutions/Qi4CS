@@ -405,14 +405,14 @@ namespace Qi4CS.Core.SPI.Model
    /// </summary>
    public sealed class ApplicationCodeGenerationArgs : EventArgs
    {
-      private readonly DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILType>> _gInfo;
+      private readonly DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> _gInfo;
 
       /// <summary>
       /// Creates new instance of <see cref="ApplicationCodeGenerationArgs"/>.
       /// </summary>
       /// <param name="generationInfo">Type generation information, see <see cref="TypeGenerationInformation"/> property for more information.</param>
       /// <exception cref="ArgumentNullException">If <paramref name="generationInfo"/> is <c>null</c>.</exception>
-      public ApplicationCodeGenerationArgs( DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILType>> generationInfo )
+      public ApplicationCodeGenerationArgs( DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> generationInfo )
       {
          ArgumentValidator.ValidateNotNull( "Reflection builders", generationInfo );
 
@@ -425,7 +425,7 @@ namespace Qi4CS.Core.SPI.Model
       /// The values are instances of dictionaries with already-existing assemblies of all types related to a single <see cref="CompositeModel"/> and values are instances of generated <see cref="CILAssemblyManipulator.API.CILType"/> types.
       /// </summary>
       /// <value>The information about generated types.</value>
-      public DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILType>> TypeGenerationInformation
+      public DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> TypeGenerationInformation
       {
          get
          {

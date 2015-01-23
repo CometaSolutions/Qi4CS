@@ -33,7 +33,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public abstract partial class AbstractCompositeModelTypeCodeGenerator : CompositeModelTypeCodeGenerator
    {
-      public IDictionary<System.Reflection.Assembly, CILType> EmitCodeForCompositeModel( CompositeModelEmittingArgs args )
+      public IDictionary<System.Reflection.Assembly, CILType[]> EmitCodeForCompositeModel( CompositeModelEmittingArgs args )
       {
          var publicTypeGens = new Dictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo>();
          var emittingInfo = new CompositeEmittingInfo( this.ctx );
@@ -70,7 +70,8 @@ namespace Qi4CS.Core.Runtime.Model
 
          // Remember to remove Qi4CS assembly from result before returning
          publicTypeGens.Remove( ReflectionHelper.QI4CS_ASSEMBLY );
-         return publicTypeGens.ToDictionary( kvp => kvp.Key, kvp => kvp.Value.Builder );
+         // When we support multiple public composite classes per assembly, this array will be populated with more than just one CILType
+         return publicTypeGens.ToDictionary( kvp => kvp.Key, kvp => new[] { kvp.Value.Builder } );
       }
 
 
