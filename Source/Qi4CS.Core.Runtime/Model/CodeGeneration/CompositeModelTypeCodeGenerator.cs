@@ -110,7 +110,6 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly IDictionary<CompositeModel, IDictionary<Int32, TypeGenerationInfo>> _allGenerationInfos;
       private readonly IDictionary<CompositeTypeModel, IDictionary<CILType, TypeBindingInformation>> _emulatedFragmentTypeInfos;
       private readonly IDictionary<CompositeMethodModel, CompositeMethodGenerationInfo> _compositeMethodGenerationInfos;
-      private readonly IDictionary<CompositeTypeGenerationInfo, CompositeConstructorGenerationInfo> _compositeCtors;
       private readonly CILReflectionContext _ctx;
 
       public CompositeEmittingInfo( CILReflectionContext ctx )
@@ -126,7 +125,6 @@ namespace Qi4CS.Core.Runtime.Model
          this._allGenerationInfos = new Dictionary<CompositeModel, IDictionary<Int32, TypeGenerationInfo>>();
          this._emulatedFragmentTypeInfos = new Dictionary<CompositeTypeModel, IDictionary<CILType, TypeBindingInformation>>();
          this._compositeMethodGenerationInfos = new Dictionary<CompositeMethodModel, CompositeMethodGenerationInfo>();
-         this._compositeCtors = new Dictionary<CompositeTypeGenerationInfo, CompositeConstructorGenerationInfo>();
       }
 
       public void RegisterGenerationInfo( CompositeModel compositeModel, TypeGenerationInfo genInfo, Int32 typeID )
@@ -207,14 +205,6 @@ namespace Qi4CS.Core.Runtime.Model
          get
          {
             return this._fragmentCreationMethods;
-         }
-      }
-
-      public IDictionary<CompositeTypeGenerationInfo, CompositeConstructorGenerationInfo> CompositeConstructors
-      {
-         get
-         {
-            return this._compositeCtors;
          }
       }
 
