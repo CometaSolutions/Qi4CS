@@ -131,7 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Portable" Condition=" '$(Qi4CSSDKBuild)' != '' ">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.0\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.1\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Core">
       <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
