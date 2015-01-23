@@ -99,7 +99,7 @@ namespace Qi4CS.Core.Runtime.Model
          )
       {
          return new PublicCompositeTypeGenerationResultImpl(
-            compositeModel,
+            compositeModel.ApplicationModel.CollectionsFactory,
             typeAttributes
             );
       }

@@ -98,13 +98,10 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly Int32 _maxParamCountForCtors;
 
       public PublicCompositeTypeGenerationResultImpl(
-         CompositeModel cModel,
+         CollectionsFactory collectionsFactory,
          IList<CompositeTypesAttribute> typeAttributes
          )
       {
-         //var orderer = new TypeLoadOrderer( cModel );
-
-         var collectionsFactory = cModel.ApplicationModel.CollectionsFactory;
          var publicTypes = typeAttributes
             .SelectMany( a => a.PublicCompositeTypes )
             .ToArray();
