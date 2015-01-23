@@ -40,9 +40,8 @@ namespace Qi4CS.Core.Runtime.Model
 
          // TODO some of these phases may be combined into one, I think...
          // Phase 1. Types
-         foreach ( var kvp in args.Assemblies )
+         foreach ( var assembly in args.Assemblies.Keys )
          {
-            var assembly = kvp.Key;
             publicTypeGens.Add( assembly, this.EmitTypesForAssembly( args, emittingInfo, assembly, null ) );
          }
 
