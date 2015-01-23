@@ -99,7 +99,6 @@ namespace Qi4CS.Core.Runtime.Model
 
       public PublicCompositeTypeGenerationResultImpl(
          CompositeModel cModel,
-         CompositeTypeModel tModel,
          IList<CompositeTypesAttribute> typeAttributes
          )
       {
@@ -141,11 +140,18 @@ namespace Qi4CS.Core.Runtime.Model
             .Select( t => (GeneratedTypeInfo) new GeneratedTypeInfoImpl( t ) )
             .ToArray();
 
-         var pGArgs = collectionsFactory.NewDictionaryProxy(
-            tModel.PublicCompositeGenericArguments
-            .Select( ( gArg, idx ) => Tuple.Create( gArg, idx ) )
-            .GroupBy( tuple => tuple.Item1.DeclaringType )
-            .ToDictionary( grouping => grouping.Key, grouping => collectionsFactory.NewListProxy( grouping.Select( tuple => tuple.Item2 ).ToList() ).CQ ) );
+         var pGArgsAttribute = mainType.GetCustomAttributes( false ).OfType<PublicCompositeGenericBindingInfoAttribute>().FirstOrDefault( a => !a.GenericTypes.IsNullOrEmpty() );
+         var pGArgsDic = new Dictionary<Type, ListQuery<Int32>>();
+         if ( pGArgsAttribute != null )
+         {
+            var cur = 0;
+            foreach ( var gType in pGArgsAttribute.GenericTypes )
+            {
+               var curCount = gType.GetGenericArguments().Length;
+               pGArgsDic.Add( gType, collectionsFactory.NewListProxy( Enumerable.Range( cur, curCount ).ToList() ).CQ );
+               cur += curCount;
+            }
+         }
 
          this._generatedPublicMainType = mainType;
          this._maxParamCountForCtors = mainType
@@ -159,7 +165,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._generatedPublicTypes = collectionsFactory.NewListProxy( publicTypes.Select(
             pt => (GeneratedTypeInfo) new GeneratedTypeInfoImpl( pt ) )
             .ToList() ).CQ;
-         this._publicCompositeGenericArguments = pGArgs.CQ;
+         this._publicCompositeGenericArguments = collectionsFactory.NewDictionaryProxy( pGArgsDic ).CQ;
          this._privateCompositeGenerationResults = collectionsFactory.NewListProxyFromParams( privateCompositeGenerationresults ).CQ;
          this._fragmentGenerationResults = collectionsFactory.NewListProxyFromParams( fragmentTypeGenerationResults ).CQ;
          this._concernInvocationGenerationResults = collectionsFactory.NewListProxyFromParams( concernInvocationGenerationResults ).CQ;

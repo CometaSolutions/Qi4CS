@@ -127,4 +127,10 @@ namespace Qi4CS.Core.Runtime.Model
       public Type[] SideEffectInvocationHandlerTypes { get; set; }
       public Type CompositeFactoryType { get; set; }
    }
+
+   [AttributeUsage( AttributeTargets.Class, AllowMultiple = false )]
+   public class PublicCompositeGenericBindingInfoAttribute : Attribute
+   {
+      public Type[] GenericTypes { get; set; }
+   }
 }

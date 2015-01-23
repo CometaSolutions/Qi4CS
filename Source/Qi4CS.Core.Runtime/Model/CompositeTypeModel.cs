@@ -30,7 +30,7 @@ namespace Qi4CS.Core.Runtime.Model
 {
    public interface CompositeTypeModel
    {
-      ListQuery<Type> PublicCompositeGenericArguments { get; }
+      ListQuery<Type> PublicCompositeGenericTypesInOrder { get; }
       DictionaryQuery<Type, TypeBindingInformation> FragmentTypeInfos { get; }
       DictionaryQuery<Type, TypeBindingInformation> ConcernInvocationTypeInfos { get; }
       DictionaryQuery<Type, TypeBindingInformation> SideEffectInvocationTypeInfos { get; }
@@ -103,7 +103,12 @@ namespace Qi4CS.Core.Runtime.Model
       public CompositeTypeModelImpl( CompositeModel compositeModel, CompositeValidationResultMutable vResult )
       {
          var collectionsFactory = compositeModel.ApplicationModel.CollectionsFactory;
-         this._publicCompositeGenericArguments = collectionsFactory.NewListProxy( GetCompositeModelPublicTypeGenericArguments( compositeModel ).ToList() ).CQ;
+         this._publicCompositeGenericArguments = collectionsFactory.NewListProxy(
+            compositeModel.PublicTypes
+            .Where( pType => pType.ContainsGenericParameters() )
+            .Select( pType => pType )
+            .ToList()
+            ).CQ;
 
          var injThisTypes = compositeModel.GetAllInjectableModelsWithInjectionScope<ThisAttribute>()
             .Select( inj => new ThisTypeInfo( inj ) )
@@ -253,13 +258,6 @@ namespace Qi4CS.Core.Runtime.Model
          this._concernInvocationTypeInfos = collectionsFactory.NewDictionaryProxy( this.CreateInvocationInfos<ConcernForAttribute>( vResult, collectionsFactory, compositeModel, privateComposites ).ToDictionary( kvp => kvp.Key, kvp => (TypeBindingInformation) new TypeBindingInformationImpl( kvp.Value ) ) ).CQ;
          this._sideEffectInvocationTypeInfos = collectionsFactory.NewDictionaryProxy( this.CreateInvocationInfos<SideEffectForAttribute>( vResult, collectionsFactory, compositeModel, privateComposites ).ToDictionary( kvp => kvp.Key, kvp => (TypeBindingInformation) new TypeBindingInformationImpl( kvp.Value ) ) ).CQ;
          this._privateCompositeTypeInfos = collectionsFactory.NewDictionaryProxy( privateComposites.ToDictionary( kvp => kvp.Key, kvp => (TypeBindingInformation) new TypeBindingInformationImpl( kvp.Value ) ) ).CQ;
-      }
-
-      private static IEnumerable<Type> GetCompositeModelPublicTypeGenericArguments( CompositeModel model )
-      {
-         return model.PublicTypes
-            .Where( pType => pType.ContainsGenericParameters() )
-            .SelectMany( pType => pType.GetGenericArguments() );
       }
 
       #region Helper methods
@@ -514,7 +512,7 @@ namespace Qi4CS.Core.Runtime.Model
          )
       {
          return type.GetAllParentTypes()
-                .Select(t => Tuple.Create(t, typesToSearch.SelectMany(tt => tt.GetAllParentTypes()).FirstOrDefault(tt => ReflectionHelper.AreStructurallySame(t, tt, true))))
+                .Select( t => Tuple.Create( t, typesToSearch.SelectMany( tt => tt.GetAllParentTypes() ).FirstOrDefault( tt => ReflectionHelper.AreStructurallySame( t, tt, true ) ) ) )
                 .Where( tuple => tuple.Item2 != null )
                 .GetBottomTypes( tuple => tuple.Item1 )
                 .FirstOrDefault();
@@ -592,7 +590,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       #region CompositeTypeModel Members
 
-      public ListQuery<Type> PublicCompositeGenericArguments
+      public ListQuery<Type> PublicCompositeGenericTypesInOrder
       {
          get
          {

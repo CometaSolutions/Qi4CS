@@ -30,6 +30,7 @@ using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.Runtime.Assembling;
 using Qi4CS.Core.Runtime.Instance;
+using Qi4CS.Core.Runtime.Model;
 
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
@@ -96,12 +97,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._affectedAssemblies = new Lazy<SetQuery<Assembly>>( () =>
             this._collectionsFactory.NewSetProxy( new HashSet<Assembly>(
                this._typeModelDic.Value
-                  .SelectMany( tModel => tModel.Key.PublicTypes
-                     .Concat( tModel.Value.PrivateCompositeTypeInfos.Keys )
-                     .Concat( tModel.Value.FragmentTypeInfos.Keys )
-                     .Concat( tModel.Value.ConcernInvocationTypeInfos.Keys )
-                     .Concat( tModel.Value.SideEffectInvocationTypeInfos.Keys ) )
-                     .Select( type => type.GetAssembly() )
+                  .SelectMany( tModel => tModel.Value.GetAllCodeGenerationRelatedAssemblies( tModel.Key ) )
             ) ).CQ
          , System.Threading.LazyThreadSafetyMode.ExecutionAndPublication );
       }
@@ -133,7 +129,6 @@ namespace Qi4CS.Core.Runtime.Model
             model => model,
             model => this._compositeModelTypeSupport[model.ModelType].LoadTypes(
                model,
-               ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel,
                attrDic[model]
                ) )
             ).CQ;
@@ -227,10 +222,6 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      //public event EventHandler<ApplicationValidationArgs> ApplicationValidationEvent;
-
-      //public event EventHandler<CompositeValidationArgs> CompositeValidationEvent;
-
       public event EventHandler<ApplicationCreationArgs> ApplicationInstanceCreatedEvent;
 
       public event EventHandler<ApplicationCodeResolveArgs> ApplicationCodeResolveEvent;
@@ -238,14 +229,6 @@ namespace Qi4CS.Core.Runtime.Model
       public event EventHandler<AssemblyLoadingArgs> GeneratedAssemblyLoadingEvent;
 
       #endregion
-
-      //protected internal EventHandler<CompositeValidationArgs> CompositeValidationEventProperty
-      //{
-      //   get
-      //   {
-      //      return this.CompositeValidationEvent;
-      //   }
-      //}
 
       protected virtual ApplicationValidationResultMutable CreateEmptyValidationResult()
       {
@@ -298,8 +281,6 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         //TypeUtil.InvokeEventIfNotNull( this.ApplicationValidationEvent, evt => evt( this, new ApplicationValidationArgs( result ) ) );
-
          return result.IQ;
       }
 
@@ -337,10 +318,8 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      //      private static readonly ConstructorInfo DEBUGGABLE_ATTRIBUTE_CTOR = TypeUtil.LoadConstructorOrThrow( typeof( DebuggableAttribute ), new Type[] { typeof( DebuggableAttribute.DebuggingModes ) } );
       private static readonly ConstructorInfo ASS_TITLE_ATTRIBUTE_CTOR = typeof( AssemblyTitleAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo ASS_DESCRIPTION_ATTRIBUTE_CTOR = typeof( AssemblyDescriptionAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
-      //private static readonly ConstructorInfo ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR = typeof( AssemblyDefaultAliasAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
       private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, IDictionary<Assembly, CILType>> cResultsOut )
@@ -373,7 +352,6 @@ namespace Qi4CS.Core.Runtime.Model
 
                ass.AddNewCustomAttributeTypedParams( ASS_TITLE_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
                ass.AddNewCustomAttributeTypedParams( ASS_DESCRIPTION_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
-               //ass.AddNewCustomAttributeTypedParams( ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
                ass.AddNewCustomAttributeTypedParams( QI4CS_GENERATED_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ) );
 
                var mod = ass.AddModule( assemblyBareFileName + ".dll" );
@@ -389,12 +367,7 @@ namespace Qi4CS.Core.Runtime.Model
 
                // Assemblies dictionary will get modified, so create a local copy of it
                // Also, assemblies not part of this model will not be visible
-               var thisAssemblyDicCopy = model.PublicTypes
-                 .Concat( typeModel.FragmentTypeInfos.Keys )
-                 .Concat( typeModel.PrivateCompositeTypeInfos.Keys )
-                 .Concat( typeModel.ConcernInvocationTypeInfos.Keys )
-                 .Concat( typeModel.SideEffectInvocationTypeInfos.Keys )
-                 .Select( t => t.Assembly )
+               var thisAssemblyDicCopy = typeModel.GetAllCodeGenerationRelatedAssemblies( model )
                  .Distinct()
                  .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
                  .ToDictionary( a => a, a => assemblyDic[a] );
@@ -409,5 +382,22 @@ namespace Qi4CS.Core.Runtime.Model
 #endif
 
 
+   }
+}
+
+public static partial class E_Qi4CS
+{
+   public static IEnumerable<Type> GetAllCodeGenerationRelatedTypes( this CompositeTypeModel tModel, CompositeModel model )
+   {
+      return model.PublicTypes
+         .Concat( tModel.FragmentTypeInfos.Keys )
+         .Concat( tModel.PrivateCompositeTypeInfos.Keys )
+         .Concat( tModel.ConcernInvocationTypeInfos.Keys )
+         .Concat( tModel.SideEffectInvocationTypeInfos.Keys );
+   }
+
+   public static IEnumerable<Assembly> GetAllCodeGenerationRelatedAssemblies( this CompositeTypeModel tModel, CompositeModel model )
+   {
+      return tModel.GetAllCodeGenerationRelatedTypes( model ).Select( t => t.GetAssembly() );
    }
 }

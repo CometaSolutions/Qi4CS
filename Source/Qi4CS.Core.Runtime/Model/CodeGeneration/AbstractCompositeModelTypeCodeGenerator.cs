@@ -2835,7 +2835,7 @@ namespace Qi4CS.Core.Runtime.Model
          else if ( !returnNullIfAnyIndirects )
          {
             IndirectGenericTypeBinding iBinding = (IndirectGenericTypeBinding) binding;
-            result = gBuilders[tModel.PublicCompositeGenericArguments.Select( ( arg, i ) => Tuple.Create( arg, i ) ).First( tuple => tuple.Item1.DeclaringType == iBinding.GenericDefinition && tuple.Item1.GenericParameterPosition == iBinding.GenericIndex ).Item2];
+            result = gBuilders[tModel.PublicCompositeGenericTypesInOrder.SelectMany( t => t.GetGenericArguments() ).Select( ( arg, i ) => Tuple.Create( arg, i ) ).First( tuple => tuple.Item1.DeclaringType == iBinding.GenericDefinition && tuple.Item1.GenericParameterPosition == iBinding.GenericIndex ).Item2];
          }
          return result;
       }
@@ -3532,11 +3532,23 @@ namespace Qi4CS.Core.Runtime.Model
 
             // Make public composite more friendly in debug view
             //this.EmitToStringMethod( info, "Composite of type " );
-
             if ( info.IsMainCompositeType )
             {
                info.Builder.AddNewCustomAttributeTypedParams( MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR );
+               // Add generic binding information
+               info.Builder.AddNewCustomAttributeNamedParams(
+                  this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR,
+                  new[]
+                     {
+                        CILCustomAttributeFactory.NewNamedArgument(
+                           this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY,
+                           CILCustomAttributeFactory.NewTypedArgument(
+                              (CILType)this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY.GetPropertyType(),
+                              typeModel.PublicCompositeGenericTypesInOrder.Select(t => t.NewWrapperAsType(this.ctx)).ToArray()
+                           ))
+                     } );
             }
+
          }
          return info;
       }
@@ -3591,8 +3603,7 @@ namespace Qi4CS.Core.Runtime.Model
          var typeID = emittingInfo.NewCompositeTypeID();
          tb.AddNewCustomAttributeTypedParams( COMPOSITE_TYPE_ID_CTOR, CILCustomAttributeFactory.NewTypedArgument( INT32_TYPE, typeID ) );
 
-         var typeGArgs = typeModel.PublicCompositeGenericArguments.ToArray();
-         var max = typeGArgs.Length;
+         var max = typeModel.PublicCompositeGenericTypesInOrder.SelectMany( t => t.GetGenericArguments() ).Count();
          var result = creatorFunc( tb, max, this.EmitInstanceField( compositeModel, tb ) );
 
          emittingInfo.RegisterGenerationInfo( compositeModel, result, typeID );
@@ -3622,7 +3633,7 @@ namespace Qi4CS.Core.Runtime.Model
             ArgumentValidator.ValidateNotNull( "Assembly", assemblyToProcess );
          }
 
-         var typeGArgs = typeModel.PublicCompositeGenericArguments.Select( arg => arg.NewWrapperAsTypeParameter( this.ctx ) ).ToArray();
+         var typeGArgs = typeModel.PublicCompositeGenericTypesInOrder.SelectMany( t => t.GetGenericArguments() ).Select( arg => arg.NewWrapperAsTypeParameter( this.ctx ) ).ToArray();
          var publicTypesToProcess = assemblyToProcess == null ?
             Empty<CILType>.Array :
             compositeModel.PublicTypes

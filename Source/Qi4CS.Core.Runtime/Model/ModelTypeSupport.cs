@@ -41,7 +41,6 @@ namespace Qi4CS.Core.Runtime.Model
 
       PublicCompositeTypeGenerationResult LoadTypes(
          CompositeModel compositeModel,
-         CompositeTypeModel tModel,
          IList<CompositeTypesAttribute> typeAttributes
          );
 
@@ -96,13 +95,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       public virtual PublicCompositeTypeGenerationResult LoadTypes(
          CompositeModel compositeModel,
-         CompositeTypeModel tModel,
          IList<CompositeTypesAttribute> typeAttributes
          )
       {
          return new PublicCompositeTypeGenerationResultImpl(
             compositeModel,
-            tModel,
             typeAttributes
             );
       }
