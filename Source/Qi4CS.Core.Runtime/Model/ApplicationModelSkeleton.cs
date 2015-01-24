@@ -35,6 +35,7 @@ using Qi4CS.Core.Runtime.Model;
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 #endif
 
 namespace Qi4CS.Core.Runtime.Model
@@ -298,13 +299,17 @@ namespace Qi4CS.Core.Runtime.Model
 
       public event EventHandler<ApplicationCodeGenerationArgs> ApplicationCodeGenerationEvent;
 
-      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILReflectionContext reflectionContext, Boolean isSilverlight )
+      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode(
+         CILReflectionContext reflectionContext,
+         Boolean parallelize,
+         Boolean isSilverlight
+         )
       {
          var validationResult = this.ValidationResult;
          CheckValidation( validationResult, "Tried to emit code based on application model with validation errors." );
 
          IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResults;
-         var assDic = this.PerformEmitting( isSilverlight, reflectionContext, out cResults );
+         var assDic = this.PerformEmitting( reflectionContext, parallelize, isSilverlight, out cResults );
 
          this.ApplicationCodeGenerationEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeGenerationArgs(
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
@@ -322,7 +327,12 @@ namespace Qi4CS.Core.Runtime.Model
       private static readonly ConstructorInfo ASS_DESCRIPTION_ATTRIBUTE_CTOR = typeof( AssemblyDescriptionAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
-      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResultsOut )
+      private IDictionary<Assembly, CILModule> PerformEmitting(
+         CILReflectionContext reflectionContext,
+         Boolean parallelize,
+         Boolean isSilverlight,
+         out IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResultsOut
+         )
       {
          var typeModelDic = this._typeModelDic.Value;
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
@@ -359,7 +369,8 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         System.Threading.Tasks.Parallel.ForEach(
+         CodeGenUtils.DoPotentiallyInParallel(
+            parallelize,
             models,
             model =>
             {
@@ -383,6 +394,46 @@ namespace Qi4CS.Core.Runtime.Model
 
 
    }
+
+#if QI4CS_SDK
+
+   // TODO this class is temporary.
+   public static class CodeGenUtils
+   {
+      // TODO move this method to UtilPack, with multiple variations something like this
+      // ParallelHelper.ForEach
+      // ParallelHelper.ForEachWithPartitioner
+      // ParallelHelper.ForEachWithThreadLocal
+      // ParallelHelper.ForEachWithThreadLocalAndPartitioner
+      // ParallelHelper.ForEachGeneric <- all parameters can be specified
+      public static Boolean DoPotentiallyInParallel<T>( Boolean parallelize, IEnumerable<T> enumerable, Action<T> action, Func<Partitioner<T>> partitionerCreator = null )
+      {
+         if ( parallelize )
+         {
+            Partitioner<T> partitioner;
+            if ( partitionerCreator == null )
+            {
+               partitioner = Partitioner.Create( enumerable );
+            }
+            else
+            {
+               partitioner = partitionerCreator();
+            }
+
+            Parallel.ForEach( partitioner, action );
+         }
+         else
+         {
+            foreach ( var item in enumerable )
+            {
+               action( item );
+            }
+         }
+         return parallelize;
+      }
+   }
+
+#endif
 }
 
 public static partial class E_Qi4CS

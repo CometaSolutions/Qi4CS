@@ -130,6 +130,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
       public String SilverlightRuntimeBaseDir { get; set; }
 
       /// <summary>
+      /// Gets or sets whether code generation should be parallelized.
+      /// </summary>
+      public Boolean Parallelize { get; set; }
+
+      /// <summary>
       /// Gets or sets the full file names of generated Qi4CS assemblies.
       /// </summary>
       /// <value>The full file names of generated Qi4CS assemblies.</value>
@@ -203,7 +208,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-                           this.GeneratedAssemblies = generator.GenerateAssemblies(
+                           this.Log.LogMessage( "Starting Qi4CS code generation, parallelize: {0}", this.Parallelize );
+                           var sw = new Stopwatch();
+                           sw.Start();
+                           var fileNameDic = generator.GenerateAssemblies(
                               projectDir,
                               this.TargetFW,
                               this.TargetFWVersion,
@@ -213,8 +221,13 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               assDir,
                               this.AssemblyInformation,
                               Path.GetDirectoryName( sourceAss ),
+                              this.Parallelize,
                               this.PerformVerify,
-                              this.WindowsSDKDir )
+                              this.WindowsSDKDir );
+                           sw.Stop();
+                           retVal = true;
+
+                           this.GeneratedAssemblies = fileNameDic
                               .Select( kvp =>
                               {
                                  var item = new TaskItem( kvp.Value );
@@ -222,7 +235,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                                  return item;
                               } )
                               .ToArray();
-                           retVal = true;
+                           this.Log.LogMessage( MessageImportance.High, "Qi4CS code generation ended in {0}, results:\n{1}", sw.Elapsed, String.Join( "\n", fileNameDic.Select( kvp => "\t" + kvp.Key + " -> " + kvp.Value ).ToArray() ) );
                         }
                         finally
                         {
@@ -451,9 +464,23 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="path">The path where to store assemblies.</param>
       /// <param name="assemblySNInfo">The file containing strongname information about the assemblies to be emitted.</param>
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
+      /// <param name="parallelize">Whether to paralellize code generation.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
-      public IDictionary<String, String> GenerateAssemblies( String projectDir, String targetFWID, String targetFWVersion, String targetFWProfile, String referenceAssembliesDir, String targetPlatform, String path, String assemblySNInfo, String qi4CSDir, Boolean verify, String winSDKDir )
+      public IDictionary<String, String> GenerateAssemblies(
+         String projectDir,
+         String targetFWID,
+         String targetFWVersion,
+         String targetFWProfile,
+         String referenceAssembliesDir,
+         String targetPlatform,
+         String path,
+         String assemblySNInfo,
+         String qi4CSDir,
+         Boolean parallelize,
+         Boolean verify,
+         String winSDKDir
+         )
       {
          qi4CSDir = Path.GetFullPath( qi4CSDir );
          path = Path.GetFullPath( path );
@@ -542,6 +569,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          try
          {
             genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
+            parallelize,
             actualPath,
             this.IsSilverlight,
             ( nAss, gAss ) =>
