@@ -642,7 +642,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          }
 
          return genAssFilenames.ToDictionary(
-            kvp => kvp.Key.CodeBase,
+            kvp => new Uri( kvp.Key.CodeBase ).LocalPath,
             kvp => kvp.Value
             );
       }
