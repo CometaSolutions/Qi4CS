@@ -23,6 +23,7 @@ using Qi4CS.Extensions.Functional.Assembling;
 using Qi4CS.Extensions.Functional.Model;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.API.Common;
+using Qi4CS.Core.SPI.Model;
 
 namespace Qi4CS.Extensions.Functional.Assembling
 {
@@ -190,6 +191,13 @@ namespace Qi4CS.Extensions.Functional.Assembling
       /// Can be used as parameter for certain methods of <see cref="FunctionAggregatorDeclaration{TKey, TComposite}"/>.
       /// </summary>
       public static Func<Object[], Object[]> ARGS_TO_EMPTY = args => EMPTY;
+
+
+
+      internal static Int32 GetCompositeMethodIndex( CompositeModel model, System.Reflection.MethodInfo method )
+      {
+         return model.Methods.Single( cMethod => cMethod.NativeInfo.Equals( method ) ).MethodIndex;
+      }
    }
 }
 

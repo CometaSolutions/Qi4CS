@@ -190,7 +190,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public interface InstancePoolInfo<TInstance>
       {
-         TypeGenerationResult TypeGenerationResult { get; }
+         GeneratedTypeInfo TypeGenerationResult { get; }
          Type GeneratedType { get; }
          InstancePool<TInstance> Pool { get; }
       }
@@ -199,9 +199,9 @@ namespace Qi4CS.Core.Runtime.Instance
       {
          private readonly InstancePool<TInstance> _pool;
          private readonly Type _generatedType;
-         private readonly TypeGenerationResult _typeGenerationResult;
+         private readonly GeneratedTypeInfo _typeGenerationResult;
 
-         public InstancePoolInfoImpl( InstancePool<TInstance> pool, Type generatedType, TypeGenerationResult typeGenerationResult )
+         public InstancePoolInfoImpl( InstancePool<TInstance> pool, Type generatedType, GeneratedTypeInfo typeGenerationResult )
          {
             this._pool = pool;
             this._generatedType = generatedType;
@@ -210,7 +210,7 @@ namespace Qi4CS.Core.Runtime.Instance
 
          #region InstancePoolInfo<InstanceType> Members
 
-         public TypeGenerationResult TypeGenerationResult
+         public GeneratedTypeInfo TypeGenerationResult
          {
             get
             {
@@ -395,13 +395,13 @@ namespace Qi4CS.Core.Runtime.Instance
             }
             else if ( genType.ContainsGenericParameters() )
             {
-               throw new InternalException( "Could not find generic arguments for fragment type " + genResult.DeclaredType + "." );
+               throw new InternalException( "Could not find generic arguments for fragment type " + genType.GetBaseType() + "." );
             }
             fInstances.Add( genType, new FragmentInstanceImpl() );
          }
          this._fragmentInstances = fInstances.CQ;
-         this._concernInvocationInstances = this.CreatePoolDictionary<TypeGenerationResult, FragmentDependant>( gArgs, publicTypeGenResult.ConcernInvocationGenerationResults, application.CollectionsFactory );
-         this._sideEffectInvocationInstances = this.CreatePoolDictionary<TypeGenerationResult, FragmentDependant>( gArgs, publicTypeGenResult.SideEffectGenerationResults, application.CollectionsFactory );
+         this._concernInvocationInstances = this.CreatePoolDictionary<GeneratedTypeInfo, FragmentDependant>( gArgs, publicTypeGenResult.ConcernInvocationGenerationResults, application.CollectionsFactory );
+         this._sideEffectInvocationInstances = this.CreatePoolDictionary<GeneratedTypeInfo, FragmentDependant>( gArgs, publicTypeGenResult.SideEffectGenerationResults, application.CollectionsFactory );
          this._constructorsForFragments = application.CollectionsFactory.NewDictionaryProxy<Type, ListQuery<FragmentConstructorInfo>>( this._fragmentInstancePools.Keys.Concat( this._fragmentInstances.Keys )
             .ToDictionary(
             fType => fType,
@@ -689,8 +689,12 @@ namespace Qi4CS.Core.Runtime.Instance
          return pool;
       }
 
-      protected DictionaryQuery<Type, InstancePoolInfo<TInvocation>> CreatePoolDictionary<TTypeGen, TInvocation>( Type[] gArgs, IEnumerable<TTypeGen> typeGenResults, CollectionsFactory collectionsFactory )
-         where TTypeGen : TypeGenerationResult
+      protected DictionaryQuery<Type, InstancePoolInfo<TInvocation>> CreatePoolDictionary<TTypeGen, TInvocation>(
+         Type[] gArgs,
+         IEnumerable<TTypeGen> typeGenResults,
+         CollectionsFactory collectionsFactory
+         )
+         where TTypeGen : GeneratedTypeInfo
       {
          DictionaryProxy<Type, InstancePoolInfo<TInvocation>> result = collectionsFactory.NewDictionaryProxy<Type, InstancePoolInfo<TInvocation>>();
 
@@ -703,7 +707,12 @@ namespace Qi4CS.Core.Runtime.Instance
             }
             else if ( genType.ContainsGenericParameters() )
             {
-               throw new InternalException( "Could not find generic arguments for " + genResult.DeclaredType + "." );
+               var typeToStringify = genType;
+               if ( typeof( TTypeGen ).Equals( typeof( FragmentTypeGenerationResult ) ) )
+               {
+                  typeToStringify = typeToStringify.GetBaseType();
+               }
+               throw new InternalException( "Could not find generic arguments for " + typeToStringify + "." );
             }
             result.Add( genType, new InstancePoolInfoImpl<TInvocation>( new InstancePool<TInvocation>(), genType, genResult ) );
          }

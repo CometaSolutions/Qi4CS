@@ -21,6 +21,7 @@ using System.Reflection;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Extensions.Functional.Instance;
+using Qi4CS.Extensions.Functional.Model;
 
 namespace Qi4CS.Extensions.Functional.Assembling
 {

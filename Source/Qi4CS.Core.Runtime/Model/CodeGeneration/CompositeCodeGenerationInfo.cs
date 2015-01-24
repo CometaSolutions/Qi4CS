@@ -25,14 +25,11 @@ namespace Qi4CS.Core.Runtime.Model
       String PublicCompositePrefix { get; }
       String PrivateCompositePrefix { get; }
       String FragmentPrefix { get; }
-      //String FragmentNoInstancePoolSuffix { get; }
       String ConcernInvocationPrefix { get; }
       String SideEffectInvocationPrefix { get; }
       String CompositeInstanceFieldName { get; }
       String CompositeFactorySuffix { get; }
       Type CompositeInstanceFieldType { get; }
-      Boolean DoesNotNeedPool( Type type );
-      Boolean IsMainPublicCompositeType( Type type );
    }
 
    public class DefaultCompositeCodeGenerationInfo : CompositeCodeGenerationInfo
@@ -125,16 +122,6 @@ namespace Qi4CS.Core.Runtime.Model
          {
             return this._compositeInstanceFieldType;
          }
-      }
-
-      public Boolean DoesNotNeedPool( Type type )
-      {
-         return type.GetCustomAttributes( false ).OfType<NoPoolNeededAttribute>().Any();
-      }
-
-      public Boolean IsMainPublicCompositeType( Type type )
-      {
-         return type.GetCustomAttributes( false ).OfType<MainPublicCompositeTypeAttribute>().Any();
       }
 
       #endregion

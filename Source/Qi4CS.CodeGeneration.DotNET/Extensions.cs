@@ -40,12 +40,13 @@ using System.Text;
 public static class E_Qi4CS_CodeGeneration
 {
    /// <summary>
-   /// Helper method to call <see cref="ApplicationModel{T}.GenerateCode(CILReflectionContext, Boolean)"/> and save the resulting Qi4CS generated assemblies to specific folder.
+   /// Helper method to call <see cref="ApplicationModel{T}.GenerateCode"/> and save the resulting Qi4CS generated assemblies to specific folder.
    /// </summary>
    /// <typeparam name="TInstance">The type of the Qi4CS application instance of <paramref name="model"/>.</typeparam>
    /// <param name="model">The <see cref="ApplicationModel{T}"/>.</param>
+   /// <param name="parallelize">Whether to parallelize the code generation.</param>
    /// <param name="path">The path where generated Qi4CS assemblies should reside. If <c>null</c>, value of <see cref="Environment.CurrentDirectory"/> will be used.</param>
-   /// <param name="isWP8OrSL5Emit">Whether emit assemblies compatible with Windows Phone 8 or Silverlight 5.</param>
+   /// <param name="isSilverlight">Whether emit assemblies compatible with Silverlight 5+.</param>
    /// <param name="emittingInfoCreator">
    /// The callback to create an <see cref="EmittingArguments"/> for emitting an assembly.
    /// It receives the existing <see cref="System.Reflection.Assembly"/> from which the Qi4CS assembly was generated, corresponding generated <see cref="CILAssembly"/>.
@@ -55,7 +56,13 @@ public static class E_Qi4CS_CodeGeneration
    /// <returns>
    /// The mapping from assembly used in Qi4CS model to the full path of corresponding generated Qi4CS assembly.
    /// </returns>
-   public static IDictionary<System.Reflection.Assembly, String> GenerateAndSaveAssemblies<TInstance>( this ApplicationModel<TInstance> model, String path = null, Boolean isWP8OrSL5Emit = false, Func<System.Reflection.Assembly, CILAssembly, EmittingArguments> emittingInfoCreator = null )
+   public static IDictionary<System.Reflection.Assembly, String> GenerateAndSaveAssemblies<TInstance>(
+      this ApplicationModel<TInstance> model,
+      Boolean parallelize,
+      String path = null,
+      Boolean isSilverlight = false,
+      Func<System.Reflection.Assembly, CILAssembly, EmittingArguments> emittingInfoCreator = null
+      )
       where TInstance : ApplicationSPI
    {
       if ( path == null )
@@ -79,7 +86,7 @@ public static class E_Qi4CS_CodeGeneration
       //var refDic = new ConcurrentDictionary<String, Tuple<CILAssemblyName, Boolean>[]>();
       var fileNames = DotNETReflectionContext.UseDotNETContext( ctx =>
       {
-         var genDic = model.GenerateCode( ctx, isWP8OrSL5Emit );
+         var genDic = model.GenerateCode( ctx, parallelize, isSilverlight );
          var eArgsDic = new Dictionary<CILAssembly, EmittingArguments>();
          // Before emitting, we must set the public keys of the generated assemblies, in order for cross-references to work properly.
          // Either CreateDefaultEmittingArguments or emittingInfoCreator should set the public key, if the strong name key pair is container name.
@@ -107,22 +114,25 @@ public static class E_Qi4CS_CodeGeneration
 
 
          var resultDic = new ConcurrentDictionary<System.Reflection.Assembly, String>();
-         System.Threading.Tasks.Parallel.ForEach( genDic, kvp =>
-         {
-            foreach ( var mod in kvp.Value.Modules )
+         Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel(
+            parallelize,
+            genDic,
+            kvp =>
             {
-               var fileName = Path.Combine( path, mod.Name );
-
-               using ( var stream = File.Open( fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read ) )
+               foreach ( var mod in kvp.Value.Modules )
                {
-                  var eArgs = eArgsDic[kvp.Value];
-                  mod.EmitModule( stream, eArgs );
-                  stream.Flush();
-                  //refDic.TryAdd( fileName, eArgs.AssemblyRefs.Select( aRef => Tuple.Create( aRef, IsDotNETAssembly( aRef, portabilityHelper, eArgs.PCLProfile ) ) ).ToArray() );
-                  resultDic.TryAdd( kvp.Key, fileName );
+                  var fileName = Path.Combine( path, mod.Name );
+
+                  using ( var stream = File.Open( fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read ) )
+                  {
+                     var eArgs = eArgsDic[kvp.Value];
+                     mod.EmitModule( stream, eArgs );
+                     stream.Flush();
+                     //refDic.TryAdd( fileName, eArgs.AssemblyRefs.Select( aRef => Tuple.Create( aRef, IsDotNETAssembly( aRef, portabilityHelper, eArgs.PCLProfile ) ) ).ToArray() );
+                     resultDic.TryAdd( kvp.Key, fileName );
+                  }
                }
-            }
-         } );
+            } );
 
          return resultDic;
       } );

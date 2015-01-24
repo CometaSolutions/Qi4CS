@@ -43,21 +43,9 @@ namespace Qi4CS.Core.SPI.Model
    }
 
    /// <summary>
-   /// This interface extends <see cref="GeneratedTypeInfo"/> to add a way to query single type associated with a generated type.
+   /// This interface extends <see cref="GeneratedTypeInfo"/> to add a way to query whether this fragment type requires instance pool.
    /// </summary>
-   public interface TypeGenerationResult : GeneratedTypeInfo
-   {
-      /// <summary>
-      /// Gets the type (usually related to <see cref="CompositeModel"/>) associated with this generated type.
-      /// </summary>
-      /// <value>The type (usually related to <see cref="CompositeModel"/>) associated with this generated type.</value>
-      Type DeclaredType { get; }
-   }
-
-   /// <summary>
-   /// This interface extends <see cref="TypeGenerationResult"/> to add a way to query whether this fragment type requires instance pool.
-   /// </summary>
-   public interface FragmentTypeGenerationResult : TypeGenerationResult
+   public interface FragmentTypeGenerationResult : GeneratedTypeInfo
    {
       /// <summary>
       /// Gets information whether instance pool is required for this generated fragment type.
@@ -123,21 +111,21 @@ namespace Qi4CS.Core.SPI.Model
       /// Gets information about all generated private composite types of this <see cref="PublicCompositeTypeGenerationResult"/>.
       /// </summary>
       /// <value>The information about all generated private composite types of this <see cref="PublicCompositeTypeGenerationResult"/>.</value>
-      /// <seealso cref="TypeGenerationResult"/>
-      ListQuery<TypeGenerationResult> PrivateCompositeGenerationResults { get; }
+      /// <seealso cref="GeneratedTypeInfo"/>
+      ListQuery<GeneratedTypeInfo> PrivateCompositeGenerationResults { get; }
 
       /// <summary>
       /// Gets information about all generated concern invocation types of this <see cref="PublicCompositeTypeGenerationResult"/>.
       /// </summary>
       /// <value>The information about all generated concern invocation type of this <see cref="PublicCompositeTypeGenerationResult"/>s.</value>
-      /// <seealso cref="TypeGenerationResult"/>
-      ListQuery<TypeGenerationResult> ConcernInvocationGenerationResults { get; }
+      /// <seealso cref="GeneratedTypeInfo"/>
+      ListQuery<GeneratedTypeInfo> ConcernInvocationGenerationResults { get; }
 
       /// <summary>
       /// Gets information about all generated side effect invocation types of this <see cref="PublicCompositeTypeGenerationResult"/>.
       /// </summary>
       /// <value>The information about al lgenerated side effect invocation types of this <see cref="PublicCompositeTypeGenerationResult"/>.</value>
       /// <seealso cref="FragmentTypeGenerationResult"/>
-      ListQuery<TypeGenerationResult> SideEffectGenerationResults { get; }
+      ListQuery<GeneratedTypeInfo> SideEffectGenerationResults { get; }
    }
 }

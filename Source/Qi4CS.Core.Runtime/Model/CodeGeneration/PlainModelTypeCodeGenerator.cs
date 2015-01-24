@@ -27,13 +27,12 @@ namespace Qi4CS.Core.Runtime.Model
    public class PlainCompositeModelTypeCodeGenerator : AbstractCompositeModelTypeCodeGenerator
    {
 
-      public PlainCompositeModelTypeCodeGenerator( Boolean isSilverlight, CILReflectionContext ctx )
-         : base( isSilverlight, ctx )
+      public PlainCompositeModelTypeCodeGenerator( CompositeCodeGenerationInfo codeGenerationInfo, Boolean isSilverlight, CILReflectionContext ctx )
+         : base( codeGenerationInfo, isSilverlight, ctx )
       {
       }
 
       protected override void EmitPrivateCompositeEquals(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
          CompositeTypeGenerationInfo publicCompositeGenInfo,
@@ -42,11 +41,10 @@ namespace Qi4CS.Core.Runtime.Model
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
       )
       {
-         this.EmitPlainCompositeEquals( codeGenerationInfo, compositeModel, typeModel, publicCompositeGenInfo, thisGenInfo, emittingInfo, fragmentGenerationInfos );
+         this.EmitPlainCompositeEquals( compositeModel, typeModel, thisGenInfo, emittingInfo, fragmentGenerationInfos );
       }
 
       protected override void EmitPrivateCompositeHashCode(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
          CompositeTypeGenerationInfo publicCompositeGenInfo,
@@ -55,40 +53,34 @@ namespace Qi4CS.Core.Runtime.Model
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
          )
       {
-         this.EmitPlainCompositeHashCode( codeGenerationInfo, compositeModel, typeModel, publicCompositeGenInfo, thisGenInfo, emittingInfo, fragmentGenerationInfos );
+         this.EmitPlainCompositeHashCode( compositeModel, typeModel, thisGenInfo, emittingInfo, fragmentGenerationInfos );
       }
 
       protected override void EmitPublicCompositeEquals(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
          )
       {
-         this.EmitPlainCompositeEquals( codeGenerationInfo, compositeModel, typeModel, publicCompositeGenInfo, thisGenInfo, emittingInfo, fragmentGenerationInfos );
+         this.EmitPlainCompositeEquals( compositeModel, typeModel, thisGenInfo, emittingInfo, fragmentGenerationInfos );
       }
 
       protected override void EmitPublicCompositeHashCode(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
          )
       {
-         this.EmitPlainCompositeHashCode( codeGenerationInfo, compositeModel, typeModel, publicCompositeGenInfo, thisGenInfo, emittingInfo, fragmentGenerationInfos );
+         this.EmitPlainCompositeHashCode( compositeModel, typeModel, thisGenInfo, emittingInfo, fragmentGenerationInfos );
       }
 
       protected virtual void EmitPlainCompositeEquals(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
@@ -98,10 +90,8 @@ namespace Qi4CS.Core.Runtime.Model
          ILLabel? returnTrueL = null;
          ILLabel? returnFalseL = null;
          this.EmitCallNonCompositeMethod(
-            codeGenerationInfo,
             compositeModel,
             typeModel,
-            publicCompositeGenInfo,
             thisGenInfo,
             emittingInfo,
             fragmentGenerationInfos,
@@ -154,20 +144,16 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       protected virtual void EmitPlainCompositeHashCode(
-         CompositeCodeGenerationInfo codeGenerationInfo,
          CompositeModel compositeModel,
          CompositeTypeModel typeModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          IEnumerable<FragmentTypeGenerationInfo> fragmentGenerationInfos
          )
       {
          this.EmitCallNonCompositeMethod(
-            codeGenerationInfo,
             compositeModel,
             typeModel,
-            publicCompositeGenInfo,
             thisGenInfo,
             emittingInfo,
             fragmentGenerationInfos,

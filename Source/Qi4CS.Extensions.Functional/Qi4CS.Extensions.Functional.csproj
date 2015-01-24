@@ -116,6 +116,7 @@
     </Compile>
     <Compile Include="Assembling\FunctionAggregatorDeclaration.cs" />
     <Compile Include="Assembling\FunctionAssembler.cs" />
+    <Compile Include="Model\CodeGeneration.cs" />
     <Compile Include="Model\FunctionInvocationDataAttribute.cs" />
     <Compile Include="Model\RoleAttributes.cs" />
     <Compile Include="Instance\FunctionServiceLookup.cs" />
@@ -130,7 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Portable" Condition=" '$(Qi4CSSDKBuild)' != '' ">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.0\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.1\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Core">
       <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
@@ -144,10 +145,10 @@
   </ItemGroup>
   <Import Condition=" '$(TargetPlatformIdentifier)' != 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Condition=" '$(TargetPlatformIdentifier)' == 'WindowsPhoneApp' " Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-
   <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property  -->
   <PropertyGroup>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
+    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' ">
+    </DeleteTargetFrameworkFileCondition>
     <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />

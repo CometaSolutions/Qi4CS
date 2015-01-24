@@ -29,10 +29,13 @@ using System.Diagnostics;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.Bootstrap.Assembling;
 using Qi4CS.Core.Runtime.Assembling;
+using Qi4CS.Core.Runtime.Instance;
+using Qi4CS.Core.Runtime.Model;
 
 #if QI4CS_SDK
 using CILAssemblyManipulator.API;
-using Qi4CS.Core.Runtime.Instance;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 #endif
 
 namespace Qi4CS.Core.Runtime.Model
@@ -95,12 +98,7 @@ namespace Qi4CS.Core.Runtime.Model
          this._affectedAssemblies = new Lazy<SetQuery<Assembly>>( () =>
             this._collectionsFactory.NewSetProxy( new HashSet<Assembly>(
                this._typeModelDic.Value
-                  .SelectMany( tModel => tModel.Key.PublicTypes
-                     .Concat( tModel.Value.PrivateCompositeTypeInfos.Keys )
-                     .Concat( tModel.Value.FragmentTypeInfos.Keys )
-                     .Concat( tModel.Value.ConcernInvocationTypeInfos.Keys )
-                     .Concat( tModel.Value.SideEffectInvocationTypeInfos.Keys ) )
-                     .Select( type => type.GetAssembly() )
+                  .SelectMany( tModel => tModel.Value.GetAllCodeGenerationRelatedAssemblies( tModel.Key ) )
             ) ).CQ
          , System.Threading.LazyThreadSafetyMode.ExecutionAndPublication );
       }
@@ -120,13 +118,61 @@ namespace Qi4CS.Core.Runtime.Model
          var validationResult = this.ValidationResult;
 
          CheckValidation( validationResult, "Tried to create new application instance from model with validation errors." );
-         var assDic = new Dictionary<Assembly, Assembly>();
-         var loadingEvt = this.GeneratedAssemblyLoadingEvent;
-         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary( model => model, model => this._compositeModelTypeSupport[model.ModelType].LoadTypes( model, ( (CompositeValidationResultImmutable) validationResult.CompositeValidationResults[model] ).TypeModel, loadingEvt, assDic ) ) ).CQ;
+         var assDic = this.AffectedAssemblies
+            .Where( a => !ReflectionHelper.QI4CS_ASSEMBLY.Equals( a ) )
+            .ToDictionary( a => a, a => this.LoadQi4CSGeneratedAssembly( a ) );
+         var attrDic = assDic.Values
+            .SelectMany( a => a.GetCustomAttributes().OfType<CompositeTypesAttribute>() )
+            .GroupBy( a => this.CompositeModels[a.CompositeID] )
+            .ToDictionary( g => g.Key, g => g.ToList() );
+
+         var dic = this._collectionsFactory.NewDictionaryProxy( this._models.CQ.Values.ToDictionary(
+            model => model,
+            model => this._compositeModelTypeSupport[model.ModelType].LoadTypes(
+               model,
+               attrDic[model]
+               ) )
+            ).CQ;
          this.ApplicationCodeResolveEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeResolveArgs( dic, this.CollectionsFactory.NewDictionaryProxy( assDic ).CQ ) ) );
          var result = this.CreateNew( validationResult, applicationName, mode, version, dic );
          this.ApplicationInstanceCreatedEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCreationArgs( result ) ) );
          return result;
+      }
+
+      private Assembly LoadQi4CSGeneratedAssembly( Assembly originalAssembly )
+      {
+         var args = new AssemblyLoadingArgs( originalAssembly.FullName, Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( originalAssembly ) );
+         this.GeneratedAssemblyLoadingEvent.InvokeEventIfNotNull( evt => evt( this, args ) );
+
+         var an = args.Qi4CSGeneratedAssemblyName;
+         if ( args.Version != null )
+         {
+            an += ", Version=" + args.Version;
+         }
+
+         if ( !String.IsNullOrEmpty( args.Culture ) )
+         {
+            an += ", Culture=" + args.Culture;
+         }
+
+         if ( !args.PublicKey.IsNullOrEmpty() )
+         {
+            an += ", PublicKey=" + StringConversions.ByteArray2HexStr( args.PublicKey );
+         }
+         else if ( !args.PublicKeyToken.IsNullOrEmpty() )
+         {
+            an += ", PublicKeyToken=" + StringConversions.ByteArray2HexStr( args.PublicKeyToken );
+         }
+
+         return Assembly.Load(
+#if WINDOWS_PHONE_APP
+               new AssemblyName(
+#endif
+ an
+#if WINDOWS_PHONE_APP
+               )
+#endif
+ );
       }
 
       public InjectionService InjectionService
@@ -177,10 +223,6 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      //public event EventHandler<ApplicationValidationArgs> ApplicationValidationEvent;
-
-      //public event EventHandler<CompositeValidationArgs> CompositeValidationEvent;
-
       public event EventHandler<ApplicationCreationArgs> ApplicationInstanceCreatedEvent;
 
       public event EventHandler<ApplicationCodeResolveArgs> ApplicationCodeResolveEvent;
@@ -188,14 +230,6 @@ namespace Qi4CS.Core.Runtime.Model
       public event EventHandler<AssemblyLoadingArgs> GeneratedAssemblyLoadingEvent;
 
       #endregion
-
-      //protected internal EventHandler<CompositeValidationArgs> CompositeValidationEventProperty
-      //{
-      //   get
-      //   {
-      //      return this.CompositeValidationEvent;
-      //   }
-      //}
 
       protected virtual ApplicationValidationResultMutable CreateEmptyValidationResult()
       {
@@ -248,8 +282,6 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         //TypeUtil.InvokeEventIfNotNull( this.ApplicationValidationEvent, evt => evt( this, new ApplicationValidationArgs( result ) ) );
-
          return result.IQ;
       }
 
@@ -267,20 +299,22 @@ namespace Qi4CS.Core.Runtime.Model
 
       public event EventHandler<ApplicationCodeGenerationArgs> ApplicationCodeGenerationEvent;
 
-      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode( CILReflectionContext reflectionContext, Boolean isSilverlight )
+      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode(
+         CILReflectionContext reflectionContext,
+         Boolean parallelize,
+         Boolean isSilverlight
+         )
       {
          var validationResult = this.ValidationResult;
          CheckValidation( validationResult, "Tried to emit code based on application model with validation errors." );
 
-         IDictionary<CompositeModel, CompositeEmittingInfo> cResults;
-         var assDic = this.PerformEmitting( isSilverlight, reflectionContext, out cResults );
+         IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResults;
+         var assDic = this.PerformEmitting( reflectionContext, parallelize, isSilverlight, out cResults );
 
          this.ApplicationCodeGenerationEvent.InvokeEventIfNotNull( evt => evt( this, new ApplicationCodeGenerationArgs(
             this.CollectionsFactory.NewDictionaryProxy( cResults.ToDictionary(
             kvp => kvp.Key,
-            kvp => this.CollectionsFactory.NewDictionaryProxy(
-               kvp.Value.GetAllPublicComposites( kvp.Key ).ToDictionary( tuple => tuple.Item1, tuple => tuple.Item2.Builder )
-               ).CQ
+            kvp => this.CollectionsFactory.NewDictionaryProxy( kvp.Value.ToDictionary( kvp2 => kvp2.Key, kvp2 => this.CollectionsFactory.NewListProxy( kvp2.Value.ToList() ).CQ ) ).CQ
             ) ).CQ
             ) ) );
 
@@ -289,24 +323,27 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      //      private static readonly ConstructorInfo DEBUGGABLE_ATTRIBUTE_CTOR = TypeUtil.LoadConstructorOrThrow( typeof( DebuggableAttribute ), new Type[] { typeof( DebuggableAttribute.DebuggingModes ) } );
       private static readonly ConstructorInfo ASS_TITLE_ATTRIBUTE_CTOR = typeof( AssemblyTitleAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo ASS_DESCRIPTION_ATTRIBUTE_CTOR = typeof( AssemblyDescriptionAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
-      //private static readonly ConstructorInfo ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR = typeof( AssemblyDefaultAliasAttribute ).LoadConstructorOrThrow( new Type[] { typeof( String ) } );
       private static readonly ConstructorInfo QI4CS_GENERATED_ATTRIBUTE_CTOR = typeof( Qi4CSGeneratedAssemblyAttribute ).LoadConstructorOrThrow( 0 );
 
-      private IDictionary<Assembly, CILModule> PerformEmitting( Boolean isSilverlight, CILReflectionContext reflectionContext, out IDictionary<CompositeModel, CompositeEmittingInfo> cResultsOut )
+      private IDictionary<Assembly, CILModule> PerformEmitting(
+         CILReflectionContext reflectionContext,
+         Boolean parallelize,
+         Boolean isSilverlight,
+         out IDictionary<CompositeModel, IDictionary<Assembly, CILType[]>> cResultsOut
+         )
       {
          var typeModelDic = this._typeModelDic.Value;
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
          var models = this._models.CQ.Values.ToArray();
          var supports = this._compositeModelTypeSupport;
-         var cResults = models.ToDictionary( muudel => muudel, muudel => new CompositeEmittingInfo( reflectionContext, models ) );
+         var cResults = new ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType[]>>();
          cResultsOut = cResults;
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
             .Distinct()
-            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => Tuple.Create( mt.NewCodeGenerator( isSilverlight, reflectionContext ), mt.CodeGenerationInfo ) );
+            .ToDictionary( mt => mt.AssemblyScopeSupport.ModelType, mt => mt.NewCodeGenerator( isSilverlight, reflectionContext ) );
 
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
@@ -325,7 +362,6 @@ namespace Qi4CS.Core.Runtime.Model
 
                ass.AddNewCustomAttributeTypedParams( ASS_TITLE_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
                ass.AddNewCustomAttributeTypedParams( ASS_DESCRIPTION_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
-               //ass.AddNewCustomAttributeTypedParams( ASS_DEFAULT_ALIAS_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
                ass.AddNewCustomAttributeTypedParams( QI4CS_GENERATED_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ) );
 
                var mod = ass.AddModule( assemblyBareFileName + ".dll" );
@@ -333,82 +369,86 @@ namespace Qi4CS.Core.Runtime.Model
             }
          }
 
-         // Phase 1: Emit empty types
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
+         CodeGenUtils.DoPotentiallyInParallel(
+            parallelize,
+            models,
+            model =>
             {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitTypesForModel( model, typeModelDic[model], currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
-            }
-         } );
+               var typeModel = typeModelDic[model];
 
-         // Phase 2: Emit fragment methods
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitFragmentMethods( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
+               // Assemblies dictionary will get modified, so create a local copy of it
+               // Also, assemblies not part of this model will not be visible
+               var thisAssemblyDicCopy = typeModel.GetAllCodeGenerationRelatedAssemblies( model )
+                 .Distinct()
+                 .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
+                 .ToDictionary( a => a, a => assemblyDic[a] );
 
-         // Phase 3: Emit composite methods and concern & side-effect invocation types
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeMethosAndInvocationInfos( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 4: Emit all composite extra methods (state check, pre-prototype, etc)
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeExtraMethods( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 5: Emit all composite constructors
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeConstructors( model, typeModelDic[model], currentAssembly, tuple1.Item2, tuple2 );
-            }
-         } );
-
-         // Phase 6: Emit all composite factory types
-         System.Threading.Tasks.Parallel.ForEach( assembliesArray, currentAssembly =>
-         {
-            foreach ( var model in models )
-            {
-               var tuple1 = codeGens[model.ModelType];
-               var tuple2 = cResults[model];
-               tuple1.Item1.EmitCompositeFactory( model, currentAssembly, GetEmittingModule( model, assemblyDic, currentAssembly ), tuple1.Item2, tuple2 );
-            }
-         } );
+               // Perform emitting
+               cResults[model] = codeGens[model.ModelType].EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, thisAssemblyDicCopy ) );
+            } );
 
          return assemblyDic;
-      }
-
-      private static CILModule GetEmittingModule( CompositeModel cModel, Dictionary<Assembly, CILModule> dic, Assembly assembly )
-      {
-         return ReflectionHelper.QI4CS_ASSEMBLY.Equals( assembly ) ? dic[cModel.MainCodeGenerationType.Assembly] : dic[assembly];
       }
 
 #endif
 
 
+   }
+
+#if QI4CS_SDK
+
+   // TODO this class is temporary.
+   public static class CodeGenUtils
+   {
+      // TODO move this method to UtilPack, with multiple variations something like this
+      // ParallelHelper.ForEach
+      // ParallelHelper.ForEachWithPartitioner
+      // ParallelHelper.ForEachWithThreadLocal
+      // ParallelHelper.ForEachWithThreadLocalAndPartitioner
+      // ParallelHelper.ForEachGeneric <- all parameters can be specified
+      public static Boolean DoPotentiallyInParallel<T>( Boolean parallelize, IEnumerable<T> enumerable, Action<T> action, Func<Partitioner<T>> partitionerCreator = null )
+      {
+         if ( parallelize )
+         {
+            Partitioner<T> partitioner;
+            if ( partitionerCreator == null )
+            {
+               partitioner = Partitioner.Create( enumerable );
+            }
+            else
+            {
+               partitioner = partitionerCreator();
+            }
+
+            Parallel.ForEach( partitioner, action );
+         }
+         else
+         {
+            foreach ( var item in enumerable )
+            {
+               action( item );
+            }
+         }
+         return parallelize;
+      }
+   }
+
+#endif
+}
+
+public static partial class E_Qi4CS
+{
+   public static IEnumerable<Type> GetAllCodeGenerationRelatedTypes( this CompositeTypeModel tModel, CompositeModel model )
+   {
+      return model.PublicTypes
+         .Concat( tModel.FragmentTypeInfos.Keys )
+         .Concat( tModel.PrivateCompositeTypeInfos.Keys )
+         .Concat( tModel.ConcernInvocationTypeInfos.Keys )
+         .Concat( tModel.SideEffectInvocationTypeInfos.Keys );
+   }
+
+   public static IEnumerable<Assembly> GetAllCodeGenerationRelatedAssemblies( this CompositeTypeModel tModel, CompositeModel model )
+   {
+      return tModel.GetAllCodeGenerationRelatedTypes( model ).Select( t => t.GetAssembly() );
    }
 }

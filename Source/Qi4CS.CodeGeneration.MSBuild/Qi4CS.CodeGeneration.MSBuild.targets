@@ -50,6 +50,7 @@
       <PropertyGroup>
          <Qi4CSAssembliesDir Condition="'$(Qi4CSAssembliesDir)' == ''">$(OutputPath)</Qi4CSAssembliesDir>
          <ReferenceAssembliesDir Condition="'$(ReferenceAssembliesDir)' == ''">C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework</ReferenceAssembliesDir>
+         <Qi4CSParallelize Condition="'$(Qi4CSParallelize)' == ''">true</Qi4CSParallelize>
       </PropertyGroup>
       <PropertyGroup Condition=" '$(Qi4CSSourceAssembly)' == ''">
          <Qi4CSSourceAssembly Condition=" '$(Qi4CSSourceAssembly)' == '' ">$(AssemblyName)</Qi4CSSourceAssembly>
@@ -79,7 +80,9 @@
          ReferenceAssembliesDir="$(ReferenceAssembliesDir)"
          PerformVerify="$(Qi4CSVerifyAssemblies)"
          WindowsSDKDir="$(Qi4CSWindowsSDKDir)"
-         SilverlightRuntimeBaseDir="$(Qi4CSSilverlightRuntimeBaseDir)">
+         SilverlightRuntimeBaseDir="$(Qi4CSSilverlightRuntimeBaseDir)"
+         Parallelize="$(Qi4CSParallelize)"
+         >
          <Output TaskParameter="GeneratedAssemblies" ItemName="Qi4CSGeneratedAssemblies" />
        </Qi4CS.CodeGeneration.MSBuild.GenerateQi4CSAssemblies>
        

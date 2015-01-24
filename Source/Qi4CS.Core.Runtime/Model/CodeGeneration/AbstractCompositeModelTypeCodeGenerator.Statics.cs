@@ -341,6 +341,17 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo GET_BYTES_SINGLE_NATIVE;
       protected static readonly MethodInfo BYTES_TO_INT32_NATIVE;
       protected static readonly MethodInfo BYTES_TO_SINGLE_NATIVE;
+
+      protected static readonly ConstructorInfo COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE;
+      protected static readonly PropertyInfo COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY_NATIVE;
+      protected static readonly ConstructorInfo PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR_NATIVE;
+      protected static readonly PropertyInfo PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY_NATIVE;
+
       //protected static readonly MethodInfo CONVERT_I64_DOUBLE_NATIVE;
       //protected static readonly MethodInfo CONVERT_DOUBLE_I64_NATIVE;
       //protected static readonly MethodInfo CONVERT_I32_SINGLE_NATIVE;
@@ -515,6 +526,15 @@ namespace Qi4CS.Core.Runtime.Model
          GET_BYTES_SINGLE_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "GetBytes", new[] { typeof( Single ) } );
          BYTES_TO_INT32_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "ToInt32", new[] { typeof( Byte[] ), typeof( Int32 ) } );
          BYTES_TO_SINGLE_NATIVE = typeof( BitConverter ).LoadMethodWithParamTypesOrThrow( "ToSingle", new[] { typeof( Byte[] ), typeof( Int32 ) } );
+         COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE = typeof( CompositeTypesAttribute ).LoadConstructorOrThrow( (Int32?) null );
+         COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "PublicCompositeTypes" );
+         COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "PrivateCompositeTypes" );
+         COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "FragmentTypes" );
+         COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "ConcernInvokationHandlerTypes" );
+         COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "SideEffectInvocationHandlerTypes" );
+         COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY_NATIVE = COMPOSITE_TYPES_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "CompositeFactoryType" );
+         PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR_NATIVE = typeof( PublicCompositeGenericBindingInfoAttribute ).LoadConstructorOrThrow( (Int32?) null );
+         PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY_NATIVE = PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR_NATIVE.DeclaringType.LoadPropertyOrThrow( "GenericTypes" );
          //CONVERT_I64_DOUBLE_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToDouble", new[] { typeof( Int64 ) } );
          //CONVERT_DOUBLE_I64_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToInt64", new[] { typeof( Double ) } );
          //CONVERT_I32_SINGLE_NATIVE = TypeUtil.TryLoadMethodWithParamTypes( typeof( Convert ), "ToSingle", new[] { typeof( Int32 ) } );

@@ -92,4 +92,45 @@ namespace Qi4CS.Core.Runtime.Model
 
       }
    }
+
+   [AttributeUsage( AttributeTargets.Assembly, AllowMultiple = true )]
+   public abstract class AbstractCompositeRelatedCodeGenerationAttribute : Attribute
+   {
+      private readonly Int32 _compositeID;
+
+      public AbstractCompositeRelatedCodeGenerationAttribute( Int32 compositeID )
+      {
+         this._compositeID = compositeID;
+      }
+
+      public Int32 CompositeID
+      {
+         get
+         {
+            return this._compositeID;
+         }
+      }
+   }
+
+   //[AttributeUsage( AttributeTargets.Assembly, AllowMultiple = true )]
+   public class CompositeTypesAttribute : AbstractCompositeRelatedCodeGenerationAttribute
+   {
+      public CompositeTypesAttribute( Int32 compositeID )
+         : base( compositeID )
+      {
+      }
+
+      public Type[] PublicCompositeTypes { get; set; }
+      public Type[] PrivateCompositeTypes { get; set; }
+      public Type[] FragmentTypes { get; set; }
+      public Type[] ConcernInvokationHandlerTypes { get; set; }
+      public Type[] SideEffectInvocationHandlerTypes { get; set; }
+      public Type CompositeFactoryType { get; set; }
+   }
+
+   [AttributeUsage( AttributeTargets.Class, AllowMultiple = false )]
+   public class PublicCompositeGenericBindingInfoAttribute : Attribute
+   {
+      public Type[] GenericTypes { get; set; }
+   }
 }

@@ -23,21 +23,13 @@ using CommonUtils;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.SPI.Model;
+using Qi4CS.Core.Runtime.Model;
 using Qi4CS.Extensions.Functional.Model;
 using Qi4CS.Extensions.Functional.Instance;
 
-#if QI4CS_SDK
-using CILAssemblyManipulator.API;
-#endif
-
 namespace Qi4CS.Extensions.Functional.Assembling
 {
-#if QI4CS_SDK
-   internal static class FunctionAggregatorDeclarationCodeGenStatics
-   {
-      internal static readonly System.Reflection.MethodInfo INVOCATION_HANDLER_METHOD = typeof( FunctionInvocationHelper ).LoadMethodOrThrow( "InvokeMethod", null );
-   }
-#endif
+
 
    internal sealed class FunctionAggregatorDeclarationImpl<TKey, TComposite> : FunctionAggregatorDeclaration<TKey, TComposite>
       where TComposite : class
@@ -45,8 +37,6 @@ namespace Qi4CS.Extensions.Functional.Assembling
       //      private static readonly Object[] EMPTY_OBJECTS = new Object[] { };
       private static readonly Func<Object[], Object[]> NO_ARGS_TRANSFORM = args => args;
       private static readonly Action<Object[], Object[]> NO_POST_ARG_TRANSFORMER_ACTION = ( mArgs, fArgs ) => { };
-
-      private const String INVOCATION_HANDLER_PREFIX = "FunctionInvocationHandler_";
 
       private readonly ServiceCompositeAssemblyDeclaration _assemblyDeclaration;
 
@@ -220,13 +210,15 @@ namespace Qi4CS.Extensions.Functional.Assembling
                {
                   args.Model.ApplicationModel.ApplicationCodeResolveEvent += new EventHandler<ApplicationCodeResolveArgs>( ( sender2, args2 ) =>
                   {
+                     var invocationHandlerAttributes = args2.Assemblies.Values.SelectMany( a => a.GetCustomAttributes().OfType<InvocationHandlerTypeAttribute>() ).ToArray();
+
                      foreach ( var kvp in info.FunctionMethods )
                      {
-                        var typeName = this.GetInvocationHandlerName( args.Model, kvp.Key );
-                        var t = args2.Assemblies[kvp.Value.DeclaringType.Assembly].GetType( typeName, false );
-                        if ( t != null )
+                        var methodIdx = FunctionAssemblerUtils.GetCompositeMethodIndex( args.Model, kvp.Key );
+                        var attribute = invocationHandlerAttributes.FirstOrDefault( a => a.CompositeID == args.Model.CompositeModelID && a.CompositeMethodIndex == methodIdx );
+                        if ( attribute != null )
                         {
-                           info.InvocationHelpers.Add( kvp.Key, (FunctionInvocationHelper) t.GetConstructors().First().Invoke( null ) );
+                           info.InvocationHelpers.Add( kvp.Key, (FunctionInvocationHelper) attribute.InvocationHandlerType.GetConstructors().First().Invoke( null ) );
                         }
                      }
                   } );
@@ -234,7 +226,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
 #if QI4CS_SDK
                   args.Model.ApplicationModel.ApplicationCodeGenerationEvent += new EventHandler<ApplicationCodeGenerationArgs>( ( sender2, args2 ) =>
                   {
-                     this.GenerateType( args.Model, info, args2 );
+                     Qi4CSFunctionalExtensionCodeGeneration.GenerateType( args.Model, info, args2 );
                   } );
 #endif
                }
@@ -242,95 +234,5 @@ namespace Qi4CS.Extensions.Functional.Assembling
          }
          return info;
       }
-
-      private String GetInvocationHandlerName( CompositeModel model, System.Reflection.MethodInfo method )
-      {
-         return INVOCATION_HANDLER_PREFIX + model.CompositeModelID + "_" + model.Methods.Single( cMethod => cMethod.NativeInfo.Equals( method ) ).MethodIndex;
-      }
-
-#if QI4CS_SDK
-      private void GenerateType( CompositeModel cModel, FunctionInfo<TKey, TComposite> info, ApplicationCodeGenerationArgs args )
-      {
-         foreach ( var kvp in info.FunctionMethods )
-         {
-            var sMethod = kvp.Value;
-            if ( !sMethod.DeclaringType.ContainsGenericParameters && !sMethod.ContainsGenericParameters )
-            {
-               var typeName = this.GetInvocationHandlerName( cModel, kvp.Key );
-               var tb = args.TypeGenerationInformation[cModel][sMethod.DeclaringType.Assembly].Module.AddType( typeName, TypeAttributes.Public | TypeAttributes.Class );
-
-               tb.AddDefaultConstructor( MethodAttributes.Public | MethodAttributes.HideBySig );
-
-               var invocationHandlerMethod = FunctionAggregatorDeclarationCodeGenStatics.INVOCATION_HANDLER_METHOD.NewWrapper( tb.ReflectionContext );
-               tb.SetParentType( invocationHandlerMethod.DeclaringType );
-               var mb = tb.AddMethod( invocationHandlerMethod.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES, CallingConventions.Standard );
-               mb.ReturnParameter.ParameterType = invocationHandlerMethod.GetReturnType();
-               mb.AddOverriddenMethods( invocationHandlerMethod );
-               foreach ( var p in invocationHandlerMethod.Parameters )
-               {
-                  mb.AddParameter( p.Name, p.Attributes, p.ParameterType );
-               }
-
-               var il = mb.MethodIL;
-               // return ((<composite type>)composite).<method>((<first param type>)args[0], (<second param type>)args[1], ...);
-               var arrayElementType = mb.Parameters[1].ParameterType.GetElementType();
-               var eSMethod = sMethod.NewWrapper( tb.ReflectionContext );
-               var localsArray = new LocalBuilder[eSMethod.Parameters.Count];
-               for ( var i = 0; i < localsArray.Length; ++i )
-               {
-                  if ( eSMethod.Parameters[i].ParameterType.IsByRef() )
-                  {
-                     localsArray[i] = il.DeclareLocal( eSMethod.Parameters[i].ParameterType.GetElementType() );
-                     il.EmitLoadArg( 2 )
-                        .EmitLoadInt32( i )
-                        .EmitLoadElement( arrayElementType )
-                        .EmitCastToType( arrayElementType, localsArray[i].LocalType )
-                        .EmitStoreLocal( localsArray[i] );
-                  }
-               }
-
-               il.EmitLoadArg( 1 );
-               il.EmitCastToType( mb.Parameters[0].ParameterType, sMethod.DeclaringType.NewWrapper( tb.ReflectionContext ) );
-               foreach ( var param in eSMethod.Parameters )
-               {
-                  if ( localsArray[param.Position] == null )
-                  {
-                     var pType = param.ParameterType;
-                     il.EmitLoadArg( 2 )
-                       .EmitLoadInt32( param.Position )
-                       .EmitLoadElement( arrayElementType )
-                       .EmitCastToType( arrayElementType, pType );
-                  }
-                  else
-                  {
-                     il.EmitLoadLocalAddress( localsArray[param.Position] );
-                  }
-               }
-               il.EmitCall( sMethod.NewWrapper( tb.ReflectionContext ) );
-
-               for ( var i = 0; i < localsArray.Length; ++i )
-               {
-                  if ( localsArray[i] != null )
-                  {
-                     il.EmitLoadArg( 2 )
-                        .EmitLoadInt32( i )
-                        .EmitLoadLocal( localsArray[i] )
-                        .EmitStoreElement( arrayElementType );
-                  }
-               }
-
-               if ( typeof( void ).Equals( sMethod.ReturnType ) )
-               {
-                  il.EmitLoadNull();
-               }
-               else
-               {
-                  il.EmitCastToType( sMethod.ReturnType.NewWrapper( tb.ReflectionContext ), mb.GetReturnType() );
-               }
-               il.EmitReturn();
-            }
-         }
-      }
-#endif
    }
 }

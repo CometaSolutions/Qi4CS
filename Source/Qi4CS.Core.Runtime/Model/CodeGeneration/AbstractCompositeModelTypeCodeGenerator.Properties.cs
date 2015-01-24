@@ -36,10 +36,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected const String PROPERTY_EXCHANGE_POSTFIX = "Exchange";
       protected const String PROPERTY_COMPARE_EXCHANGE_POSTFIX = "CompareExchange";
 
-      protected virtual void EmitPropertySetterMethod(
-         CompositeCodeGenerationInfo codeGenerationInfo,
+      protected void EmitPropertySetterMethod(
          PropertyModel propertyModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
          CILTypeBase fieldType,
@@ -62,11 +60,11 @@ namespace Qi4CS.Core.Runtime.Model
          // }
          var il = methodGenInfo.IL;
          il.EmitLoadThisField( thisGenerationInfo.CompositeField )
-           .EmitStoreLocal( methodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, codeGenerationInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ) ) );
+           .EmitStoreLocal( methodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, this.codeGenInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ) ) );
 
          this.EmitThrowIfApplicationNotActive( methodGenInfo );
 
-         this.EmitProcessParameters( codeGenerationInfo, propertyModel.SetterMethod, true, publicCompositeGenInfo, thisGenerationInfo, methodGenInfo );
+         this.EmitProcessParameters( propertyModel.SetterMethod, true, thisGenerationInfo, methodGenInfo );
 
          this.EmitThrowIfViolations( thisGenerationInfo, methodGenInfo, propertyModel.SetterMethod );
 
@@ -79,7 +77,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      protected virtual void EmitCheckPropertyImmutability(
+      protected void EmitCheckPropertyImmutability(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          MethodIL il
@@ -106,10 +104,8 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      protected virtual void EmitPropertyGetterMethod(
-         CompositeCodeGenerationInfo codeGenerationInfo,
+      protected void EmitPropertyGetterMethod(
          PropertyModel propertyModel,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
          CILTypeBase propertyType,
@@ -129,7 +125,7 @@ namespace Qi4CS.Core.Runtime.Model
          var il = methodGenInfo.IL;
 
          il.EmitLoadThisField( thisGenerationInfo.CompositeField )
-           .EmitStoreLocal( methodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, codeGenerationInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ) ) );
+           .EmitStoreLocal( methodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, this.codeGenInfo.CompositeInstanceFieldType.NewWrapper( this.ctx ) ) );
          this.EmitThrowIfApplicationNotActive( methodGenInfo );
 
          var resultB = methodGenInfo.GetOrCreateLocal( LB_RESULT, methodGenInfo.ReturnType );
@@ -137,8 +133,8 @@ namespace Qi4CS.Core.Runtime.Model
          readAction( propertyField, il );
          il.EmitStoreLocal( resultB );
 
-         this.EmitProcessParameters( codeGenerationInfo, propertyModel.GetterMethod, false, publicCompositeGenInfo, thisGenerationInfo, methodGenInfo );
-         this.EmitProcessResult( codeGenerationInfo, propertyModel.GetterMethod, publicCompositeGenInfo, thisGenerationInfo, methodGenInfo );
+         this.EmitProcessParameters( propertyModel.GetterMethod, false, thisGenerationInfo, methodGenInfo );
+         this.EmitProcessResult( propertyModel.GetterMethod, thisGenerationInfo, methodGenInfo );
 
          this.EmitThrowIfViolations( thisGenerationInfo, methodGenInfo, propertyModel.GetterMethod );
 
@@ -146,7 +142,7 @@ namespace Qi4CS.Core.Runtime.Model
            .EmitReturn();
       }
 
-      protected virtual void EmitPropertyExchangeMethod(
+      protected void EmitPropertyExchangeMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -168,7 +164,7 @@ namespace Qi4CS.Core.Runtime.Model
             .EmitReturn();
       }
 
-      protected virtual void EmitPropertyCompareExchangeMethod(
+      protected void EmitPropertyCompareExchangeMethod(
          PropertyModel propertyModel,
          CompositeTypeGenerationInfo thisGenerationInfo,
          CILField propertyField,
@@ -186,9 +182,7 @@ namespace Qi4CS.Core.Runtime.Model
          il.EmitReturn();
       }
 
-      protected virtual void EmitPropertyRelatedThings(
-         CompositeCodeGenerationInfo codeGenerationInfo,
-         CompositeTypeGenerationInfo publicCompositeGenInfo,
+      protected void EmitPropertyRelatedThings(
          CompositeTypeGenerationInfo thisGenerationInfo,
          CompositeMethodGenerationInfo thisMethodGenerationInfo,
          PropertyModel propertyModel,
@@ -222,7 +216,7 @@ namespace Qi4CS.Core.Runtime.Model
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_GETTER_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
                CallingConventions.HasThis );
-            this.EmitPropertyGetterMethod( codeGenerationInfo, propertyModel, publicCompositeGenInfo, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, readMethod );
+            this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, readMethod );
 
             // Field getter for 32-bit processes, if required
             CILMethod getter32 = null;
@@ -232,14 +226,14 @@ namespace Qi4CS.Core.Runtime.Model
                   PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_GETTER32_POSTFIX,
                   MethodAttributes.Private | MethodAttributes.HideBySig,
                   CallingConventions.HasThis );
-               this.EmitPropertyGetterMethod( codeGenerationInfo, propertyModel, publicCompositeGenInfo, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter32, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, read32Method );
+               this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter32, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, read32Method );
             }
             // Field setter
             var setter = thisGenerationInfo.Builder.AddMethod(
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_SETTER_POSTFIX,
                MethodAttributes.Public | MethodAttributes.HideBySig, // TODO MethodAttributes.Assembly when [InternalsVisibleTo(...)] attribute will be applied to all generated assemblies.
                CallingConventions.HasThis );
-            this.EmitPropertySetterMethod( codeGenerationInfo, propertyModel, publicCompositeGenInfo, thisGenerationInfo, propertyField, fieldType, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( setter, null, null ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 1 ) ), writeMethod );
+            this.EmitPropertySetterMethod( propertyModel, thisGenerationInfo, propertyField, fieldType, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( setter, null, null ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 1 ) ), writeMethod );
 
             // Exchange method
             var exchangeMethod = thisGenerationInfo.Builder.AddMethod(
@@ -303,7 +297,7 @@ namespace Qi4CS.Core.Runtime.Model
          }
       }
 
-      protected virtual Boolean IsCompositeGeneratedProperty(
+      protected Boolean IsCompositeGeneratedProperty(
          CompositeTypeGenerationInfo thisGenerationInfo,
          PropertyModel propertyModel,
          Type genericPropertyMixinType
@@ -316,7 +310,7 @@ namespace Qi4CS.Core.Runtime.Model
               genericPropertyMixinType.Equals( propertyModel.SetterMethod.Mixin.NativeInfo.DeclaringType );
       }
 
-      protected virtual void GetReadAndWriteMethods(
+      protected void GetReadAndWriteMethods(
          CILTypeBase propertyType,
          out Action<CILField, MethodIL> read,
          out Action<CILField, MethodIL> read32,
@@ -463,12 +457,12 @@ namespace Qi4CS.Core.Runtime.Model
          };
       }
 
-      protected virtual Boolean CanEmitDefaultValueForPropertyModel( PropertyModel propModel )
+      protected Boolean CanEmitDefaultValueForPropertyModel( PropertyModel propModel )
       {
          return propModel.IsPartOfCompositeState() && ( propModel.DefaultValueCreator != null || propModel.IsUseDefaults() );
       }
 
-      protected virtual void EmitLoadDefaultValueForPropertyModel(
+      protected void EmitLoadDefaultValueForPropertyModel(
          PropertyModel propModel,
          CompositeTypeGenerationInfo propertyDeclaringTypeGenInfo,
          MethodGenerationInfo methodGenInfo
