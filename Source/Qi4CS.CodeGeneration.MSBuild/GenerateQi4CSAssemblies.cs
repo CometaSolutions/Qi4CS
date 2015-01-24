@@ -208,7 +208,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-                           this.Log.LogMessage( "Starting Qi4CS code generation, parallelize: {0}", this.Parallelize );
+                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelize: {0}", this.Parallelize );
                            var sw = new Stopwatch();
                            sw.Start();
                            var fileNameDic = generator.GenerateAssemblies(
