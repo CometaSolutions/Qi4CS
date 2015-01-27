@@ -37,27 +37,38 @@ namespace Qi4CS.Extensions.Configuration.Instance
 
       #region ConfigurationManager Members
 
-      public virtual ConfigurationInstance<TConfiguration> Create<TConfiguration>( ConfigurationCompositeInfo info )
-         where TConfiguration : class
+      public virtual Boolean HasInformationAbout( Type configurationType, ConfigurationCompositeInfo info = null )
       {
-         var configType = typeof( TConfiguration );
-         info = this.GetInfoForCreation( configType, info );
+         info = this.GetInfoForCreation( configurationType, info );
+         String errorMsg;
+         return info != null && this.CheckInfo( configurationType, info, out errorMsg );
+      }
+
+      public virtual Boolean TryGetDefaultInformationAbout( Type configurationType, out ConfigurationCompositeInfo info )
+      {
+         info = this.GetInfoForCreation( configurationType, null );
+         return info != null;
+      }
+
+      public virtual ConfigurationInstance<Object> AsConfigurationInstance( Type configurationType, Object composite, ConfigurationCompositeInfo info = null )
+      {
+         info = this.GetInfoForCreation( configurationType, info );
          if ( info == null )
          {
-            throw new InvalidOperationException( "Could not find information about configuration with type " + configType + "." );
+            throw new InvalidOperationException( "Could not find information about configuration with type " + configurationType + "." );
          }
          if ( info == null )
          {
-            if ( !this._state.CompositeInfos.TryGetValue( configType, out info ) )
+            if ( !this._state.CompositeInfos.TryGetValue( configurationType, out info ) )
             {
-               throw new InvalidOperationException( "Could not find information about configuration with type " + configType + "." );
+               throw new InvalidOperationException( "Could not find information about configuration with type " + configurationType + "." );
             }
          }
          else
          {
             info = new ConfigurationCompositeInfo( info.Resource, info.Serializer );
             ConfigurationCompositeInfo existingInfo;
-            if ( this._state.CompositeInfos.TryGetValue( configType, out existingInfo ) )
+            if ( this._state.CompositeInfos.TryGetValue( configurationType, out existingInfo ) )
             {
                if ( info.Resource == null )
                {
@@ -70,14 +81,7 @@ namespace Qi4CS.Extensions.Configuration.Instance
             }
          }
 
-         return (ConfigurationInstance<TConfiguration>) this.DoCreate( configType, info );
-      }
-
-      public virtual Boolean HasInformationAbout( Type configurationType, ConfigurationCompositeInfo info = null )
-      {
-         info = this.GetInfoForCreation( configurationType, info );
-         String errorMsg;
-         return info != null && this.CheckInfo( configurationType, info, out errorMsg );
+         return this.DoCreate( configurationType, info, composite );
       }
 
       #endregion
@@ -136,7 +140,7 @@ namespace Qi4CS.Extensions.Configuration.Instance
          this._state.CompositeInfos = configInfo.CompositeInfos.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
       }
 
-      private ConfigurationInstance<Object> DoCreate( Type configType, ConfigurationCompositeInfo info )
+      private ConfigurationInstance<Object> DoCreate( Type configType, ConfigurationCompositeInfo info, Object existingComposite )
       {
          var configInstanceType = typeof( ConfigurationInstance<> ).MakeGenericType( configType );
          var builder = this._ssp.NewPlainCompositeBuilder( configInstanceType );
@@ -148,7 +152,7 @@ namespace Qi4CS.Extensions.Configuration.Instance
          }
 
          var serializer = this._ssp.NewPlainCompositeBuilder( info.Serializer ).Instantiate<ConfigurationSerializer>();
-         builder.Use( Tuple.Create( serializer, info.Resource ) );
+         builder.Use( serializer, info.Resource, existingComposite );
 
          return (ConfigurationInstance<Object>) builder.InstantiateWithType( typeof( Object ) );
       }

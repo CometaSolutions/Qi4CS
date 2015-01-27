@@ -25,7 +25,7 @@ namespace Qi4CS.Extensions.Configuration.Instance
    /// </summary>
    /// <seealso cref="Assembling.ConfigurationCompositeDefaultInfo.SerializedBy(Type)"/>
    /// <seealso cref="ConfigurationCompositeInfo.Serializer"/>
-   /// <seealso cref="ConfigurationManager.Create{T}(ConfigurationCompositeInfo)"/>
+   /// <seealso cref="E_Qi4CSConfiguration.Create(ConfigurationManager, Type, ConfigurationCompositeInfo)"/>
    public interface ConfigurationSerializer
    {
       /// <summary>

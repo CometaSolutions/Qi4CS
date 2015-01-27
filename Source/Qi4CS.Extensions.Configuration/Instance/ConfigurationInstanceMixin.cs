@@ -18,6 +18,7 @@
 using System;
 using Qi4CS.Core.API.Instance;
 using Qi4CS.Core.API.Model;
+using System.Threading;
 
 namespace Qi4CS.Extensions.Configuration.Instance
 {
@@ -90,10 +91,21 @@ namespace Qi4CS.Extensions.Configuration.Instance
       #endregion
 
       [Prototype]
-      protected void InitState( [Uses] Tuple<ConfigurationSerializer, Qi4CSConfigurationResource> configurationSerializationInfo )
+      protected void InitState(
+         [Uses] ConfigurationSerializer serializer,
+         [Uses] Qi4CSConfigurationResource resource,
+         [Uses, Optional] TConfiguration existingComposite
+         )
       {
-         this._state.Serializer = configurationSerializationInfo.Item1;
-         this.SetConfigurationComposite( configurationSerializationInfo.Item2 );
+         this._state.Serializer = serializer;
+         if ( existingComposite == null )
+         {
+            this.SetConfigurationComposite( resource );
+         }
+         else
+         {
+            this._state.Configuration = Tuple.Create( new Lazy<TConfiguration>( () => existingComposite, LazyThreadSafetyMode.ExecutionAndPublication ), resource );
+         }
       }
 
       private void SetConfigurationComposite( Qi4CSConfigurationResource resource )
