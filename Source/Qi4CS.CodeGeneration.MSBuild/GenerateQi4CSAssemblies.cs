@@ -597,47 +597,56 @@ namespace Qi4CS.CodeGeneration.MSBuild
             try
             {
                winSDKDir = FindWinSDKBinPath( winSDKDir );
-               foreach ( var fn in genAssFilenames )
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, genAssFilenames, fn =>
                {
                   Verify( winSDKDir, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
-               }
+               } );
             }
             finally
             {
-               if ( !Directory.Exists( path ) )
+               if ( needToMove )
                {
-                  Directory.CreateDirectory( path );
+
+                  if ( !Directory.Exists( path ) )
+                  {
+                     Directory.CreateDirectory( path );
+                  }
+                  var genAssFilenamesArray = genAssFilenames.ToArray();
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, 0, genAssFilenamesArray.Length, idx =>
+                  {
+                     var kvp = genAssFilenamesArray[idx];
+                     var fn = kvp.Value;
+                     try
+                     {
+                        var targetFn = Path.Combine( path, Path.GetFileName( fn ) );
+                        if ( !String.Equals( fn, targetFn ) )
+                        {
+
+                           if ( File.Exists( targetFn ) )
+                           {
+                              try
+                              {
+                                 File.Delete( targetFn );
+                              }
+                              catch
+                              {
+                                 // Ignore
+                              }
+                           }
+                           File.Move( fn, targetFn );
+                           genAssFilenamesArray[idx] = new KeyValuePair<System.Reflection.Assembly, String>( kvp.Key, targetFn );
+                        }
+                     }
+                     catch
+                     {
+                        // Ignore
+                     }
+                  } );
+
+
+                  genAssFilenames = genAssFilenamesArray.ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
                }
 
-               foreach ( var kvp in genAssFilenames.ToArray() )
-               {
-                  var fn = kvp.Value;
-                  try
-                  {
-                     var targetFn = Path.Combine( path, Path.GetFileName( fn ) );
-                     if ( !String.Equals( fn, targetFn ) )
-                     {
-                        if ( File.Exists( targetFn ) )
-                        {
-                           try
-                           {
-                              File.Delete( targetFn );
-                           }
-                           catch
-                           {
-                              // Ignore
-                           }
-                        }
-                        File.Move( fn, targetFn );
-                        genAssFilenames.Remove( kvp.Key );
-                        genAssFilenames.Add( kvp.Key, targetFn );
-                     }
-                  }
-                  catch
-                  {
-                     // Ignore
-                  }
-               }
             }
          }
 

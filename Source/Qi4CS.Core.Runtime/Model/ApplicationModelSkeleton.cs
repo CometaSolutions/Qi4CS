@@ -431,6 +431,23 @@ namespace Qi4CS.Core.Runtime.Model
          }
          return parallelize;
       }
+
+      public static Boolean DoPotentiallyInParallel( Boolean parallelize, Int32 fromInclusive, Int32 toExclusive, Action<Int32> action )
+      {
+         if ( parallelize )
+         {
+            Parallel.For( fromInclusive, toExclusive, action );
+         }
+         else
+         {
+            for ( var i = fromInclusive; i < toExclusive; ++i )
+            {
+               action( i );
+            }
+         }
+
+         return parallelize;
+      }
    }
 
 #endif
