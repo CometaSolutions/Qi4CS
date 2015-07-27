@@ -127,25 +127,14 @@ namespace Qi4CS.Core.Architectures.Instance
       {
          // TODO might get rid of tuple? if lookup is done by target module
 #if SILVERLIGHT
-         IDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>> cache;
-         lock ( this._compositeTypeLookupCache )
-         {
-            cache = this._compositeTypeLookupCache.GetOrAdd_NotThreadSafe( compositeModelType, key => new Dictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>( ArrayEqualityComparer<Type>.DefaultArrayEqualityComparer ) );
+         var cache = this._compositeTypeLookupCache.GetOrAdd_WithLock( compositeModelType, key => new Dictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>( ArrayEqualityComparer<Type>.DefaultArrayEqualityComparer ) );
 #else
          var cache = this._compositeTypeLookupCache.GetOrAdd( compositeModelType, key => new System.Collections.Concurrent.ConcurrentDictionary<Type[], Tuple<CompositeInstanceStructureOwner, CompositeModel>>( ArrayEqualityComparer<Type>.DefaultArrayEqualityComparer ) );
 #endif
 
-#if SILVERLIGHT
-         }
-#endif
-
-#if SILVERLIGHT
-         lock ( cache )
-         {
-#endif
          return cache.
 #if SILVERLIGHT
-GetOrAdd_NotThreadSafe(
+GetOrAdd_WithLock(
 #else
 GetOrAdd(
 #endif
@@ -187,9 +176,6 @@ GetOrAdd(
                   }
                }
             } );
-#if SILVERLIGHT
-         }
-#endif
       }
 
       internal IEnumerable<Tuple<CompositeInstanceStructureOwner, CompositeModel>> FindVisibleModels( Func<CompositeModel, Boolean> matcher )

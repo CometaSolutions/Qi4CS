@@ -77,12 +77,12 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CILAssemblyManipulator.DotNET">
-      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.7.1\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Logical">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
     </Reference>
-    <Reference Include="CILAssemblyManipulator.Portable">
+    <Reference Include="CILAssemblyManipulator.Physical">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.1\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Core" />
     <Reference Include="System" />
@@ -90,7 +90,7 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\portable-net40+win8\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

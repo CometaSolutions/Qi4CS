@@ -219,20 +219,13 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public InstancePool<Object> GetConstraintInstancePool( Type resolvedConstraintType )
       {
-#if SILVERLIGHT
-         lock ( this._constraintInstancePools )
-         {
-#endif
          return this._constraintInstancePools.
 #if SILVERLIGHT
-GetOrAdd_NotThreadSafe(
+GetOrAdd_WithLock(
 #else
 GetOrAdd(
 #endif
  resolvedConstraintType, ( rType ) => new InstancePool<Object>() );
-#if SILVERLIGHT
-         }
-#endif
       }
 
       public InjectionService InjectionService

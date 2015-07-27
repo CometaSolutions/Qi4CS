@@ -19,7 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
+using CILAssemblyManipulator.Physical;
 using Qi4CS.Core.API.Model;
 using Qi4CS.Core.Runtime.Instance;
 using Qi4CS.Core.SPI.Model;
@@ -49,8 +50,8 @@ namespace Qi4CS.Core.Runtime.Model
       public ServiceModelTypeCodeGenerator( CompositeCodeGenerationInfo codeGenerationInfo, Boolean isSilverlight, CILReflectionContext ctx )
          : base( codeGenerationInfo, isSilverlight, ctx )
       {
-         this.SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD = SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE.NewWrapper( this.ctx );
-         this.METHOD_GENERIC_ARGUMENTS_INFO_CTOR = METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE.NewWrapper( this.ctx );
+         this.SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD = this.ctx.NewWrapper( SERVICE_COMPOSITE_ACTIVATE_IF_NEEDED_METHOD_NATIVE );
+         this.METHOD_GENERIC_ARGUMENTS_INFO_CTOR = this.ctx.NewWrapper( METHOD_GENERIC_ARGUMENTS_INFO_CTOR_NATIVE );
       }
 
       protected override void EmitAfterCompositeMethodBodyBegan(
@@ -80,10 +81,10 @@ namespace Qi4CS.Core.Runtime.Model
          {
             // new MethodGenericArgumentsInfo(<method-handle>, <type-handle>)
             var cMethodInfo = thisMethodGenerationInfo.OverriddenMethod.MakeGenericMethod( thisMethodGenerationInfo.GenericArguments.ToArray() );
-            il.Add( new OpCodeInfoWithMethodToken(
+            il.Add( new LogicalOpCodeInfoWithMethodToken(
                   OpCodes.Ldtoken,
                   cMethodInfo ) )
-               .Add( new OpCodeInfoWithTypeToken(
+               .Add( new LogicalOpCodeInfoWithTypeToken(
                   OpCodes.Ldtoken,
                   cMethodInfo.DeclaringType
                ) );

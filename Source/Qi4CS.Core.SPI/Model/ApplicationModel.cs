@@ -143,7 +143,7 @@ namespace Qi4CS.Core.SPI.Model
       /// <summary>
       /// Generates all composite types required for successful application instance creation.
       /// </summary>
-      /// <param name="reflectionContext">The <see cref="CILAssemblyManipulator.API.CILReflectionContext"/> to use when generating code.</param>
+      /// <param name="reflectionContext">The <see cref="CILAssemblyManipulator.Logical.CILReflectionContext"/> to use when generating code.</param>
       /// <param name="parallelize">Whether to parallelize the code generation process.</param>
       /// <param name="isSilverlight">Whether the code being emitted should be run on Silverlight 5. See remarks for more information.</param>
       /// <returns>A dictionary containing mapping from already-existing native assemblies to generated assemblies.</returns>
@@ -160,8 +160,8 @@ namespace Qi4CS.Core.SPI.Model
       /// </para>
       /// </remarks>
       /// <seealso cref="ValidationResult"/>
-      DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode(
-         CILAssemblyManipulator.API.CILReflectionContext reflectionContext,
+      DictionaryQuery<System.Reflection.Assembly, CILAssemblyManipulator.Logical.CILAssembly> GenerateCode(
+         CILAssemblyManipulator.Logical.CILReflectionContext reflectionContext,
          Boolean parallelize,
          Boolean isSilverlight
          );
@@ -410,14 +410,14 @@ namespace Qi4CS.Core.SPI.Model
    /// </summary>
    public sealed class ApplicationCodeGenerationArgs : EventArgs
    {
-      private readonly DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> _gInfo;
+      private readonly DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.Logical.CILType>>> _gInfo;
 
       /// <summary>
       /// Creates new instance of <see cref="ApplicationCodeGenerationArgs"/>.
       /// </summary>
       /// <param name="generationInfo">Type generation information, see <see cref="TypeGenerationInformation"/> property for more information.</param>
       /// <exception cref="ArgumentNullException">If <paramref name="generationInfo"/> is <c>null</c>.</exception>
-      public ApplicationCodeGenerationArgs( DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> generationInfo )
+      public ApplicationCodeGenerationArgs( DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.Logical.CILType>>> generationInfo )
       {
          ArgumentValidator.ValidateNotNull( "Reflection builders", generationInfo );
 
@@ -427,10 +427,10 @@ namespace Qi4CS.Core.SPI.Model
       /// <summary>
       /// Gets the information about generated types.
       /// The keys are instances of the <see cref="CompositeModel"/>.
-      /// The values are instances of dictionaries with already-existing assemblies of all types related to a single <see cref="CompositeModel"/> and values are instances of generated <see cref="CILAssemblyManipulator.API.CILType"/> types.
+      /// The values are instances of dictionaries with already-existing assemblies of all types related to a single <see cref="CompositeModel"/> and values are instances of generated <see cref="CILAssemblyManipulator.Logical.CILType"/> types.
       /// </summary>
       /// <value>The information about generated types.</value>
-      public DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.API.CILType>>> TypeGenerationInformation
+      public DictionaryQuery<CompositeModel, DictionaryQuery<System.Reflection.Assembly, ListQuery<CILAssemblyManipulator.Logical.CILType>>> TypeGenerationInformation
       {
          get
          {

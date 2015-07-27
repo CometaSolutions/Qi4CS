@@ -49,7 +49,7 @@ namespace Qi4CS.Core.Runtime.Model
       CompositeModel NewCompositeModel( ApplicationModel<ApplicationSPI> appModel, CompositeAssemblyInfo compositeInfo, Func<Int32, Object, Attribute, Attribute> attributeTransformer, String architectureContainerID );
 
 #if QI4CS_SDK
-      CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
+      CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isWP8Emit, CILAssemblyManipulator.Logical.CILReflectionContext reflectionContext );
 #endif
 
    }
@@ -130,7 +130,7 @@ namespace Qi4CS.Core.Runtime.Model
 
 #if QI4CS_SDK
 
-      public abstract CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext );
+      public abstract CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.Logical.CILReflectionContext reflectionContext );
 
 #endif
    }
@@ -154,7 +154,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 #if QI4CS_SDK
-      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
+      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.Logical.CILReflectionContext reflectionContext )
       {
          return new PlainCompositeModelTypeCodeGenerator( this.CodeGenerationInfo, isSilverlight, reflectionContext );
       }
@@ -211,7 +211,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
 #if QI4CS_SDK
-      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.API.CILReflectionContext reflectionContext )
+      public override CompositeModelTypeCodeGenerator NewCodeGenerator( Boolean isSilverlight, CILAssemblyManipulator.Logical.CILReflectionContext reflectionContext )
       {
          return new ServiceModelTypeCodeGenerator( this.CodeGenerationInfo, isSilverlight, reflectionContext );
       }

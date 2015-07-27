@@ -33,7 +33,7 @@ using Qi4CS.Core.Runtime.Instance;
 using Qi4CS.Core.Runtime.Model;
 
 #if QI4CS_SDK
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 #endif
@@ -157,11 +157,11 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( !args.PublicKey.IsNullOrEmpty() )
          {
-            an += ", PublicKey=" + StringConversions.ByteArray2HexStr( args.PublicKey );
+            an += ", PublicKey=" + args.PublicKey.CreateHexString();
          }
          else if ( !args.PublicKeyToken.IsNullOrEmpty() )
          {
-            an += ", PublicKeyToken=" + StringConversions.ByteArray2HexStr( args.PublicKeyToken );
+            an += ", PublicKeyToken=" + args.PublicKeyToken.CreateHexString();
          }
 
          return Assembly.Load(
@@ -299,7 +299,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       public event EventHandler<ApplicationCodeGenerationArgs> ApplicationCodeGenerationEvent;
 
-      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode(
+      public DictionaryQuery<Assembly, CILAssemblyManipulator.Logical.CILAssembly> GenerateCode(
          CILReflectionContext reflectionContext,
          Boolean parallelize,
          Boolean isSilverlight
@@ -353,16 +353,16 @@ namespace Qi4CS.Core.Runtime.Model
                var assemblyBareFileName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( currentAssembly );
 
                var ass = reflectionContext.NewBlankAssembly( assemblyBareFileName );
-               var eAss = currentAssembly.NewWrapper( reflectionContext );
+               var eAss = reflectionContext.NewWrapper( currentAssembly );
                ass.Name.MajorVersion = eAss.Name.MajorVersion;
                ass.Name.MinorVersion = eAss.Name.MinorVersion;
                ass.Name.BuildNumber = eAss.Name.BuildNumber;
                ass.Name.Revision = eAss.Name.Revision;
                ass.Name.Culture = eAss.Name.Culture;
 
-               ass.AddNewCustomAttributeTypedParams( ASS_TITLE_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
-               ass.AddNewCustomAttributeTypedParams( ASS_DESCRIPTION_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
-               ass.AddNewCustomAttributeTypedParams( QI4CS_GENERATED_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( ASS_TITLE_ATTRIBUTE_CTOR ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( ASS_DESCRIPTION_ATTRIBUTE_CTOR ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( QI4CS_GENERATED_ATTRIBUTE_CTOR ) );
 
                var mod = ass.AddModule( assemblyBareFileName + ".dll" );
                assemblyDic.Add( currentAssembly, mod );

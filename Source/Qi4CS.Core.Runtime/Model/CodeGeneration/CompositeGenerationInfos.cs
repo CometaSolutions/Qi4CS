@@ -22,7 +22,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
 using CollectionsWithRoles.API;
 using CollectionsWithRoles.Implementation;
 using CommonUtils;
@@ -161,7 +161,7 @@ namespace Qi4CS.Core.Runtime.Model
          : base( tb, amountOfGArgs, CollectionsFactorySingleton.DEFAULT_COLLECTIONS_FACTORY, GENERIC_ARGUMENT_NAME_PREFIX, ( b, a ) => b.DefineGenericParameters( a ) )
       {
          this._parents = CollectionsFactorySingleton.DEFAULT_COLLECTIONS_FACTORY.NewDictionaryProxy( new Dictionary<CILType, CILType>() );
-         this._parents[(CILType) typeof( Object ).NewWrapper( tb.ReflectionContext )] = (CILType) typeof( Object ).NewWrapper( tb.ReflectionContext );
+         this._parents[tb.ReflectionContext.NewWrapperAsType( typeof( Object ) )] = tb.ReflectionContext.NewWrapperAsType( typeof( Object ) );
          this._parents[this.Builder] = this.Builder;
          this._currentLambdaClassCount = 0;
       }
@@ -630,7 +630,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       public LocalBuilder GetOrCreateLocal( LocalBuilderInfo info )
       {
-         return this.GetOrCreateLocal( info.Name, info.Type.NewWrapper( this.Builder.ReflectionContext ) );
+         return this.GetOrCreateLocal( info.Name, this.Builder.ReflectionContext.NewWrapper( info.Type ) );
       }
 
       public LocalBuilder GetOrCreateLocal( LocalBuilderInfo info, CILTypeBase type )
@@ -707,7 +707,7 @@ namespace Qi4CS.Core.Runtime.Model
          return result;
       }
 
-      public MethodBaseGenerationInfoImpl<TBuilder> WithParameters( IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.API.ParameterAttributes>> paramTypes )
+      public MethodBaseGenerationInfoImpl<TBuilder> WithParameters( IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.Physical.ParameterAttributes>> paramTypes )
       {
          foreach ( var pt in paramTypes )
          {
@@ -848,9 +848,9 @@ namespace Qi4CS.Core.Runtime.Model
    {
       public ConstructorGenerationInfoImpl(
          CILType tb,
-         CILAssemblyManipulator.API.MethodAttributes ctorAttributes,
-         CILAssemblyManipulator.API.CallingConventions callingConventions,
-         IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.API.ParameterAttributes, String>> parameters
+         CILAssemblyManipulator.Physical.MethodAttributes ctorAttributes,
+         CILAssemblyManipulator.Logical.CallingConventions callingConventions,
+         IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.Physical.ParameterAttributes, String>> parameters
          )
          : base( tb.AddConstructor( ctorAttributes, callingConventions ), 0, null )
       {
@@ -869,9 +869,9 @@ namespace Qi4CS.Core.Runtime.Model
       private readonly Int32 _firstAdditionalParamIndex;
 
       public CompositeConstructorGenerationInfoImpl(
-         CILAssemblyManipulator.API.MethodAttributes ctorAttributes,
-         CILAssemblyManipulator.API.CallingConventions callingConventions,
-         IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.API.ParameterAttributes, String>> parameters,
+         CILAssemblyManipulator.Physical.MethodAttributes ctorAttributes,
+         CILAssemblyManipulator.Logical.CallingConventions callingConventions,
+         IEnumerable<Tuple<CILTypeBase, CILAssemblyManipulator.Physical.ParameterAttributes, String>> parameters,
          AbstractTypeGenerationInfoForComposites typeGenerationInfo,
          CILConstructor ctorFromModel,
          CILConstructor ctorToOverride,
@@ -1267,7 +1267,7 @@ namespace Qi4CS.Core.Runtime.Model
       public static void CopyGenericArgumentConstraintsExceptVariance( IEnumerable<CILTypeParameter> gBuilders, CILTypeParameter[] mgBuilders, CILTypeParameter gArg, CILTypeParameter gBuilder )
       {
          gBuilder.AddGenericParameterConstraints( gArg.GenericParameterConstraints.Select( constraint => CreateTypeForEmitting( constraint, gBuilders, mgBuilders ) ).ToArray() );
-         gBuilder.Attributes = gArg.Attributes & CILAssemblyManipulator.API.GenericParameterAttributes.SpecialConstraintMask;
+         gBuilder.Attributes = gArg.Attributes & CILAssemblyManipulator.Physical.GenericParameterAttributes.SpecialConstraintMask;
       }
 
       public static void CopyGenericArgumentConstraintsFromAll( IEnumerable<CILTypeParameter> allGBuilders, CILTypeParameter[] allMGBuilders, ListQuery<CILTypeBase> gArgs, CILTypeParameter[] gBuilders )
@@ -1283,7 +1283,7 @@ namespace Qi4CS.Core.Runtime.Model
          TypeGenerationInfo typeGenInfo,
          CILMethod methodToCopy,
          String newName,
-         CILAssemblyManipulator.API.MethodAttributes newAttributes
+         CILAssemblyManipulator.Physical.MethodAttributes newAttributes
          )
       {
          return ImplementMethodForEmitting( typeGenInfo.Builder, typeGenInfo.GenericArguments, parent => typeGenInfo.Parents[parent], methodToCopy, newName, newAttributes );
@@ -1295,7 +1295,7 @@ namespace Qi4CS.Core.Runtime.Model
          Func<CILType, CILType> parentFunc,
          CILMethod eMethodToCopy,
          String newName,
-         CILAssemblyManipulator.API.MethodAttributes newAttributes
+         CILAssemblyManipulator.Physical.MethodAttributes newAttributes
          )
       {
          CILTypeBase[] gArgs = null;
@@ -1310,7 +1310,7 @@ namespace Qi4CS.Core.Runtime.Model
          var mb = tb.AddMethod(
             newName == null ? eMethodToCopy.Name : newName,
             newAttributes,
-            (CILAssemblyManipulator.API.CallingConventions) eMethodToCopy.CallingConvention
+            (CILAssemblyManipulator.Logical.CallingConventions) eMethodToCopy.CallingConvention
          );
 
          if ( actualMethodToCopy.HasGenericArguments() )
@@ -1324,7 +1324,7 @@ namespace Qi4CS.Core.Runtime.Model
          foreach ( var param in actualMethodToCopy.Parameters )
          {
             // Don't set HasDefault & optional flags
-            mb.AddParameter( param.Name, param.Attributes & ~( CILAssemblyManipulator.API.ParameterAttributes.HasDefault | CILAssemblyManipulator.API.ParameterAttributes.Optional ), TypeGenerationUtils.CreateTypeForEmitting( param.ParameterType, tbGArgs, mb.GenericArguments ) );
+            mb.AddParameter( param.Name, param.Attributes & ~( CILAssemblyManipulator.Physical.ParameterAttributes.HasDefault | CILAssemblyManipulator.Physical.ParameterAttributes.Optional ), TypeGenerationUtils.CreateTypeForEmitting( param.ParameterType, tbGArgs, mb.GenericArguments ) );
          }
          var rp = mb.ReturnParameter;
          rp.Name = actualMethodToCopy.ReturnParameter.Name;
@@ -1338,7 +1338,7 @@ namespace Qi4CS.Core.Runtime.Model
          TypeGenerationInfo typeGenInfo,
          CILMethod methodToCopy,
          String newName,
-         CILAssemblyManipulator.API.MethodAttributes newAttributes
+         CILAssemblyManipulator.Physical.MethodAttributes newAttributes
          )
       {
          return new MethodGenerationInfoImpl( ImplementMethodForEmitting( typeGenInfo.Builder, typeGenInfo.GenericArguments, parent => typeGenInfo.Parents[parent], methodToCopy, newName, newAttributes ).Item1 );

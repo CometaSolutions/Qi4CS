@@ -53,7 +53,7 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\portable-net40+win8\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
 using CommonUtils;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.Runtime.Instance;
@@ -235,7 +235,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       public IDictionary<CILType, TypeBindingInformation> GetEmulatedFragmentTypeBindingInfos( CompositeTypeModel typeModel )
       {
-         return this._emulatedFragmentTypeInfos.GetOrAdd_NotThreadSafe( typeModel, tm => tm.FragmentTypeInfos.ToDictionary( kvp => kvp.Key.NewWrapperAsType( this._ctx ), kvp => kvp.Value ) );
+         return this._emulatedFragmentTypeInfos.GetOrAdd_NotThreadSafe( typeModel, tm => tm.FragmentTypeInfos.ToDictionary( kvp => this._ctx.NewWrapperAsType( kvp.Key ), kvp => kvp.Value ) );
       }
    }
 }

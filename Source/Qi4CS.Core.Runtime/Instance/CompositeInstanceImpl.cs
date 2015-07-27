@@ -29,74 +29,9 @@ using Qi4CS.Core.Runtime.Model;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
-#if SILVERLIGHT
-using System.Runtime.CompilerServices;
-#endif
 
 namespace Qi4CS.Core.Runtime.Instance
 {
-#if SILVERLIGHT
-      // TODO maybe move this class to UtilPack ?
-      public sealed class ThreadLocal<T>
-      {
-         // Helper class to hold values, so T typeparam wouldn't have any generic constraints.
-         private class ValueHolder
-         {
-            internal T _value;
-            internal ValueHolder( T value )
-            {
-               this._value = value;
-            }
-         }
-
-         // Table holding all instances of ThreadLocals in this thread. Since they are weak references, they should get GC'd without big issues.
-         [ThreadStatic]
-         private static ConditionalWeakTable<ThreadLocal<T>, ValueHolder> _table;
-
-         // Factory callback
-         private readonly Func<T> _factory;
-
-         public ThreadLocal()
-            : this( () => default( T ) )
-         {
-
-         }
-
-         public ThreadLocal( Func<T> factory )
-         {
-            CommonUtils.ArgumentValidator.ValidateNotNull( "Threadlocal value factory", factory );
-            this._factory = factory;
-         }
-
-         public T Value
-         {
-            get
-            {
-               ValueHolder holder;
-               T retVal;
-               if ( _table != null && _table.TryGetValue( this, out holder ) )
-               {
-                  retVal = holder._value;
-               }
-               else
-               {
-                  retVal = this._factory();
-                  this.Value = retVal;
-               }
-               return retVal;
-            }
-            set
-            {
-               if ( _table == null )
-               {
-                  _table = new ConditionalWeakTable<ThreadLocal<T>, ValueHolder>();
-               }
-               _table.GetOrCreateValue( this )._value = value;
-            }
-         }
-      }
-
-#endif
 
    public class InvocationInfoImpl : InvocationInfo
    {
@@ -253,7 +188,17 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly DictionaryQuery<Type, ListQuery<FragmentConstructorInfo>> _constructorsForFragments;
       private readonly CompositeState _state;
       private readonly UsesContainerQuery _usesContainer;
-      private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
+#if SILVERLIGHT
+      [ThreadStatic]
+      private static 
+#else
+      private readonly Lazy<ThreadLocal<
+#endif
+Stack<InvocationInfo>
+#if !SILVERLIGHT
+>>
+#endif
+ _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
       private readonly Lazy<MethodInfo[]> _compositeMethods;
@@ -295,7 +240,15 @@ namespace Qi4CS.Core.Runtime.Instance
 
          this._isPrototype = (Int32) PrototypeState.PROTOTYPE;
 
-         this._invocationInfos = new Lazy<ThreadLocal<Stack<InvocationInfo>>>( () => new ThreadLocal<Stack<InvocationInfo>>( () => new Stack<InvocationInfo>() ), LazyThreadSafetyMode.PublicationOnly );
+         this._invocationInfos =
+#if !SILVERLIGHT
+ new Lazy<ThreadLocal<Stack<InvocationInfo>>>( () => new ThreadLocal<Stack<InvocationInfo>>( () =>
+#endif
+ new Stack<InvocationInfo>()
+#if !SILVERLIGHT
+ ), LazyThreadSafetyMode.PublicationOnly )
+#endif
+;
 
          var composites = application.CollectionsFactory.NewDictionaryProxy<Type, Object>();
          var cProps = application.CollectionsFactory.NewListProxy( new List<CompositeProperty>( model.Methods.Count * 2 ) );
@@ -607,7 +560,11 @@ namespace Qi4CS.Core.Runtime.Instance
 
             if ( compositeMethod != null )
             {
-               this._invocationInfos.Value.Value.Push( new InvocationInfoImpl( compositeMethod, nextMethod ) );
+               _invocationInfos
+#if !SILVERLIGHT
+.Value.Value
+#endif
+.Push( new InvocationInfoImpl( compositeMethod, nextMethod ) );
             }
             try
             {
@@ -617,7 +574,11 @@ namespace Qi4CS.Core.Runtime.Instance
             {
                if ( compositeMethod != null )
                {
-                  this._invocationInfos.Value.Value.Pop();
+                  _invocationInfos
+#if !SILVERLIGHT
+.Value.Value
+#endif
+.Pop();
                }
             }
          }
@@ -656,18 +617,27 @@ namespace Qi4CS.Core.Runtime.Instance
       {
          get
          {
-            Stack<InvocationInfo> stk = this._invocationInfos.Value.Value;
+            var stk = _invocationInfos
+#if !SILVERLIGHT
+.Value.Value
+#endif
+;
             return stk.Count == 0 ? null : stk.Peek();
          }
          set
          {
+            var stk = _invocationInfos
+#if !SILVERLIGHT
+.Value.Value
+#endif
+;
             if ( value == null )
             {
-               this._invocationInfos.Value.Value.Pop();
+               stk.Pop();
             }
             else
             {
-               this._invocationInfos.Value.Value.Push( value );
+               stk.Push( value );
             }
          }
       }
