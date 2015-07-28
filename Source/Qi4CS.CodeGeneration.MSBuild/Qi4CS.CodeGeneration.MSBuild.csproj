@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="DeleteTargetFrameworkFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -14,19 +14,19 @@
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <OutputPath>..\..\Output\$(Configuration)\Normal\SDK\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <OutputPath>..\..\Output\$(Configuration)\Normal\SDK\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -38,17 +38,15 @@
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CILAssemblyManipulator.DotNET">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.7.1\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Logical">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
     </Reference>
-    <Reference Include="CILAssemblyManipulator.Portable">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.1\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Physical">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
-    <Reference Include="Qi4CS.Core" />
+    <Reference Include="Qi4CS.Core" Condition=" '$(IsCommandLineBuild)' != '' " />
     <Reference Include="System" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
@@ -67,21 +65,32 @@
     <None Include="Qi4CS.CodeGeneration.MSBuild.targets" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">
+    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
       <Project>{7be33f23-3f8a-4b25-ad6c-43647e592108}</Project>
       <Name>Qi4CS.CodeGeneration.DotNET</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{9a6623f3-5ffc-4a63-8c98-163a4302a5ea}</Project>
+      <Name>Qi4CS.Core.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Bootstrap\Qi4CS.Core.Bootstrap.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{ccfe3603-d36d-4028-98f6-f7e47566d087}</Project>
+      <Name>Qi4CS.Core.Bootstrap</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Runtime\Qi4CS.Core.Runtime.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{5c2d448e-749e-4564-8bd4-7a5c5e1fbc55}</Project>
+      <Name>Qi4CS.Core.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.SPI\Qi4CS.Core.SPI.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{7de287e8-2277-48e0-bdbe-047a7fc79b21}</Project>
+      <Name>Qi4CS.Core.SPI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+  <!-- Assembly signing info -->
   <PropertyGroup>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
-  </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
-  <!-- This is after Import since ProjectDir is set there -->
-  <PropertyGroup>
-    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.CodeGen.snk</KeyFilePath>
+    <SignAssembly>true</SignAssembly>
+    <KeyFilePath>$(MSBuildThisFileDirectory)..\..\Keys\Qi4CS.CodeGen.snk</KeyFilePath>
     <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <!-- Create .snk file if it doesn't exist to ensure smooth build -->

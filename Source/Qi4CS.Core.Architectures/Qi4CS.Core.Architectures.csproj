@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
@@ -78,6 +78,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\AssemblyInfo\Qi4CS.Core.cs">
+      <Link>Properties\Qi4CS.Core.AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Assembling\LayeredModelTypeSupport.cs" />
     <Compile Include="Assembling\Qi4CSArchitectureFactory.cs" />
     <Compile Include="Assembling\SingletonModelTypeSupport.cs" />
@@ -105,7 +108,6 @@
     <Compile Include="Model\ModuleModel.cs" />
     <Compile Include="Assembling\ModuleArchitectureImpl.cs" />
     <Compile Include="Model\SingletonModelTypeSupport.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Assembling\SingletonAssemblerImpl.cs" />
     <Compile Include="Model\SingletonApplicationServiceInjectionFunctionality.cs" />
     <Compile Include="Model\SingletonApplicationStructureInjectionProvider.cs" />
@@ -127,7 +129,55 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  
+  <!-- Assembly signing info -->
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <KeyFilePath>$(MSBuildThisFileDirectory)..\..\Keys\Qi4CS.Core.snk</KeyFilePath>
+    <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <!-- Create .snk file if it doesn't exist to ensure smooth build -->
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
 
+  <!-- Assembly information -->
+  <PropertyGroup>
+    <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/Qi4CS.Core.cs</AssemblyInfoOutputFile>
+    <AssemblyInfoDescription>Qi4CS Core</AssemblyInfoDescription>
+    <AssemblyInfoDescription Condition=" '$(Qi4CSKind)' == 'SDK' ">$(AssemblyInfoDescription) SDK</AssemblyInfoDescription>
+    <AssemblyInfoDescription>$(AssemblyInfoDescription).</AssemblyInfoDescription>
+    <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
+    <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
+    <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
+    <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>
+    <AssemblyInfoAssemblyInceptionYear>2011</AssemblyInfoAssemblyInceptionYear>
+    <AssemblyInfoTitle>Qi4CS.Core</AssemblyInfoTitle>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/AssemblyInfo.targets" />
+
+  <!-- Merging -->
+  <Import Project="..\..\packages\CILMerge.MSBuild.1.0.0.0\build\CILMerge.MSBuild.targets" />
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <CILMergeNoDebug>True</CILMergeNoDebug>
+  </PropertyGroup>
+  <Target Condition=" '$(IsCommandLineBuild)' != '' " Name="AfterBuild">
+    <!-- TODO Output logging info when all projects have XML document files -->
+    <CILMerge.MSBuild.CILMergeTask
+        InputAssemblies="$(MSBuildThisFileDirectory)$(OutputPath)Qi4CS.Core.*.dll"
+        TargetAssemblyAttributeSource="$(MSBuildThisFileDirectory)$(OutputPath)$(AssemblyName).dll"
+        VersionFile="$(MSBuildProjectDirectory)/../Qi4CSVersion.txt"
+        AllowWildCards="True"
+        OutPath="$(MSBuildThisFileDirectory)$(OutputPath)Qi4CS.Core.dll"
+        OutDir="$(MSBuildThisFileDirectory)$(OutputPath)"
+        Union="True"
+        Closed="False"
+        XmlDocs="True"
+        UseFullPublicKeyForRefs="True"
+        NoDebug="$(CILMergeNoDebug)"
+        KeyFile="$(KeyFilePath)"
+        VerifyOutput="true"
+        />
+  </Target>
 </Project>

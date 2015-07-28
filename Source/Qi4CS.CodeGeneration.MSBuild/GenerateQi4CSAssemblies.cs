@@ -25,13 +25,13 @@ using CommonUtils;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.Bootstrap.Model;
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
+using CILAssemblyManipulator.Physical;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Collections.Concurrent;
-using CILAssemblyManipulator.DotNET;
 
 namespace Qi4CS.CodeGeneration.MSBuild
 {
@@ -132,7 +132,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <summary>
       /// Gets or sets whether code generation should be parallelized.
       /// </summary>
-      public Boolean Parallelize { get; set; }
+      public CodeGenerationParallelization Parallelization { get; set; }
 
       /// <summary>
       /// Gets or sets the full file names of generated Qi4CS assemblies.
@@ -208,7 +208,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelize: {0}", this.Parallelize );
+                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelize: {0}", this.Parallelization );
                            var sw = new Stopwatch();
                            sw.Start();
                            var fileNameDic = generator.GenerateAssemblies(
@@ -221,7 +221,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               assDir,
                               this.AssemblyInformation,
                               Path.GetDirectoryName( sourceAss ),
-                              this.Parallelize,
+                              this.Parallelization,
                               this.PerformVerify,
                               this.WindowsSDKDir );
                            sw.Stop();
@@ -315,9 +315,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
       private const String ANYCPU = "AnyCPU";
       private const String X86 = "x86";
       private const String X64 = "x64";
-
-      // TODO parametrize this
-      private const String PCL_FW_NAME = FrameworkMonikerInfo.DEFAULT_PCL_FW_NAME;
 
       private delegate Boolean ParsingDelegate<TIn, TOut>( TIn element, out TOut result );
 
@@ -464,7 +461,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="path">The path where to store assemblies.</param>
       /// <param name="assemblySNInfo">The file containing strongname information about the assemblies to be emitted.</param>
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
-      /// <param name="parallelize">Whether to paralellize code generation.</param>
+      /// <param name="parallelization">Whether to paralellize code generation.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
       public IDictionary<String, String> GenerateAssemblies(
@@ -477,7 +474,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          String path,
          String assemblySNInfo,
          String qi4CSDir,
-         Boolean parallelize,
+         CodeGenerationParallelization parallelization,
          Boolean verify,
          String winSDKDir
          )
@@ -505,20 +502,12 @@ namespace Qi4CS.CodeGeneration.MSBuild
             referenceAssembliesDir = Path.Combine( referenceAssembliesDir, "Profile", targetFWProfile );
          }
 
-         String msCorLibName; String fwDisplayName; String targetFWDir;
-         var thisFWMoniker = new FrameworkMonikerInfo( targetFWID, targetFWVersion, targetFWProfile, DotNETReflectionContext.ReadAssemblyInformationFromRedistXMLFile( Path.Combine( referenceAssembliesDir, "RedistList", "FrameworkList.xml" ), out msCorLibName, out fwDisplayName, out targetFWDir ), msCorLibName, fwDisplayName );
-
-         if ( !String.IsNullOrEmpty( targetFWDir ) )
-         {
-            referenceAssembliesDir = targetFWDir;
-         }
-
          if ( !Directory.Exists( referenceAssembliesDir ) )
          {
             throw new Qi4CSBuildException( "The reference assemblies directory " + referenceAssembliesDir + " does not exist." );
          }
 
-         referenceAssembliesDir += Path.DirectorySeparatorChar;
+         //referenceAssembliesDir += Path.DirectorySeparatorChar;
 
          var isX86 = X86.Equals( targetPlatform, StringComparison.InvariantCultureIgnoreCase );
          var targetMachine = String.IsNullOrEmpty( targetPlatform ) || ANYCPU.Equals( targetPlatform, StringComparison.InvariantCultureIgnoreCase ) || isX86 ?
@@ -530,7 +519,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
             mFlags |= ModuleFlags.Required32Bit;
          }
 
-         var snDic = new ConcurrentDictionary<String, Tuple<StrongNameKeyPair, AssemblyHashAlgorithm>>();
+         var snDic = new ConcurrentDictionary<String, Tuple<StrongNameKeyPair, AssemblyHashAlgorithm?>>();
 
          if ( assemblyInfo != null )
          {
@@ -542,13 +531,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      var type = snElem.Attribute( "type" );
                      sn = "container".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ?
                         new StrongNameKeyPair( snElem.Value ) :
-                        new StrongNameKeyPair( "inline".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ? StringConversions.HexStr2ByteArray( snElem.Value ) : ReadAllBytes( projectDir, snElem.Value ) );
+                        new StrongNameKeyPair( "inline".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ? snElem.Value.CreateHexBytes() : ReadAllBytes( projectDir, snElem.Value ) );
                      return true;
                   }, null ),
-                  SubElementAttributeOrFallback( elem, "hashAlgorithm", ( String algoStr, out AssemblyHashAlgorithm algo ) =>
+                  SubElementAttributeOrFallback( elem, "hashAlgorithm", ( String algoStr, out AssemblyHashAlgorithm? algo ) =>
                   {
-                     return Enum.TryParse<AssemblyHashAlgorithm>( algoStr, out algo );
-                  }, AssemblyHashAlgorithm.SHA1 ) );
+                     AssemblyHashAlgorithm algoo;
+                     var retVal = Enum.TryParse<AssemblyHashAlgorithm>( algoStr, out algoo );
+                     algo = retVal ? algoo : (AssemblyHashAlgorithm?) null;
+                     return retVal;
+                  }, null ) );
             }
          }
 
@@ -568,24 +560,33 @@ namespace Qi4CS.CodeGeneration.MSBuild
          IDictionary<System.Reflection.Assembly, String> genAssFilenames;
          try
          {
-            genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
-            parallelize,
-            actualPath,
-            this.IsSilverlight,
-            ( nAss, gAss ) =>
+            var cryptoCallbacks = new CryptoCallbacksDotNET();
+            var loaderCallbacks = new CILMetaDataLoaderResourceCallbacksForFiles( referenceAssembliesDir, qi4CSDir );
+            var thisFWMoniker = new TargetFrameworkInfo( targetFWID, targetFWVersion, targetFWProfile );
+            using ( var loader = parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ) ?
+               (CILMetaDataLoaderWithCallbacks) new CILMetaDataLoaderThreadSafeConcurrentForFiles( callbacks: loaderCallbacks ) :
+               new CILMetaDataLoaderNotThreadSafeForFiles( callbacks: loaderCallbacks ) )
             {
-               Tuple<StrongNameKeyPair, AssemblyHashAlgorithm> snTuple;
-               snDic.TryGetValue( nAss.GetName().Name, out snTuple );
-               var sn = snTuple == null ? null : snTuple.Item1;
-               var eArgs = EmittingArguments.CreateForEmittingWithMoniker( gAss.ReflectionContext, targetMachine, TargetRuntime.Net_4_0, ModuleKind.Dll, null, runtimeRootDir, referenceAssembliesDir, streamOpener, sn, thisFWMoniker, String.Equals( thisFWMoniker.FrameworkName, PCL_FW_NAME ), mFlags );
-
-               gAss.AddTargetFrameworkAttributeWithMonikerInfo( thisFWMoniker, eArgs.AssemblyMapper );
-               if ( snTuple != null )
-               {
-                  eArgs.SigningAlgorithm = snTuple.Item2;
-               }
-               return eArgs;
-            } );
+               var fwMapper = new TargetFrameworkMapper();
+               genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
+                  parallelization,
+                  actualPath,
+                  this.IsSilverlight,
+                  ( nAss, gAss, eArgs ) =>
+                  {
+                     Tuple<StrongNameKeyPair, AssemblyHashAlgorithm?> snTuple;
+                     snDic.TryGetValue( nAss.GetName().Name, out snTuple );
+                     if ( snTuple != null )
+                     {
+                        eArgs.StrongName = snTuple.Item1;
+                        eArgs.SigningAlgorithm = snTuple.Item2;
+                     }
+                  },
+                  ( nAss, gAss, md ) =>
+                  {
+                     fwMapper.ChangeTargetFramework( md, loader, thisFWMoniker );
+                  } );
+            }
          }
          catch ( InvalidApplicationModelException apme )
          {
@@ -597,7 +598,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
             try
             {
                winSDKDir = FindWinSDKBinPath( winSDKDir );
-               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, genAssFilenames, fn =>
+               // TODO proper parallelization parameter
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( true, genAssFilenames, fn =>
                {
                   Verify( winSDKDir, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
                } );
@@ -612,7 +614,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      Directory.CreateDirectory( path );
                   }
                   var genAssFilenamesArray = genAssFilenames.ToArray();
-                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, 0, genAssFilenamesArray.Length, idx =>
+                  // TODO proper parallelization parameter
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( true, 0, genAssFilenamesArray.Length, idx =>
                   {
                      var kvp = genAssFilenamesArray[idx];
                      var fn = kvp.Value;

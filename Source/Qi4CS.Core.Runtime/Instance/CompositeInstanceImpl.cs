@@ -678,7 +678,7 @@ Stack<InvocationInfo>
             else if ( genType.ContainsGenericParameters() )
             {
                var typeToStringify = genType;
-               if ( typeof( TTypeGen ).Equals( typeof( FragmentTypeGenerationResult ) ) )
+               if ( Equals( typeof( TTypeGen ), typeof( FragmentTypeGenerationResult ) ) )
                {
                   typeToStringify = typeToStringify.GetBaseType();
                }
