@@ -69,8 +69,8 @@ public static class E_Qi4CS_CodeGeneration
    /// <param name="parallelization">How to parallelize the code generation.</param>
    /// <param name="path">The path where generated Qi4CS assemblies should reside. If <c>null</c>, value of <see cref="Environment.CurrentDirectory"/> will be used.</param>
    /// <param name="isSilverlight">Whether emit assemblies compatible with Silverlight 5+.</param>
-   /// <param name="emittingInfoProcessor">
-   /// The optional callback to process an <see cref="EmittingArguments"/> for emitting an assembly.
+   /// <param name="logicalAssemblyProcessor">
+   /// The optional callback to process <see cref="CILAssembly"/> or <see cref="EmittingArguments"/> after generation of given <see cref="CILAssembly"/>.
    /// The callback receives the existing <see cref="System.Reflection.Assembly"/> from which the Qi4CS assembly was generated, corresponding generated <see cref="CILAssembly"/>, and corresponding <see cref="EmittingArguments"/> that will be used to write the generated assembly.
    /// </param>
    /// <param name="physicalMDProcessor">
@@ -85,7 +85,7 @@ public static class E_Qi4CS_CodeGeneration
       CodeGenerationParallelization parallelization,
       String path = null,
       Boolean isSilverlight = false,
-      Action<System.Reflection.Assembly, CILAssembly, EmittingArguments> emittingInfoProcessor = null,
+      Action<System.Reflection.Assembly, CILAssembly, EmittingArguments> logicalAssemblyProcessor = null,
       Action<System.Reflection.Assembly, CILAssembly, CILMetaData> physicalMDProcessor = null
       )
       where TInstance : ApplicationSPI
@@ -124,9 +124,9 @@ public static class E_Qi4CS_CodeGeneration
             var genAss = kvp.Value;
             var nAss = kvp.Key;
             var eArgs = ctx.CreateDefaultEmittingArguments();
-            if ( emittingInfoProcessor != null )
+            if ( logicalAssemblyProcessor != null )
             {
-               emittingInfoProcessor( nAss, genAss, eArgs );
+               logicalAssemblyProcessor( nAss, genAss, eArgs );
             }
 
             if ( eArgs.StrongName != null && !eArgs.StrongName.KeyPair.IsNullOrEmpty() )
@@ -168,7 +168,9 @@ public static class E_Qi4CS_CodeGeneration
                   using ( var stream = File.Open( fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read ) )
                   {
                      var genAss = kvp.Value;
-                     physicalDic[genAss].WriteModule( stream, eArgsDic[genAss] );
+                     var md = physicalDic[genAss];
+                     md.OrderTablesAndRemoveDuplicates();
+                     md.WriteModule( stream, eArgsDic[genAss] );
                      stream.Flush();
                      resultDic.TryAdd( kvp.Key, fileName );
                   }
@@ -177,6 +179,16 @@ public static class E_Qi4CS_CodeGeneration
       }
 
       return resultDic;
+   }
+
+   /// <summary>
+   /// Checks whether given <see cref="CodeGenerationParallelization"/> specifies that code generation should be parallelized in any way.
+   /// </summary>
+   /// <param name="parallelization">The <see cref="CodeGenerationParallelization"/>.</param>
+   /// <returns><c>true</c> if <paramref name="parallelization"/> is not <see cref="CodeGenerationParallelization.NotParallel"/>; <c>false</c> otherwise.</returns>
+   public static Boolean HasAnyParallelization( this CodeGenerationParallelization parallelization )
+   {
+      return parallelization != CodeGenerationParallelization.NotParallel;
    }
 
    private static String GetRelativePath( String folder, String filespec )

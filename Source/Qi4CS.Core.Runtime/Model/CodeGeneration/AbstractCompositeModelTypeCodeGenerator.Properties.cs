@@ -213,42 +213,47 @@ namespace Qi4CS.Core.Runtime.Model
                );
 
             // Field getter
-            var getter = thisGenerationInfo.Builder.AddMethod(
+            var getter = thisGenerationInfo.Builder.AddMethodWithReturnType(
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_GETTER_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
-               CallingConventions.HasThis );
-            this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, readMethod );
+               CallingConventions.HasThis,
+               propertyType );
+            this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, new CompositeMethodGenerationInfoImpl( getter, null, null )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, readMethod );
 
             // Field getter for 32-bit processes, if required
             CILMethod getter32 = null;
             if ( read32Method != null )
             {
-               getter32 = thisGenerationInfo.Builder.AddMethod(
+               getter32 = thisGenerationInfo.Builder.AddMethodWithReturnType(
                   PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_GETTER32_POSTFIX,
                   MethodAttributes.Private | MethodAttributes.HideBySig,
-                  CallingConventions.HasThis );
-               this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( getter32, null, null ).WithReturnType( propertyType )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, read32Method );
+                  CallingConventions.HasThis,
+                  propertyType );
+               this.EmitPropertyGetterMethod( propertyModel, thisGenerationInfo, propertyField, propertyType, new CompositeMethodGenerationInfoImpl( getter32, null, null )/*.WithParameters( propertyInfo.GetIndexParameters().Select( p => Tuple.Create( p.ParameterType, p.Attributes ) ) )*/, read32Method );
             }
             // Field setter
-            var setter = thisGenerationInfo.Builder.AddMethod(
+            var setter = thisGenerationInfo.Builder.AddMethodWithReturnType(
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_SETTER_POSTFIX,
                MethodAttributes.Public | MethodAttributes.HideBySig, // TODO MethodAttributes.Assembly when [InternalsVisibleTo(...)] attribute will be applied to all generated assemblies.
-               CallingConventions.HasThis );
+               CallingConventions.HasThis,
+               VOID_TYPE );
             this.EmitPropertySetterMethod( propertyModel, thisGenerationInfo, propertyField, fieldType, propertyType, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( setter, null, null ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 1 ) ), writeMethod );
 
             // Exchange method
-            var exchangeMethod = thisGenerationInfo.Builder.AddMethod(
+            var exchangeMethod = thisGenerationInfo.Builder.AddMethodWithReturnType(
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_EXCHANGE_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
-               CallingConventions.HasThis );
-            this.EmitPropertyExchangeMethod( propertyModel, thisGenerationInfo, propertyField, fieldType, propertyType, setter, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( exchangeMethod, null, null ).WithReturnType( propertyType ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 1 ) ), writeMethod );
+               CallingConventions.HasThis,
+               propertyType );
+            this.EmitPropertyExchangeMethod( propertyModel, thisGenerationInfo, propertyField, fieldType, propertyType, setter, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( exchangeMethod, null, null ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 1 ) ), writeMethod );
 
             // CompareExchange method
-            var compareExchangeMethod = thisGenerationInfo.Builder.AddMethod(
+            var compareExchangeMethod = thisGenerationInfo.Builder.AddMethodWithReturnType(
                PROPERTY_METHOD_PREFIX + propertyIdx + PROPERTY_COMPARE_EXCHANGE_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
-               CallingConventions.HasThis );
-            this.EmitPropertyCompareExchangeMethod( propertyModel, thisGenerationInfo, propertyField, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( compareExchangeMethod, null, null ).WithReturnType( propertyType ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 2 ) ), compareExchangeMethodEmitter );
+               CallingConventions.HasThis,
+               propertyType );
+            this.EmitPropertyCompareExchangeMethod( propertyModel, thisGenerationInfo, propertyField, (CompositeMethodGenerationInfo) new CompositeMethodGenerationInfoImpl( compareExchangeMethod, null, null ).WithParameters( Enumerable.Repeat( Tuple.Create( propertyType, ParameterAttributes.None ), 2 ) ), compareExchangeMethodEmitter );
 
             thisGenerationInfo.AutoGeneratedPropertyInfos.Add( nPropertyInfo, new PropertyGenerationInfo(
                this.EmitRefMethodForPropertyOrEvent( propertyField, PROPERTY_METHOD_PREFIX + propertyIdx + REF_INVOKER_METHOD_SUFFIX ),

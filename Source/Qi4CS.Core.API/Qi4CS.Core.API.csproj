@@ -34,6 +34,9 @@
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-sl50+wp81</NuGetFrameworkString>
     
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
+    
     <!-- Ignore "XML comment has cref attribute 'xxx' that could not be resolved" warnings on WPA build. -->
     <!-- <WarningsNotAsErrors Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">1574</WarningsNotAsErrors> -->
   </PropertyGroup>
@@ -41,8 +44,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
     <OutputPath>..\..\Output\$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</OutputPath>
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -52,8 +53,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
-    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
     <OutputPath>..\..\Output\$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</OutputPath>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>

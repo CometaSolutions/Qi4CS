@@ -316,6 +316,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
       private const String X86 = "x86";
       private const String X64 = "x64";
 
+      private static readonly System.Reflection.ConstructorInfo TARGET_FW_ATTR_CTOR = typeof( System.Runtime.Versioning.TargetFrameworkAttribute ).LoadConstructorOrThrow( new[] { typeof( String ) } );
+
       private delegate Boolean ParsingDelegate<TIn, TOut>( TIn element, out TOut result );
 
       private readonly Qi4CSModelProvider<ApplicationModel<ApplicationSPI>> _modelFactory;
@@ -574,6 +576,19 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   this.IsSilverlight,
                   ( nAss, gAss, eArgs ) =>
                   {
+                     // Add target framework information
+                     gAss.AddCustomAttribute(
+                        gAss.ReflectionContext.NewWrapper( TARGET_FW_ATTR_CTOR ),
+                        new[]
+                        {
+                           CILCustomAttributeFactory.NewTypedArgument( thisFWMoniker.ToString(), gAss.ReflectionContext )
+                        },
+                        null
+                        );
+
+                     eArgs.Headers.ModuleFlags = mFlags;
+                     eArgs.Headers.Machine = targetMachine;
+
                      Tuple<StrongNameKeyPair, AssemblyHashAlgorithm?> snTuple;
                      snDic.TryGetValue( nAss.GetName().Name, out snTuple );
                      if ( snTuple != null )
@@ -597,11 +612,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             try
             {
-               winSDKDir = FindWinSDKBinPath( winSDKDir );
-               // TODO proper parallelization parameter
-               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( true, genAssFilenames, fn =>
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasAnyParallelization(), genAssFilenames, fn =>
                {
-                  Verify( winSDKDir, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
+                  try
+                  {
+                     Verification.RunPEVerify( null, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
+                  }
+                  catch ( Exception e )
+                  {
+                     throw new Qi4CSBuildException( "Verification failed for " + fn.Value + ":\n" + e.Message + "." );
+                  }
                } );
             }
             finally
@@ -614,8 +634,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      Directory.CreateDirectory( path );
                   }
                   var genAssFilenamesArray = genAssFilenames.ToArray();
-                  // TODO proper parallelization parameter
-                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( true, 0, genAssFilenamesArray.Length, idx =>
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasAnyParallelization(), 0, genAssFilenamesArray.Length, idx =>
                   {
                      var kvp = genAssFilenamesArray[idx];
                      var fn = kvp.Value;
@@ -687,96 +706,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
             result = fallback;
          }
          return result;
-      }
-
-      private static String FindWinSDKBinPath( String winSDKDir )
-      {
-         String binPath;
-         if ( !String.IsNullOrEmpty( winSDKDir ) && Directory.Exists( winSDKDir ) )
-         {
-            binPath = Path.Combine( winSDKDir, "bin" );
-            if ( Directory.Exists( winSDKDir ) )
-            {
-               // The PEVerify may be right here, in v7.1A and older, or it may reside in subdirectory, in v8.0A or newer
-               // The directly found PEVerify might be using too old runtime, so prefer the one in subdirectory
-               binPath = Directory.EnumerateDirectories( binPath ).FirstOrDefault( bp => File.Exists( Path.Combine( bp, PEVERIFY_EXE ) ) );
-               if ( binPath == null )
-               {
-                  if ( !File.Exists( Path.Combine( binPath, PEVERIFY_EXE ) ) )
-                  {
-                     throw new Qi4CSBuildException( "Failed to detect path to PEVerify based on Windows SDK directory " + winSDKDir + "." );
-                  }
-               }
-            }
-            else
-            {
-               throw new Qi4CSBuildException( "The 'bin' subdirectory did not exist in " + binPath + "." );
-            }
-         }
-         else
-         {
-            throw new Qi4CSBuildException( "The verification of generated assemblies is on, but " +
-               ( String.IsNullOrEmpty( winSDKDir ) ? "no path to Windows SDK was specified" : ( "the specified path " + winSDKDir + " does not exist" ) ) +
-               ". Make sure there is Windows SDK installed on the machine." );
-         }
-         return binPath;
-      }
-
-
-
-      private static void Verify( String winSDKBinDir, String fileName, Boolean verifyStrongName )
-      {
-         fileName = Path.GetFullPath( fileName );
-         var peVerifyPath = Path.Combine( winSDKBinDir, PEVERIFY_EXE );
-
-         var validationPath = Path.GetDirectoryName( fileName );
-
-         // Call PEVerify
-         var startInfo = new ProcessStartInfo();
-         startInfo.FileName = peVerifyPath;
-         // Ignore loading direct pointer to delegate ctors.
-         startInfo.Arguments = "/IL /MD /VERBOSE /NOLOGO /HRESULT /IGNORE=0x80131861" + " \"" + fileName + "\"";
-         startInfo.CreateNoWindow = true;
-         startInfo.WorkingDirectory = validationPath;
-         startInfo.RedirectStandardOutput = true;
-         startInfo.RedirectStandardError = true;
-         startInfo.UseShellExecute = false;
-         var process = Process.Start( startInfo );
-
-         // First 'read to end', only then wait for exit.
-         // Otherwise, might get stuck (forgot the link to StackOverflow which explained this).
-         var results = process.StandardOutput.ReadToEnd();
-         process.WaitForExit();
-
-         if ( !results.StartsWith( "All Classes and Methods in " + fileName + " Verified." ) )
-         {
-            throw new Qi4CSBuildException( "PEVerify detected the following errors in " + fileName + ":\n" + results );
-         }
-
-         if ( verifyStrongName )
-         {
-            startInfo.FileName = Path.Combine( winSDKBinDir, "sn.exe" );
-            if ( File.Exists( startInfo.FileName ) )
-            {
-               startInfo.Arguments = "-vf \"" + fileName + "\"";
-               process = Process.Start( startInfo );
-
-               results = process.StandardOutput.ReadToEnd();
-               process.WaitForExit();
-
-               var lines = results.Split( new Char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries );
-
-               if ( !( lines.Length == 3 && String.Equals( lines[2], "Assembly '" + fileName + "' is valid" ) ) )
-               {
-                  throw new Qi4CSBuildException( "Strong name validation detected the following errors in " + fileName + ":\n" + results );
-               }
-
-            }
-            else
-            {
-               throw new Qi4CSBuildException( "The strong name utility sn.exe is not in same path as " + PEVERIFY_EXE + "." );
-            }
-         }
       }
 
       private static Byte[] ReadAllBytes( String projectDir, String path )

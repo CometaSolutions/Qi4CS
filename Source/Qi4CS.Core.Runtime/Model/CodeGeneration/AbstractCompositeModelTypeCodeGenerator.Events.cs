@@ -111,10 +111,11 @@ namespace Qi4CS.Core.Runtime.Model
             // {
             //   Interlocked.Exchange<TEvent>(ref this._event<idx>, null);
             // }
-            var eventClearMB = thisGenerationInfo.Builder.AddMethod(
+            var eventClearMB = thisGenerationInfo.Builder.AddMethodWithReturnType(
                EVENT_METHOD_PREFIX + eventIdx + EVENT_CLEAR_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
-               CallingConventions.HasThis );
+               CallingConventions.HasThis,
+               VOID_TYPE );
             var il = eventClearMB.MethodIL;
 
 
@@ -134,12 +135,12 @@ namespace Qi4CS.Core.Runtime.Model
             //   // for weak refs
             //   return 
             // }
-            var eventCheckerMB = thisGenerationInfo.Builder.AddMethod(
+            var eventCheckerMB = thisGenerationInfo.Builder.AddMethodWithReturnType(
                EVENT_METHOD_PREFIX + eventIdx + EVENT_CHECKER_POSTFIX,
                MethodAttributes.Private | MethodAttributes.HideBySig,
-               CallingConventions.HasThis
+               CallingConventions.HasThis,
+               BOOLEAN_TYPE
                );
-            eventCheckerMB.ReturnParameter.ParameterType = BOOLEAN_TYPE;
             il = eventCheckerMB.MethodIL;
 
             this.EmitThrowIfApplicationNotActiveWithoutLocalVariable( thisGenerationInfo, il );

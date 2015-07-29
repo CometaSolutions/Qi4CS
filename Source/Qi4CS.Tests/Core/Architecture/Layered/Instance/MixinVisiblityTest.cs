@@ -70,7 +70,7 @@ namespace Qi4CS.Tests.Core.Architecture.Layered.Instance
                   mainAssembler.NewPlainComposite().OfTypes( typeof( TestPerformer ) ).WithMixins( typeof( TestPerformerMixin ) );
                   this.Assemble( architecture, testPerformerLayer, mainAssembler );
                   var model = architecture.CreateModel();
-                  model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
+                  model.GenerateAndSaveAssemblies( CodeGeneration.CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
                   var application = model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );
                   application.Activate();
                   var performer = application.FindModule( AbstractLayeredArchitectureInstanceTest.LAYER_NAME, AbstractLayeredArchitectureInstanceTest.MODULE_NAME ).StructureServices.NewPlainCompositeBuilder<TestPerformer>().Instantiate();

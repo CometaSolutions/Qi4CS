@@ -127,7 +127,7 @@ namespace Qi4CS.Tests.Extensions.Configuration
             testLayer.UseLayers( configLayer );
 
             var model = architecture.CreateModel();
-            model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
+            model.GenerateAndSaveAssemblies( CodeGeneration.CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
             var application = model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );
             _ssp = assembler.GetStructureServiceProvider( application );
             application.Activate();

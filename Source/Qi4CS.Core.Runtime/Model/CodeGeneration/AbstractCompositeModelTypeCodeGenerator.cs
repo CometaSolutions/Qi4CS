@@ -1443,8 +1443,7 @@ namespace Qi4CS.Core.Runtime.Model
                   lambdaAdditionalFields = additionalFieldsInLambaClass( lambdaTB );
                }
 
-               var lambdaMethod = lambdaTB.AddMethod( LAMBDA_METHOD_NAME, MethodAttributes.Public | MethodAttributes.HideBySig, CallingConventions.Standard );
-               lambdaMethod.ReturnParameter.ParameterType = actualTypeToGive;
+               var lambdaMethod = lambdaTB.AddMethodWithReturnType( LAMBDA_METHOD_NAME, MethodAttributes.Public | MethodAttributes.HideBySig, CallingConventions.Standard, actualTypeToGive );
                var lambdaIL = lambdaMethod.MethodIL;
                var lambdaMethodGenInfo = new MethodGenerationInfoImpl( lambdaMethod );
                instanceB = lambdaMethodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, this.ctx.NewWrapper( codeGenerationInfo.CompositeInstanceFieldType ) );
@@ -2437,10 +2436,12 @@ namespace Qi4CS.Core.Runtime.Model
          CompositeEmittingInfo emittingInfo
          )
       {
-         var mb = publicCompositeGenerationInfo.Builder.AddMethod(
+         var mb = publicCompositeGenerationInfo.Builder.AddMethodWithReturnType(
             CREATE_FRAGMENT_METHOD_PREFIX + fragmentGenerationInfo.Builder.Name,
             MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, // TODO MethodAttributes.Assembly when [InternalsVisibleTo] attribute will be applied to all generated assemblies.
-            CallingConventions.Standard );
+            CallingConventions.Standard,
+            this.ctx.NewWrapper( LB_F_INSTANCE.Type )
+            );
          var thisMethodGenInfo = new CompositeMethodGenerationInfoImpl(
             mb,
             null,
@@ -2451,7 +2452,6 @@ namespace Qi4CS.Core.Runtime.Model
          mb.AddParameter( CREATE_FRAGMENT_METHOD_CONCERN_INDEX_PARAM_NAME, ParameterAttributes.None, INT32_TYPE );
          mb.AddParameter( CREATE_FRAGMENT_METHOD_METHOD_RESULT_PARAM_NAME, ParameterAttributes.None, OBJECT_TYPE );
          mb.AddParameter( CREATE_FRAGMENT_METHOD_METHOD_EXCEPTION_PARAM_NAME, ParameterAttributes.None, EXCEPTION_TYPE );
-         mb.ReturnParameter.ParameterType = this.ctx.NewWrapper( LB_F_INSTANCE.Type );
 
          var instanceB = thisMethodGenInfo.GetOrCreateLocal( LB_C_INSTANCE, cit );
          var fInstanceB = thisMethodGenInfo.GetOrCreateLocal( LB_F_INSTANCE );
@@ -2716,12 +2716,13 @@ namespace Qi4CS.Core.Runtime.Model
 
          // Create a new method with different name, calling base.OriginalName(args) with injected parameters.
          var mb = new CompositeMethodGenerationInfoImpl(
-            thisGenInfo.Builder.AddMethod(
+            thisGenInfo.Builder.AddMethodWithReturnType(
              SPECIAL_METHOD_PREFIX + specialMethodModel.SpecialMethodIndex,
              MethodAttributes.Public | MethodAttributes.HideBySig,
-             specialMethod.CallingConvention ),
+             specialMethod.CallingConvention,
+             VOID_TYPE ),
              null,
-             null ).WithReturnType( VOID_TYPE ) as CompositeMethodGenerationInfo;
+             null );
 
          // Mark this method's index
          mb.Builder.AddCustomAttribute(
@@ -3396,8 +3397,8 @@ namespace Qi4CS.Core.Runtime.Model
          {
             // Emit method to call all needed special methods
             var actionGenInfo = new CompositeMethodGenerationInfoImpl(
-               thisGenerationInfo.Builder.AddMethod( actionMethodName, MethodAttributes.Private | MethodAttributes.HideBySig, CallingConventions.HasThis ), null, null
-               ).WithReturnType( VOID_TYPE ) as CompositeMethodGenerationInfo;
+               thisGenerationInfo.Builder.AddMethodWithReturnType( actionMethodName, MethodAttributes.Private | MethodAttributes.HideBySig, CallingConventions.HasThis, VOID_TYPE ), null, null
+               );
             var cInstanceB = actionGenInfo.GetOrCreateLocal( LB_C_INSTANCE, this.ctx.NewWrapper( this.codeGenInfo.CompositeInstanceFieldType ) );
 
             var il = actionGenInfo.IL;
@@ -5078,8 +5079,7 @@ namespace Qi4CS.Core.Runtime.Model
          //       return false;
          //    }
          //}
-         var method = field.DeclaringType.AddMethod( name, MethodAttributes.Private | MethodAttributes.HideBySig, CallingConventions.HasThis );
-         method.ReturnParameter.ParameterType = BOOLEAN_TYPE;
+         var method = field.DeclaringType.AddMethodWithReturnType( name, MethodAttributes.Private | MethodAttributes.HideBySig, CallingConventions.HasThis, BOOLEAN_TYPE );
          var delegateParam = method.AddParameter( "delegate", ParameterAttributes.None, OBJECT_TYPE );
          var returnValueParam = method.AddParameter( "returnValue", ParameterAttributes.Out, OBJECT_TYPE.MakeByRefType() );
 

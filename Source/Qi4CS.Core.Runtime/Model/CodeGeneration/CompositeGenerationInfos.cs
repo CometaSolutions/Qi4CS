@@ -758,11 +758,11 @@ namespace Qi4CS.Core.Runtime.Model
 
       #endregion
 
-      public MethodGenerationInfoImpl WithReturnType( CILTypeBase type )
-      {
-         this.Builder.ReturnParameter.ParameterType = type;
-         return this;
-      }
+      //public MethodGenerationInfoImpl WithReturnType( CILTypeBase type )
+      //{
+      //   this.Builder.ReturnParameter.ParameterType = type;
+      //   return this;
+      //}
    }
 
    public class CompositeMethodGenerationInfoImpl : MethodGenerationInfoImpl, CompositeMethodGenerationInfo

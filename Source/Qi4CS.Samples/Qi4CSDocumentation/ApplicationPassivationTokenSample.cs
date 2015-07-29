@@ -25,6 +25,8 @@ using Qi4CS.Core.API.Instance;
 
 namespace Qi4CS.Samples.Qi4CSDocumentation
 {
+#pragma warning disable 649,169
+
    #region PassivationTokenCode1
    public interface MyServiceWithBackgroundThread
    {
@@ -102,4 +104,6 @@ namespace Qi4CS.Samples.Qi4CSDocumentation
       }
       #endregion
    }
+
+#pragma warning restore 649,169
 }

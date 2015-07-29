@@ -15,7 +15,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +24,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
@@ -42,53 +42,15 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
-    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Output\Debug\WP\Normal\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
-    <OutputPath>..\..\Output\Release\WP\Normal\</OutputPath>
-    <DefineConstants>TRACE;LOAD_ONLY;WINDOWS_PHONE_APP</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CILAssemblyManipulator.Portable, Version=0.9.6.3, Culture=neutral, PublicKeyToken=d012532b26c40715, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Packages\CILAssemblyManipulator.Portable.0.9.6.3\lib\portable-net40+win\CILAssemblyManipulator.Portable.dll</HintPath>
+    <Reference Include="UtilPack">
+      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\portable-net40+win8+wpa81\UtilPack.dll</HintPath>
     </Reference>
-    <Reference Include="Qi4CS.Core">
-      <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Logical">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
     </Reference>
-    <Reference Include="Qi4CS.Extensions.Functional">
-      <HintPath>$(OutputPath)Qi4CS.Extensions.Functional.dll</HintPath>
-    </Reference>
-    <Reference Include="Qi4CS.Extensions.Configuration">
-      <HintPath>$(OutputPath)Qi4CS.Extensions.Configuration.dll</HintPath>
-    </Reference>
-    <Reference Include="Qi4CS.CodeGeneration.DotNET">
-      <HintPath>$(OutputPath)Qi4CS.CodeGeneration.DotNET.dll</HintPath>
-    </Reference>
-    <Reference Include="UtilPack, Version=0.9.6.1, Culture=neutral, PublicKeyToken=a19296b3eb5ffc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Physical">
+      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +62,44 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">
+      <Project>{7be33f23-3f8a-4b25-ad6c-43647e592108}</Project>
+      <Name>Qi4CS.CodeGeneration.DotNET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj">
+      <Project>{9a6623f3-5ffc-4a63-8c98-163a4302a5ea}</Project>
+      <Name>Qi4CS.Core.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Architectures\Qi4CS.Core.Architectures.csproj">
+      <Project>{ee51d59f-ea79-47a8-8531-9446e0c15da8}</Project>
+      <Name>Qi4CS.Core.Architectures</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Bootstrap\Qi4CS.Core.Bootstrap.csproj">
+      <Project>{ccfe3603-d36d-4028-98f6-f7e47566d087}</Project>
+      <Name>Qi4CS.Core.Bootstrap</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Runtime\Qi4CS.Core.Runtime.csproj">
+      <Project>{5c2d448e-749e-4564-8bd4-7a5c5e1fbc55}</Project>
+      <Name>Qi4CS.Core.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.SPI\Qi4CS.Core.SPI.csproj">
+      <Project>{7de287e8-2277-48e0-bdbe-047a7fc79b21}</Project>
+      <Name>Qi4CS.Core.SPI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Extensions.Configuration.XML\Qi4CS.Extensions.Configuration.XML.csproj">
+      <Project>{ab903b13-aa87-42b7-940e-8ff2ecead2c0}</Project>
+      <Name>Qi4CS.Extensions.Configuration.XML</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Extensions.Configuration\Qi4CS.Extensions.Configuration.csproj">
+      <Project>{3a78aac7-7998-471c-a413-147be7b0ce1b}</Project>
+      <Name>Qi4CS.Extensions.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Extensions.Functional\Qi4CS.Extensions.Functional.csproj">
+      <Project>{f0683808-f7f6-49ae-ab0e-9817b3de3274}</Project>
+      <Name>Qi4CS.Extensions.Functional</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
