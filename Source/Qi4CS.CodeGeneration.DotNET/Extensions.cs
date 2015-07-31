@@ -176,6 +176,13 @@ public static class E_Qi4CS_CodeGeneration
                   }
                }
             } );
+
+#if DEBUG
+         foreach ( var kvp in resultDic )
+         {
+            Verification.RunPEVerify( null, kvp.Value, false );
+         }
+#endif
       }
 
       return resultDic;

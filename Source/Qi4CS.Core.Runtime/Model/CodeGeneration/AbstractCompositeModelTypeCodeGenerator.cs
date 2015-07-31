@@ -49,7 +49,17 @@ namespace Qi4CS.Core.Runtime.Model
          // Qi4CS assembly is special - the composite types belonging to Qi4CS go into module mapped from main assembly
          var mainAssembly = args.Model.MainCodeGenerationType.Assembly;
          var mainTypeGen = publicTypeGens[mainAssembly];
-         publicTypeGens.Add( ReflectionHelper.QI4CS_ASSEMBLY, this.EmitTypesForAssembly( args, emittingInfo, ReflectionHelper.QI4CS_ASSEMBLY, mainTypeGen ) );
+#if DEBUG
+         foreach ( var qA in ReflectionHelper.QI4CS_ASSEMBLIES )
+         {
+#else
+            var qA = ReflectionHelper.QI4CS_ASSEMBLY;
+#endif
+
+            publicTypeGens.Add( qA, this.EmitTypesForAssembly( args, emittingInfo, qA, mainTypeGen ) );
+#if DEBUG
+         }
+#endif
 
          // Phase 2. Fragment methods
          this.EmitFragmentMethods( args, emittingInfo );
@@ -70,7 +80,14 @@ namespace Qi4CS.Core.Runtime.Model
          this.EmitTypeInfoAttributes( args, emittingInfo, mainAssembly, compositeFactoryType );
 
          // Remember to remove Qi4CS assembly from result before returning
-         publicTypeGens.Remove( ReflectionHelper.QI4CS_ASSEMBLY );
+#if DEBUG
+         foreach ( var qA in ReflectionHelper.QI4CS_ASSEMBLIES )
+         {
+#endif
+            publicTypeGens.Remove( qA );
+#if DEBUG
+         }
+#endif
          // When we support multiple public composite classes per assembly, this array will be populated with more than just one CILType
          return publicTypeGens.ToDictionary( kvp => kvp.Key, kvp => new[] { kvp.Value.Builder } );
       }
@@ -3538,9 +3555,11 @@ namespace Qi4CS.Core.Runtime.Model
             {
                info.Builder.AddNewCustomAttributeTypedParams( MAIN_PUBLIC_COMPOSITE_TYPE_ATTRIBUTE_CTOR );
                // Add generic binding information
-               info.Builder.AddNewCustomAttributeNamedParams(
-                  this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR,
-                  new[]
+               if ( typeModel.PublicCompositeGenericTypesInOrder.Count > 0 )
+               {
+                  info.Builder.AddNewCustomAttributeNamedParams(
+                     this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_CTOR,
+                     new[]
                      {
                         CILCustomAttributeFactory.NewNamedArgument(
                            this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY,
@@ -3549,6 +3568,7 @@ namespace Qi4CS.Core.Runtime.Model
                               typeModel.PublicCompositeGenericTypesInOrder.Select( t => this.ctx.NewWrapperAsType( t ) ).ToArray()
                            ))
                      } );
+               }
             }
 
          }

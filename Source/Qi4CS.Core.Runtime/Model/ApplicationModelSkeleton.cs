@@ -119,7 +119,7 @@ namespace Qi4CS.Core.Runtime.Model
 
          CheckValidation( validationResult, "Tried to create new application instance from model with validation errors." );
          var assDic = this.AffectedAssemblies
-            .Where( a => !ReflectionHelper.QI4CS_ASSEMBLY.Equals( a ) )
+            .Where( a => !ReflectionHelper.IsQi4CSAssembly( a ) )
             .ToDictionary( a => a, a => this.LoadQi4CSGeneratedAssembly( a ) );
          var attrDic = assDic.Values
             .SelectMany( a => a.GetCustomAttributes().OfType<CompositeTypesAttribute>() )
@@ -348,7 +348,7 @@ namespace Qi4CS.Core.Runtime.Model
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
          {
-            if ( !ReflectionHelper.QI4CS_ASSEMBLY.Equals( currentAssembly ) )
+            if ( !ReflectionHelper.IsQi4CSAssembly( currentAssembly ) )
             {
                var assemblyBareFileName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( currentAssembly );
 
@@ -380,7 +380,7 @@ namespace Qi4CS.Core.Runtime.Model
                // Also, assemblies not part of this model will not be visible
                var thisAssemblyDicCopy = typeModel.GetAllCodeGenerationRelatedAssemblies( model )
                  .Distinct()
-                 .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
+                 .Where( a => !ReflectionHelper.IsQi4CSAssembly( a ) )
                  .ToDictionary( a => a, a => assemblyDic[a] );
 
                // Perform emitting

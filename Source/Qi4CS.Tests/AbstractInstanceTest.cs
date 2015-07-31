@@ -81,7 +81,6 @@ namespace Qi4CS.Tests
          {
             ArchitectureType architecture = this.CreateArchitecture();
             this.SetUpArchitecture( architecture );
-            var ass = ReflectionHelper.QI4CS_ASSEMBLY;
             _model = this.CreateModel( architecture );
             _model.GenerateAndSaveAssemblies( CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
             _application = _model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );

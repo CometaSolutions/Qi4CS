@@ -59,14 +59,47 @@ namespace Qi4CS.Core.Runtime.Instance
       }
 
 
+
+
+#if DEBUG
+
+      /// <summary>
+      /// Qi4CS Core assemblies in debug mode.
+      /// </summary>
+      public static readonly Assembly[] QI4CS_ASSEMBLIES = new[]
+      {
+         Assembly.Load("Qi4CS.Core.API"),
+         Assembly.Load("Qi4CS.Core.SPI"),
+         Assembly.Load("Qi4CS.Core.Bootstrap"),
+         Assembly.Load("Qi4CS.Core.Runtime"),
+         Assembly.Load("Qi4CS.Core.Architectures"),
+      };
+#else
       /// <summary>
       /// Helper field to get access of Qi4CS assembly.
       /// </summary>
-      public static readonly Assembly QI4CS_ASSEMBLY = typeof(ReflectionHelper)
+      public static readonly Assembly QI4CS_ASSEMBLY = typeof( ReflectionHelper )
 #if WINDOWS_PHONE_APP
 .GetTypeInfo()
 #endif
 .Assembly;
+#endif
+
+      /// <summary>
+      /// Checks whether given assembly can be considered as part of Qi4CS Core, and thus e.g. be treated differently during code generation.
+      /// </summary>
+      /// <param name="assembly">The assembly to check.</param>
+      /// <returns><c>true</c> if <paramref name="assembly"/> is part of Qi4CS Core, <c>false</c> otherwise.</returns>
+      public static Boolean IsQi4CSAssembly( Assembly assembly )
+      {
+         return
+#if DEBUG
+ assembly.FullName.StartsWith( "Qi4CS.Core." )
+#else
+         return QI4CS_ASSEMBLY.Equals(assembly)
+#endif
+;
+      }
 
       /// <summary>
       /// Finds a method from <paramref name="classType"/> and its base type hierarchy which could be seen as implementing the <paramref name="methodFromParent"/>.
@@ -75,23 +108,23 @@ namespace Qi4CS.Core.Runtime.Instance
       /// <param name="classType">The type containing implementation of method.</param>
       /// <param name="methodFromParent">The method of some parent type of <paramref name="classType"/>.</param>
       /// <returns>The suitable method of <paramref name="classType"/>, or <c>null</c> if no such method could be found. Also returns <c>null</c> if either of <paramref name="classType"/> or <paramref name="methodFromParent"/> is <c>null</c>.</returns>
-      public static MethodInfo FindMethodImplicitlyImplementingMethod(Type classType, MethodInfo methodFromParent)
+      public static MethodInfo FindMethodImplicitlyImplementingMethod( Type classType, MethodInfo methodFromParent )
       {
          // TODO optimize: if classType not interface and methodFromInterface.DeclaringType is not interface, and methodFromInterface.DeclaringType is not generic, then it is enough to just call classType.GetMethod with suitable parameters.
          MethodInfo result = null;
-         if (classType != null && methodFromParent != null)
+         if ( classType != null && methodFromParent != null )
          {
-            foreach (var suitableType in classType.GetAllParentTypes().Where(t => AreStructurallySame(t, methodFromParent.DeclaringType, true)))
+            foreach ( var suitableType in classType.GetAllParentTypes().Where( t => AreStructurallySame( t, methodFromParent.DeclaringType, true ) ) )
             {
 #if WINDOWS_PHONE_APP
                var newMethodsFromInterface = suitableType.GetAllDeclaredInstanceMethods().Where(m => String.Equals(m.Name, methodFromParent.Name));
 #else
-               var newMethodFromInterface = (MethodInfo)MethodBase.GetMethodFromHandle(methodFromParent.MethodHandle, suitableType.TypeHandle);
+               var newMethodFromInterface = (MethodInfo) MethodBase.GetMethodFromHandle( methodFromParent.MethodHandle, suitableType.TypeHandle );
 #endif
                result = classType
                   .GetClassHierarchy()
-                  .SelectMany(t => t.GetAllDeclaredInstanceMethods())
-                  .FirstOrDefault(method =>
+                  .SelectMany( t => t.GetAllDeclaredInstanceMethods() )
+                  .FirstOrDefault( method =>
                   {
 #if WINDOWS_PHONE_APP
                      return newMethodsFromInterface.Any(newMethodFromInterface =>
@@ -101,18 +134,18 @@ namespace Qi4CS.Core.Runtime.Instance
                      var p2 = method.GetParameters();
                      return
 #if !WINDOWS_PHONE_APP
-                        String.Equals(newMethodFromInterface.Name, method.Name) &&
+ String.Equals( newMethodFromInterface.Name, method.Name ) &&
 #endif
-                        newMethodFromInterface.GetGenericArguments().Length == method.GetGenericArguments().Length
+ newMethodFromInterface.GetGenericArguments().Length == method.GetGenericArguments().Length
                         && p1.Length == p2.Length
-                        && AreStructurallySame(method.ReturnParameter.ParameterType, newMethodFromInterface.ReturnParameter.ParameterType, false)
-                        && p1.TakeWhile((param, idx) => AreStructurallySame(p2[idx].ParameterType, param.ParameterType, false)).Count() == p1.Length;
+                        && AreStructurallySame( method.ReturnParameter.ParameterType, newMethodFromInterface.ReturnParameter.ParameterType, false )
+                        && p1.TakeWhile( ( param, idx ) => AreStructurallySame( p2[idx].ParameterType, param.ParameterType, false ) ).Count() == p1.Length;
 #if WINDOWS_PHONE_APP
                   });
 #endif
-                  });
+                  } );
 
-               if (result != null)
+               if ( result != null )
                {
                   break;
                }
@@ -131,14 +164,14 @@ namespace Qi4CS.Core.Runtime.Instance
       /// <remarks>
       /// TODO explain better what 'structurally same' means.
       /// </remarks>
-      public static Boolean AreStructurallySame(Type x, Type y, Boolean comparingBaseTypes)
+      public static Boolean AreStructurallySame( Type x, Type y, Boolean comparingBaseTypes )
       {
-         var result = Object.ReferenceEquals(x, y);
-         if (!result)
+         var result = Object.ReferenceEquals( x, y );
+         if ( !result )
          {
-            if (x.IsGenericParameter && y.IsGenericParameter)
+            if ( x.IsGenericParameter && y.IsGenericParameter )
             {
-               result = comparingBaseTypes || (x
+               result = comparingBaseTypes || ( x
 #if WINDOWS_PHONE_APP
 .GetTypeInfo()
 #endif
@@ -146,27 +179,27 @@ namespace Qi4CS.Core.Runtime.Instance
 #if WINDOWS_PHONE_APP
 .GetTypeInfo()
 #endif
-.DeclaringMethod != null && x.GenericParameterPosition == y.GenericParameterPosition);
+.DeclaringMethod != null && x.GenericParameterPosition == y.GenericParameterPosition );
             }
-            else if (x.IsGenericType() && y.IsGenericType())
+            else if ( x.IsGenericType() && y.IsGenericType() )
             {
                var cGArgs = x.GetGenericArguments();
                var iGArgs = y.GetGenericArguments();
-               result = Object.ReferenceEquals(x.GetGenericTypeDefinition(), y.GetGenericTypeDefinition())
-                  && iGArgs.TakeWhile((arg, index) => AreStructurallySame(cGArgs[index], arg, comparingBaseTypes)).Count() == iGArgs.Length;
+               result = Object.ReferenceEquals( x.GetGenericTypeDefinition(), y.GetGenericTypeDefinition() )
+                  && iGArgs.TakeWhile( ( arg, index ) => AreStructurallySame( cGArgs[index], arg, comparingBaseTypes ) ).Count() == iGArgs.Length;
             }
-            else if (x.HasElementType && y.HasElementType)
+            else if ( x.HasElementType && y.HasElementType )
             {
-               if (x.IsArray && y.IsArray)
+               if ( x.IsArray && y.IsArray )
                {
                   result = x.GetArrayRank() == y.GetArrayRank();
                }
-               if (comparingBaseTypes || result || !x.IsArray)
+               if ( comparingBaseTypes || result || !x.IsArray )
                {
-                  result = (comparingBaseTypes || (x.IsArray == y.IsArray
+                  result = ( comparingBaseTypes || ( x.IsArray == y.IsArray
                      && x.IsByRef == y.IsByRef
-                     && x.IsPointer == y.IsPointer))
-                     && AreStructurallySame(x.GetElementType(), y.GetElementType(), comparingBaseTypes);
+                     && x.IsPointer == y.IsPointer ) )
+                     && AreStructurallySame( x.GetElementType(), y.GetElementType(), comparingBaseTypes );
                }
             }
          }
