@@ -113,7 +113,7 @@ namespace Qi4CS.Extensions.Functional.Model
                var ctx = tb.ReflectionContext;
                var invocationHandlerMethod = ctx.NewWrapper( INVOCATION_HANDLER_METHOD );
                tb.SetParentType( invocationHandlerMethod.DeclaringType );
-               var mb = tb.AddMethodWithReturnType( invocationHandlerMethod.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES, CallingConventions.Standard, invocationHandlerMethod.GetReturnType() );
+               var mb = tb.AddMethodWithReturnType( invocationHandlerMethod.Name, AbstractCompositeModelTypeCodeGenerator.EXPLICIT_IMPLEMENTATION_ATTRIBUTES, CallingConventions.Standard, invocationHandlerMethod.GetReturnType() );
                mb.AddOverriddenMethods( invocationHandlerMethod );
                foreach ( var p in invocationHandlerMethod.Parameters )
                {

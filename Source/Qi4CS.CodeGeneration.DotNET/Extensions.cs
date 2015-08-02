@@ -180,7 +180,11 @@ public static class E_Qi4CS_CodeGeneration
 #if DEBUG
          foreach ( var kvp in resultDic )
          {
-            Verification.RunPEVerify( null, kvp.Value, false );
+            String peVerify, snVerify;
+            if ( Verification.RunPEVerify( null, kvp.Value, false, out peVerify, out snVerify ) )
+            {
+               throw new VerificationException( peVerify, snVerify );
+            }
          }
 #endif
       }

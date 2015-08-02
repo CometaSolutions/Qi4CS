@@ -60,6 +60,8 @@ namespace Qi4CS.Core.Runtime.Model
 #if DEBUG
          }
 #endif
+         // Emit composite method signatures first, in order to call them from fragment methods
+         this.EmitCompositeMethodSignatures( args, emittingInfo );
 
          // Phase 2. Fragment methods
          this.EmitFragmentMethods( args, emittingInfo );
@@ -154,23 +156,18 @@ namespace Qi4CS.Core.Runtime.Model
          {
             foreach ( var fGenInfo in emittingInfo.FragmentTypeGenerationInfos[binding].Item1 )
             {
-               this.EmitFragmentMethods( args.Model, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
+               this.EmitFragmentMethods( emittingInfo, args.Model, fGenInfo, emittingInfo.AllCompositeGenerationInfos );
             }
          }
       }
 
-      private void EmitCompositeMethodsAndInvocationInfos(
+      private void EmitCompositeMethodSignatures(
          CompositeModelEmittingArgs args,
-         CompositeEmittingInfo emittingInfo,
-         IDictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo> publicCompositeGenInfos
+         CompositeEmittingInfo emittingInfo
          )
       {
          var model = args.Model;
          var typeModel = args.TypeModel;
-
-         var collectionsFactory = model.ApplicationModel.CollectionsFactory;
-
-         var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
 
          var genericEventMixinType = model.ApplicationModel.GenericEventMixinType;
          var genericPropertyMixinType = model.ApplicationModel.GenericPropertyMixinType;
@@ -182,24 +179,52 @@ namespace Qi4CS.Core.Runtime.Model
                if ( cInfo.Parents.ContainsKey( this.ctx.NewWrapperAsType( cMethod.NativeInfo.DeclaringType ) ) )
                {
                   // Define a composite method, utilizing required constraints, concerns, mixins, and side-effects
-                  var cMethodGen = this.EmitCompositeMethod(
-                     fragmentTypeGenerationInfos,
+                  var method = this.ctx.NewWrapper( cMethod.NativeInfo );
+                  var useExplicitImplementation = cInfo.Builder.BaseType.Equals( OBJECT_TYPE );
+                  // Don't make composite methods private so that fragments may call them
+                  var methodGenInfo = this.ImplementMethodForEmitting(
                      cInfo,
-                     emittingInfo,
-                     cMethod,
-                     typeModel
-                     );
+                     method,
+                     useExplicitImplementation ? COMPOSITE_METHOD_PREFIX + cMethod.MethodIndex : method.Name,
+                     useExplicitImplementation ? ( NORMAL_IMPLEMENTATION_ATTRIBUTES | MethodAttributes.NewSlot | MethodAttributes.Final ) : NORMAL_IMPLEMENTATION_ATTRIBUTES,
+                     true
+                    );
+
+                  if ( useExplicitImplementation )
+                  {
+                     methodGenInfo.Builder.AddOverriddenMethods( methodGenInfo.OverriddenMethod );
+                  }
+
+                  emittingInfo.RegisterCompositeMethodGenerationInfo( cMethod, methodGenInfo );
                   if ( cMethod.EventModel != null )
                   {
-                     this.EmitEventRelatedThings( cInfo, cMethodGen, cMethod.EventModel, genericEventMixinType );
+                     this.EmitEventRelatedThings( cInfo, methodGenInfo, cMethod.EventModel, genericEventMixinType );
                   }
                   if ( cMethod.PropertyModel != null )
                   {
-                     this.EmitPropertyRelatedThings( cInfo, cMethodGen, cMethod.PropertyModel, genericPropertyMixinType );
+                     this.EmitPropertyRelatedThings( cInfo, methodGenInfo, cMethod.PropertyModel, genericPropertyMixinType );
                   }
                }
             }
          }
+      }
+
+      private void EmitCompositeMethodsAndInvocationInfos(
+         CompositeModelEmittingArgs args,
+         CompositeEmittingInfo emittingInfo,
+         IDictionary<System.Reflection.Assembly, CompositeTypeGenerationInfo> publicCompositeGenInfos
+         )
+      {
+         var fragmentTypeGenerationInfos = emittingInfo.FragmentTypeGenerationInfos.Values.SelectMany( info => info.Item1 );
+         var typeModel = args.TypeModel;
+         var model = args.Model;
+         var collectionsFactory = model.ApplicationModel.CollectionsFactory;
+
+         foreach ( var kvp in emittingInfo.CompositeMethodGenerationInfos )
+         {
+            this.EmitCompositeMethod( fragmentTypeGenerationInfos, emittingInfo, kvp.Key, typeModel, kvp.Value );
+         }
+
 
          foreach ( var kvp in typeModel.ConcernInvocationTypeInfos )
          {
@@ -287,7 +312,7 @@ namespace Qi4CS.Core.Runtime.Model
          factory.AddDeclaredInterfaces( COMPOSITE_FACTORY_TYPE );
 
          // Explicitly implement interface
-         var method = TypeGenerationUtils.ImplementMethodForEmitting( factory, null, t => t, COMPOSITE_FACTORY_METHOD, COMPOSITE_FACTORY_TYPE.Name + "." + COMPOSITE_FACTORY_METHOD.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
+         var method = TypeGenerationUtils.ImplementMethodForEmitting( factory, null, t => t, COMPOSITE_FACTORY_METHOD, COMPOSITE_FACTORY_TYPE.Name + "." + COMPOSITE_FACTORY_METHOD.Name, EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
          var methodGenInfo = new MethodGenerationInfoImpl( method );
          // Generate code for it
          var il = method.MethodIL;
@@ -495,7 +520,7 @@ namespace Qi4CS.Core.Runtime.Model
          var compositeCallbacks = COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD.DeclaringType;
          typeGenInfo.Builder.AddDeclaredInterfaces( compositeCallbacks );
 
-         var method = TypeGenerationUtils.ImplementMethodForEmitting( typeGenInfo.Builder, null, t => t, COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD, compositeCallbacks.Name + "." + COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
+         var method = TypeGenerationUtils.ImplementMethodForEmitting( typeGenInfo.Builder, null, t => t, COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD, compositeCallbacks.Name + "." + COMPOSITE_CALLBACK_GET_COMPOSITE_METHOD_METHOD.Name, EXPLICIT_IMPLEMENTATION_ATTRIBUTES ).Item1;
          var methodGenInfo = new MethodGenerationInfoImpl( method );
          // Generate code for it
          var il = method.MethodIL;
@@ -594,22 +619,15 @@ namespace Qi4CS.Core.Runtime.Model
 
       protected CompositeMethodGenerationInfo EmitCompositeMethod(
          IEnumerable<FragmentTypeGenerationInfo> fragmentTypeGenerationInfos,
-         CompositeTypeGenerationInfo thisGenInfo,
          CompositeEmittingInfo emittingInfo,
          CompositeMethodModel compositeMethod,
-         CompositeTypeModel typeModel
+         CompositeTypeModel typeModel,
+         CompositeMethodGenerationInfo methodGenInfo
          )
       {
          var method = this.ctx.NewWrapper( compositeMethod.NativeInfo );
-         var useExplicitImplementation = thisGenInfo.Builder.BaseType.Equals( OBJECT_TYPE );
-         var methodGenInfo = this.ImplementMethodForEmitting(
-            thisGenInfo,
-            method,
-            useExplicitImplementation ? COMPOSITE_METHOD_PREFIX + compositeMethod.MethodIndex : method.Name,
-            useExplicitImplementation ? MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES : NORMAL_IMPLEMENTATION_ATTRIBUTES,
-            true
-           );
-         emittingInfo.RegisterCompositeMethodGenerationInfo( compositeMethod, methodGenInfo );
+
+         var thisGenInfo = (CompositeTypeGenerationInfo) methodGenInfo.DeclaringTypeGenInfo;
 
          var actualMethod = methodGenInfo.OverriddenMethod;
          thisGenInfo.NormalMethodBuilders.Add( method, methodGenInfo );
@@ -743,10 +761,6 @@ namespace Qi4CS.Core.Runtime.Model
             il.EmitLoadLocal( resultB );
          }
          il.EmitReturn();
-         if ( useExplicitImplementation )
-         {
-            methodGenInfo.Builder.AddOverriddenMethods( actualMethod );
-         }
 
          return methodGenInfo;
       }
@@ -1489,26 +1503,32 @@ namespace Qi4CS.Core.Runtime.Model
                publicCompositeGenInfo.LazyInjectionLambdaClasses.Add( injectableModel, lambdaInfo );
             }
 
-            var lambdaB = thisMethodGenInfo.GetOrCreateLocalBasedOnType( lambdaInfo.Item1 );
+
+            var thisTypeGArgs = thisMethodGenInfo.Builder.DeclaringType.IsGenericType() ?
+               thisMethodGenInfo.Builder.GenericArguments.ToArray() :
+               null;
+            var actualLambdaType = lambdaInfo.Item1.MakeGenericType( thisTypeGArgs );
+
+            var lambdaB = thisMethodGenInfo.GetOrCreateLocalBasedOnType( actualLambdaType );
             var thisInstanceB = thisMethodGenInfo.GetLocalOrThrow( LB_C_INSTANCE );
             var actualFuncCtor = FUNC_1_CTOR.ChangeDeclaringType( actualTypeToGive );
             var actualLazyCtor = LAZY_GDEF_CTOR.ChangeDeclaringType( actualTypeToGive );
             il
-               .EmitNewObject( lambdaInfo.Item2 )
+               .EmitNewObject( lambdaInfo.Item2.ChangeDeclaringType( thisTypeGArgs ) )
                .EmitStoreLocal( lambdaB )
                .EmitLoadLocal( lambdaB )
-               .EmitStoreOtherField( lambdaInfo.Item4, il2 => il2.EmitLoadLocal( thisInstanceB ) )
+               .EmitStoreOtherField( lambdaInfo.Item4.ChangeDeclaringType( thisTypeGArgs ), il2 => il2.EmitLoadLocal( thisInstanceB ) )
                .EmitLoadLocal( lambdaB )
-               .EmitStoreOtherField( lambdaInfo.Item5, loadInjectableModelAction )
+               .EmitStoreOtherField( lambdaInfo.Item5.ChangeDeclaringType( thisTypeGArgs ), loadInjectableModelAction )
                .EmitLoadLocal( lambdaB )
-               .EmitStoreOtherField( lambdaInfo.Item6, il2 => il2.EmitReflectionObjectOf( actualTypeToGive ) );
+               .EmitStoreOtherField( lambdaInfo.Item6.ChangeDeclaringType( thisTypeGArgs ), il2 => il2.EmitReflectionObjectOf( actualTypeToGive ) );
             if ( useAdditionalFields != null )
             {
-               useAdditionalFields( thisMethodGenInfo, lambdaB, lambdaInfo.Item7 );
+               useAdditionalFields( thisMethodGenInfo, lambdaB, lambdaInfo.Item7.Select( f => f.ChangeDeclaringType( thisTypeGArgs ) ).ToList() );
             }
             il
                .EmitLoadLocal( lambdaB )
-               .EmitLoadUnmanagedMethodToken( lambdaInfo.Item3 )
+               .EmitLoadUnmanagedMethodToken( lambdaInfo.Item3.ChangeDeclaringType( thisTypeGArgs ) )
                .EmitNewObject( actualFuncCtor )
                .EmitLoadInt32( (Int32) System.Threading.LazyThreadSafetyMode.None )
                .EmitNewObject( actualLazyCtor );
@@ -3796,6 +3816,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       protected void EmitFragmentMethods(
+         CompositeEmittingInfo emittingInfo,
          CompositeModel compositeModel,
          FragmentTypeGenerationInfo thisGenInfo,
          IEnumerable<CompositeTypeGenerationInfo> compositeTypeGenerationInfos
@@ -3808,6 +3829,7 @@ namespace Qi4CS.Core.Runtime.Model
             if ( existingFragmentMethod != null && !thisGenInfo.NormalMethodBuilders.ContainsKey( existingFragmentMethod ) )
             {
                var generatedMethod = this.EmitFragmentMethod(
+                  emittingInfo,
                   existingFragmentMethod,
                   compositeMethod,
                   thisGenInfo,
@@ -3842,6 +3864,7 @@ namespace Qi4CS.Core.Runtime.Model
       }
 
       protected CompositeMethodGenerationInfo EmitFragmentMethod(
+         CompositeEmittingInfo emittingInfo,
          CILMethod fragmentMethod,
          CompositeMethodModel compositeMethodModel,
          FragmentTypeGenerationInfo thisGenInfo,
@@ -3861,7 +3884,7 @@ namespace Qi4CS.Core.Runtime.Model
             );
 
          var canEmitTailCall = !mbGenInfo.OverriddenMethod.Parameters.Any( param => param.ParameterType.IsByRef() );
-         this.EmitCallSameCompositeMethod( mbGenInfo.OverriddenMethod, mbGenInfo, thisGenInfo.CompositeField, canEmitTailCall );
+         this.EmitCallSameCompositeMethod( emittingInfo.CompositeMethodGenerationInfos[compositeMethodModel].Builder, mbGenInfo, thisGenInfo.CompositeField, canEmitTailCall );
          mbGenInfo.IL.EmitReturn();
 
          CompositeMethodGenerationInfo result = null;
@@ -4080,7 +4103,7 @@ namespace Qi4CS.Core.Runtime.Model
                genInfo,
                FRAGMENT_DEPENDANT_GETTER,
                null,
-               MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
+               EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
                true );
             il = fragmentGetter.IL;
             il
@@ -4093,7 +4116,7 @@ namespace Qi4CS.Core.Runtime.Model
                genInfo,
                FRAGMENT_DEPENDANT_SETTER,
                null,
-               MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
+               EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
                true );
             il = fragmentSetter.IL;
             il
@@ -4188,7 +4211,7 @@ namespace Qi4CS.Core.Runtime.Model
             thisInfo,
             methodFromModel,
             useExplicitImplementation ? methodPrefix + methodIndex : methodFromModel.Name,
-            useExplicitImplementation ? MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES : NORMAL_IMPLEMENTATION_ATTRIBUTES,
+            useExplicitImplementation ? EXPLICIT_IMPLEMENTATION_ATTRIBUTES : NORMAL_IMPLEMENTATION_ATTRIBUTES,
             true
          );
          thisInfo.NormalMethodBuilders.Add( methodFromModel, methodGenInfo );
@@ -4470,7 +4493,7 @@ namespace Qi4CS.Core.Runtime.Model
             thisInfo,
             GENERIC_FRAGMENT_METHOD,
             null,
-            MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
+            EXPLICIT_IMPLEMENTATION_ATTRIBUTES,
             true
             );
          thisInfo.NormalMethodBuilders.Add( GENERIC_FRAGMENT_METHOD, methodGenInfo );

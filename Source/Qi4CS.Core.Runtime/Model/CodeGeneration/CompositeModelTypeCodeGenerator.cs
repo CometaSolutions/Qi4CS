@@ -142,6 +142,14 @@ namespace Qi4CS.Core.Runtime.Model
          return this._compositeMethodGenerationInfos[model];
       }
 
+      public IDictionary<CompositeMethodModel, CompositeMethodGenerationInfo> CompositeMethodGenerationInfos
+      {
+         get
+         {
+            return this._compositeMethodGenerationInfos;
+         }
+      }
+
       public IDictionary<Int32, TypeGenerationInfo> GetGenerationInfosByTypeID( CompositeModel compositeModel )
       {
          return this._allGenerationInfos[compositeModel];
