@@ -429,15 +429,16 @@ namespace Qi4CS.Core.Runtime.Model
          CILType compositeFactoryType
          )
       {
+         var typeType = this.TYPE_TYPE;
          foreach ( var module in args.Assemblies.Values )
          {
             var namedList = new List<CILCustomAttributeNamedArgument>()
             {
                CILCustomAttributeFactory.NewNamedArgument(
                   this.COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY,
-                  CILCustomAttributeFactory.NewTypedArgument(
-                     (CILType)this.COMPOSITE_TYPES_ATTRIBUTE_PUBLIC_TYPES_PROPERTY.GetPropertyType(),
-                     emittingInfo.PublicCompositeGenerationInfos.Select(g => g.Builder).Where(t => t.Module.Equals(module)).ToArray()
+                  CILCustomAttributeFactory.NewTypedArgumentArray(
+                     typeType,
+                     emittingInfo.PublicCompositeGenerationInfos.Select(g => g.Builder).Where(t => t.Module.Equals(module))
                   ))
             };
             var typez = emittingInfo.PrivateCompositeTypeGenerationInfos.Values.SelectMany( t => t.Item1 ).Select( t => t.Builder ).Where( t => t.Module.Equals( module ) ).ToArray();
@@ -446,8 +447,8 @@ namespace Qi4CS.Core.Runtime.Model
                namedList.Add(
                   CILCustomAttributeFactory.NewNamedArgument(
                      this.COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY,
-                     CILCustomAttributeFactory.NewTypedArgument(
-                        (CILType) this.COMPOSITE_TYPES_ATTRIBUTE_PRIVATE_TYPES_PROPERTY.GetPropertyType(),
+                     CILCustomAttributeFactory.NewTypedArgumentArray(
+                        typeType,
                         typez
                      ) ) );
             }
@@ -457,8 +458,8 @@ namespace Qi4CS.Core.Runtime.Model
             {
                namedList.Add( CILCustomAttributeFactory.NewNamedArgument(
                   this.COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY,
-                  CILCustomAttributeFactory.NewTypedArgument(
-                     (CILType) this.COMPOSITE_TYPES_ATTRIBUTE_FRAGMENT_TYPES_PROPERTY.GetPropertyType(),
+                  CILCustomAttributeFactory.NewTypedArgumentArray(
+                     typeType,
                      typez
                   ) ) );
             }
@@ -468,8 +469,8 @@ namespace Qi4CS.Core.Runtime.Model
             {
                namedList.Add( CILCustomAttributeFactory.NewNamedArgument(
                   this.COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY,
-                  CILCustomAttributeFactory.NewTypedArgument(
-                     (CILType) this.COMPOSITE_TYPES_ATTRIBUTE_CONCERN_INVOCATION_HANDLER_TYPES_PROPERTY.GetPropertyType(),
+                  CILCustomAttributeFactory.NewTypedArgumentArray(
+                     typeType,
                      typez
                   ) ) );
             }
@@ -478,8 +479,8 @@ namespace Qi4CS.Core.Runtime.Model
             {
                namedList.Add( CILCustomAttributeFactory.NewNamedArgument(
                   this.COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY,
-                  CILCustomAttributeFactory.NewTypedArgument(
-                     (CILType) this.COMPOSITE_TYPES_ATTRIBUTE_SIDE_EFFECT_INVOCATION_HANDLER_TYPES_PROPERTY.GetPropertyType(),
+                  CILCustomAttributeFactory.NewTypedArgumentArray(
+                     typeType,
                      typez
                   ) ) );
             }
@@ -489,7 +490,7 @@ namespace Qi4CS.Core.Runtime.Model
                   CILCustomAttributeFactory.NewNamedArgument(
                      this.COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY,
                      CILCustomAttributeFactory.NewTypedArgument(
-                        (CILType) this.COMPOSITE_TYPES_ATTRIBUTE_COMPOSITE_FACTORY_TYPE_PROPERTY.GetPropertyType(),
+                        typeType,
                         compositeFactoryType
                    ) ) );
             }
@@ -1505,7 +1506,7 @@ namespace Qi4CS.Core.Runtime.Model
 
 
             var thisTypeGArgs = thisMethodGenInfo.Builder.DeclaringType.IsGenericType() ?
-               thisMethodGenInfo.Builder.GenericArguments.ToArray() :
+               thisMethodGenInfo.Builder.DeclaringType.GenericArguments.ToArray() :
                null;
             var actualLambdaType = lambdaInfo.Item1.MakeGenericType( thisTypeGArgs );
 
@@ -3583,9 +3584,9 @@ namespace Qi4CS.Core.Runtime.Model
                      {
                         CILCustomAttributeFactory.NewNamedArgument(
                            this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY,
-                           CILCustomAttributeFactory.NewTypedArgument(
-                              (CILType)this.PUBLIC_COMPOSITE_GENERIC_BINDING_ATTRIBUTE_PROPERTY.GetPropertyType(),
-                              typeModel.PublicCompositeGenericTypesInOrder.Select( t => this.ctx.NewWrapperAsType( t ) ).ToArray()
+                           CILCustomAttributeFactory.NewTypedArgumentArray(
+                              this.TYPE_TYPE,
+                              typeModel.PublicCompositeGenericTypesInOrder.Select( t => this.ctx.NewWrapperAsType( t ) )
                            ))
                      } );
                }
