@@ -96,7 +96,7 @@ namespace Qi4CS.Core.Runtime.Instance
 #if DEBUG
  assembly.FullName.StartsWith( "Qi4CS.Core." )
 #else
-         return QI4CS_ASSEMBLY.Equals(assembly)
+ QI4CS_ASSEMBLY.Equals( assembly )
 #endif
 ;
       }
