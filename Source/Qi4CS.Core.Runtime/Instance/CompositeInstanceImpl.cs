@@ -188,17 +188,7 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly DictionaryQuery<Type, ListQuery<FragmentConstructorInfo>> _constructorsForFragments;
       private readonly CompositeState _state;
       private readonly UsesContainerQuery _usesContainer;
-#if SILVERLIGHT
-      [ThreadStatic]
-      private static 
-#else
-      private readonly Lazy<ThreadLocal<
-#endif
-Stack<InvocationInfo>
-#if !SILVERLIGHT
->>
-#endif
- _invocationInfos;
+      private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
       private readonly Lazy<MethodInfo[]> _compositeMethods;
@@ -239,16 +229,7 @@ Stack<InvocationInfo>
          this._usesContainer = usesContainer;
 
          this._isPrototype = (Int32) PrototypeState.PROTOTYPE;
-
-         this._invocationInfos =
-#if !SILVERLIGHT
- new Lazy<ThreadLocal<Stack<InvocationInfo>>>( () => new ThreadLocal<Stack<InvocationInfo>>( () =>
-#endif
- new Stack<InvocationInfo>()
-#if !SILVERLIGHT
- ), LazyThreadSafetyMode.PublicationOnly )
-#endif
-;
+         this._invocationInfos = new Lazy<ThreadLocal<Stack<InvocationInfo>>>( () => new ThreadLocal<Stack<InvocationInfo>>( () => new Stack<InvocationInfo>() ), LazyThreadSafetyMode.PublicationOnly );
 
          var composites = application.CollectionsFactory.NewDictionaryProxy<Type, Object>();
          var cProps = application.CollectionsFactory.NewListProxy( new List<CompositeProperty>( model.Methods.Count * 2 ) );
@@ -560,11 +541,7 @@ Stack<InvocationInfo>
 
             if ( compositeMethod != null )
             {
-               _invocationInfos
-#if !SILVERLIGHT
-.Value.Value
-#endif
-.Push( new InvocationInfoImpl( compositeMethod, nextMethod ) );
+               _invocationInfos.Value.Value.Push( new InvocationInfoImpl( compositeMethod, nextMethod ) );
             }
             try
             {
@@ -574,11 +551,7 @@ Stack<InvocationInfo>
             {
                if ( compositeMethod != null )
                {
-                  _invocationInfos
-#if !SILVERLIGHT
-.Value.Value
-#endif
-.Pop();
+                  _invocationInfos.Value.Value.Pop();
                }
             }
          }
@@ -617,20 +590,12 @@ Stack<InvocationInfo>
       {
          get
          {
-            var stk = _invocationInfos
-#if !SILVERLIGHT
-.Value.Value
-#endif
-;
+            var stk = _invocationInfos.Value.Value;
             return stk.Count == 0 ? null : stk.Peek();
          }
          set
          {
-            var stk = _invocationInfos
-#if !SILVERLIGHT
-.Value.Value
-#endif
-;
+            var stk = _invocationInfos.Value.Value;
             if ( value == null )
             {
                stk.Pop();

@@ -40,9 +40,11 @@
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Logical">
       <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Physical">
       <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
@@ -67,7 +69,7 @@
     <None Include="Qi4CS.CodeGeneration.MSBuild.targets" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+    <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">
       <Project>{7be33f23-3f8a-4b25-ad6c-43647e592108}</Project>
       <Name>Qi4CS.CodeGeneration.DotNET</Name>
     </ProjectReference>

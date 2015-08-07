@@ -27,7 +27,7 @@ using Qi4CS.Core.SPI.Model;
 using Qi4CS.Extensions.Functional.Assembling;
 using Qi4CS.Extensions.Functional.Model;
 #if SILVERLIGHT
-using Qi4CS.Core.Runtime.Instance;
+using CommonUtils;
 #endif
 
 

@@ -569,7 +569,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
                (CILMetaDataLoaderWithCallbacks) new CILMetaDataLoaderThreadSafeConcurrentForFiles( callbacks: loaderCallbacks ) :
                new CILMetaDataLoaderNotThreadSafeForFiles( callbacks: loaderCallbacks ) )
             {
-               var fwMapper = new TargetFrameworkMapper();
+               var fwMapper = parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ) ?
+                  (TargetFrameworkMapper) new TargetFrameworkMapperConcurrent() :
+                  new TargetFrameworkMapperNotThreadSafe();
+
                genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
                   parallelization,
                   actualPath,

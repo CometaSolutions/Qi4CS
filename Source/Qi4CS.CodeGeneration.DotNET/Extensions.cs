@@ -82,7 +82,7 @@ public static class E_Qi4CS_CodeGeneration
    /// </returns>
    public static IDictionary<System.Reflection.Assembly, String> GenerateAndSaveAssemblies<TInstance>(
       this ApplicationModel<TInstance> model,
-      CodeGenerationParallelization parallelization,
+      CodeGenerationParallelization parallelization = CodeGenerationParallelization.NotParallel,
       String path = null,
       Boolean isSilverlight = false,
       Action<System.Reflection.Assembly, CILAssembly, EmittingArguments> logicalAssemblyProcessor = null,
@@ -113,8 +113,6 @@ public static class E_Qi4CS_CodeGeneration
 
       using ( var ctx = DotNETReflectionContext.CreateDotNETContext( parallelization == CodeGenerationParallelization.NotParallel ? CILReflectionContextConcurrencySupport.NotThreadSafe : CILReflectionContextConcurrencySupport.ThreadSafe_WithConcurrentCollections ) )
       {
-
-
          var genDic = model.GenerateCode( ctx, parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ), isSilverlight );
          var eArgsDic = new Dictionary<CILAssembly, EmittingArguments>();
          // Before emitting, we must set the public keys of the generated assemblies, in order for cross-references to work properly.
@@ -138,6 +136,7 @@ public static class E_Qi4CS_CodeGeneration
             eArgsDic.Add( genAss, eArgs );
          }
 
+         // This has to check for ParallelEmitting flag, since CreatePhysicalRepresentation might require concurrent features from reflection context when run in parallel!
          var physicalDic = new ConcurrentDictionary<CILAssembly, CILMetaData>();
          Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel(
             parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ),
@@ -146,12 +145,7 @@ public static class E_Qi4CS_CodeGeneration
             {
                var nAss = kvp.Key;
                var genAss = genDic[nAss];
-               var md = genAss.MainModule.CreatePhysicalRepresentation( false );
-               if ( physicalMDProcessor != null )
-               {
-                  physicalMDProcessor( nAss, genAss, md );
-               }
-               physicalDic.TryAdd( genAss, md );
+               physicalDic.TryAdd( genAss, genAss.MainModule.CreatePhysicalRepresentation( false ) );
             } );
 
 
@@ -167,12 +161,17 @@ public static class E_Qi4CS_CodeGeneration
 
                   using ( var stream = File.Open( fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read ) )
                   {
+                     var nAss = kvp.Key;
                      var genAss = kvp.Value;
                      var md = physicalDic[genAss];
+                     if ( physicalMDProcessor != null )
+                     {
+                        physicalMDProcessor( nAss, genAss, md );
+                     }
                      md.OrderTablesAndRemoveDuplicates();
                      md.WriteModule( stream, eArgsDic[genAss] );
                      stream.Flush();
-                     resultDic.TryAdd( kvp.Key, fileName );
+                     resultDic.TryAdd( nAss, fileName );
                   }
                }
             } );

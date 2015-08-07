@@ -7,17 +7,19 @@
     <Qi4CSEConfXMLBuildTargets Condition=" '$(Qi4CSEConfXMLBuildTargets)' == '' ">Build</Qi4CSEConfXMLBuildTargets>
     <Qi4CSEConfXMLBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSEConfXMLBuildTargets)</Qi4CSEConfXMLBuildTargets>
     <Qi4CSEConfXMLBuildTargets>GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSEConfXMLBuildTargets)</Qi4CSEConfXMLBuildTargets>
-    
+    <Qi4CSEConfXMLKind Condition=" '$(Qi4CSEConfXMLKind)' == '' ">Normal</Qi4CSEConfXMLKind>
+    <Qi4CSEConfXMLPlatformKind Condition=" '$(Qi4CSEConfXMLPlatformKind)' == '' ">Normal</Qi4CSEConfXMLPlatformKind>
+
     <Qi4CSEConfConfiguration Condition=" '$(Qi4CSEConfConfiguration)' == '' ">$(Qi4CSEConfXMLConfiguration)</Qi4CSEConfConfiguration>
     <Qi4CSEConfPlatform Condition=" '$(Qi4CSEConfPlatform)' == '' ">$(Qi4CSEConfXMLPlatform)</Qi4CSEConfPlatform>
   </PropertyGroup>
   
   <Target Name="Build">
     <!-- Build Qi4CS Extension: Configuration -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.build" Properties="Qi4CSEConfConfiguration=$(Qi4CSEConfConfiguration);Qi4CSEConfPlatform=$(Qi4CSEConfPlatform)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.build" Properties="Qi4CSEConfConfiguration=$(Qi4CSEConfConfiguration);Qi4CSEConfPlatform=$(Qi4CSEConfPlatform);Qi4CSCoreKind=$(Qi4CSEConfXMLKind);Qi4CSCorePlatformKind=$(Qi4CSEConfXMLPlatformKind)" />
     
     <!-- Build Qi4CS Extension: Configuration (XML)  -->
-    <MSBuild Projects="$(Qi4CSEConfXMLBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" Targets="$(Qi4CSEConfXMLBuildTargets)" Properties="Configuration=$(Qi4CSEConfXMLConfiguration);Platform=$(Qi4CSEConfXMLPlatform)" />
+    <MSBuild Projects="$(Qi4CSEConfXMLBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" Targets="$(Qi4CSEConfXMLBuildTargets)" Properties="Configuration=$(Qi4CSEConfXMLConfiguration);Platform=$(Qi4CSEConfXMLPlatform);Qi4CSKind=$(Qi4CSEConfXMLKind);Qi4CSPlatformKind=$(Qi4CSEConfXMLPlatformKind);IsCommandLineBuild=True" />
   </Target>
  
   <Import Project="$(Qi4CSEConfXMLBaseDir)/CommonBuildTools/CLR/MSBuild/NuSpec.targets" />

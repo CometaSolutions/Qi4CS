@@ -7,6 +7,8 @@
     <Qi4CSCoreBuildTargets Condition=" '$(Qi4CSCoreBuildTargets)' == '' ">Build</Qi4CSCoreBuildTargets>
     <Qi4CSCoreBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSCoreBuildTargets)</Qi4CSCoreBuildTargets>
     <Qi4CSCoreFinalAssemblyTargets Condition=" '$(Qi4CSCoreFinalAssemblyTargets)' == '' ">GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSCoreBuildTargets)</Qi4CSCoreFinalAssemblyTargets>
+    <Qi4CSCoreKind Condition=" '$(Qi4CSCoreKind)' == '' ">Normal</Qi4CSCoreKind>
+    <Qi4CSCorePlatformKind Condition=" '$(Qi4CSCorePlatformKind)' == '' ">Normal</Qi4CSCorePlatformKind>
     
     <!-- NuGet stuff -->
     <NuGetRestore_RepositoriesFile>$(Qi4CSCoreBaseDir)/packages/repositories.config</NuGetRestore_RepositoriesFile>
@@ -31,13 +33,10 @@
     <CallTarget Targets="RestoreNuGetPackages" />
 
     <!-- Build Qi4CS Core projects -->
-    <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSCoreBuildTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
-
-    <!-- Build Qi4CS Core merged DLL -->
-    <MSBuild Projects="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Core.OneDLL/Qi4CS.Core.OneDLL.csproj" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+    <MSBuild Projects="@(Qi4CSCoreProject)" Targets="$(Qi4CSCoreBuildTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform);Qi4CSKind=$(Qi4CSCoreKind);Qi4CSPlatformKind=$(Qi4CSCorePlatformKind);IsCommandLineBuild=True" />
 
     <!-- Build Qi4CS SDK, if needed -->
-    <MSBuild Condition=" '$(Qi4CSCoreConfiguration.EndsWith(`_SDK`))' == 'true' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform)" />
+    <MSBuild Condition=" '$(Qi4CSCoreKind)' == 'SDK' and '$(Qi4CSCorePlatformKind)' == 'Normal' " Projects="@(Qi4CSSDKProject)" Targets="$(Qi4CSCoreFinalAssemblyTargets)" Properties="Configuration=$(Qi4CSCoreConfiguration);Platform=$(Qi4CSCorePlatform);Qi4CSPlatformKind=$(Qi4CSCorePlatformKind);IsCommandLineBuild=True" />
     
   </Target>
   

@@ -17,7 +17,6 @@
  */
 #if QI4CS_SDK
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CILAssemblyManipulator.Logical;
