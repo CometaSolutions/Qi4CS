@@ -36,6 +36,40 @@ using System.Collections.Concurrent;
 namespace Qi4CS.CodeGeneration.MSBuild
 {
    /// <summary>
+   /// This enumeration extends the <see cref="CodeGenerationParallelization"/> enumeration to provide addition parallelization customization.
+   /// </summary>
+   [Flags]
+   public enum MSBuildCodeGenerationParallelization
+   {
+      /// <summary>
+      /// No parallelization at all will be used, everything will be done in a single thread.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.NotParallel"/>
+      NotParallel = CodeGenerationParallelization.NotParallel,
+      /// <summary>
+      /// Emitting the <see cref="CILAssembly"/> and <see cref="CILMetaData"/> will be done in parallel.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.ParallelEmitting"/>
+      ParallelEmitting = CodeGenerationParallelization.ParallelEmitting,
+      /// <summary>
+      /// Saving the generated <see cref="CILMetaData"/>s to disk will be done in parallel.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.ParallelSaving"/>
+      ParallelSaving = CodeGenerationParallelization.ParallelSaving,
+      /// <summary>
+      /// If verifying assemblies, it should be done in parallel.
+      /// </summary>
+      ParallelVerification = 4,
+      /// <summary>
+      /// If copying target assemblies to different folder, then whether to copy in parallel.
+      /// </summary>
+      ParallelTargetAssemblyCopying = 8,
+      /// <summary>
+      /// A mask for <see cref="CodeGenerationParallelization"/> values.
+      /// </summary>
+      CodeGenMask = 3,
+   }
+   /// <summary>
    /// This task will generate the Qi4CS assemblies for the Qi4CS application model of the assembly being built.
    /// </summary>
    /// <seealso cref="ModelFactory"/>
@@ -132,7 +166,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <summary>
       /// Gets or sets whether code generation should be parallelized.
       /// </summary>
-      public CodeGenerationParallelization Parallelization { get; set; }
+      /// <remarks>This should be stringified value from <see cref="CodeGenerationParallelization"/> enumeration.</remarks>
+      public String Parallelization { get; set; }
 
       /// <summary>
       /// Gets or sets the full file names of generated Qi4CS assemblies.
@@ -199,6 +234,14 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   var oldCurDir = Environment.CurrentDirectory;
                   Environment.CurrentDirectory = Path.GetDirectoryName( sourceAss );
 
+                  var pStr = this.Parallelization;
+                  MSBuildCodeGenerationParallelization parallelization;
+                  if ( !Enum.TryParse<MSBuildCodeGenerationParallelization>( pStr, true, out parallelization ) )
+                  {
+                     this.Log.LogWarning( "Unsupported parallelization value: {0}, defaulting to not parallel.", pStr );
+                     parallelization = MSBuildCodeGenerationParallelization.NotParallel;
+                  }
+
                   try
                   {
                      var generator = new Qi4CSAssemblyGenerator( sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir() );
@@ -208,7 +251,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelize: {0}", this.Parallelization );
+
+                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelization: {0}.", parallelization.ToString() );
                            var sw = new Stopwatch();
                            sw.Start();
                            var fileNameDic = generator.GenerateAssemblies(
@@ -221,8 +265,10 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               assDir,
                               this.AssemblyInformation,
                               Path.GetDirectoryName( sourceAss ),
-                              this.Parallelization,
+                              (CodeGenerationParallelization) ( parallelization & MSBuildCodeGenerationParallelization.CodeGenMask ),
                               this.PerformVerify,
+                              parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelVerification ),
+                              parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelTargetAssemblyCopying ),
                               this.WindowsSDKDir );
                            sw.Stop();
                            retVal = true;
@@ -465,6 +511,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
       /// <param name="parallelization">Whether to paralellize code generation.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
+      /// <param name="verifyInParallel">If running PEVerify, then whether to run PEVerify in parallel.</param>
+      /// <param name="copyInParallel">If copying target assemblies to different folder, then whether to copy in parallel.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
       public IDictionary<String, String> GenerateAssemblies(
          String projectDir,
@@ -478,6 +526,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
          String qi4CSDir,
          CodeGenerationParallelization parallelization,
          Boolean verify,
+         Boolean verifyInParallel,
+         Boolean copyInParallel,
          String winSDKDir
          )
       {
@@ -498,11 +548,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
          }
          Func<String, Stream> streamOpener = str => File.Open( str, FileMode.Open, FileAccess.Read, FileShare.Read );
 
-         referenceAssembliesDir = Path.Combine( referenceAssembliesDir, targetFWID, targetFWVersion );
-         if ( !String.IsNullOrEmpty( targetFWProfile ) )
-         {
-            referenceAssembliesDir = Path.Combine( referenceAssembliesDir, "Profile", targetFWProfile );
-         }
+         //referenceAssembliesDir = Path.Combine( referenceAssembliesDir, targetFWID, targetFWVersion );
+         //if ( !String.IsNullOrEmpty( targetFWProfile ) )
+         //{
+         //   referenceAssembliesDir = Path.Combine( referenceAssembliesDir, "Profile", targetFWProfile );
+         //}
 
          if ( !Directory.Exists( referenceAssembliesDir ) )
          {
@@ -565,11 +615,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
             var cryptoCallbacks = new CryptoCallbacksDotNET();
             var loaderCallbacks = new CILMetaDataLoaderResourceCallbacksForFiles( referenceAssembliesDir, qi4CSDir );
             var thisFWMoniker = new TargetFrameworkInfo( targetFWID, targetFWVersion, targetFWProfile );
-            using ( var loader = parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ) ?
+            using ( var loader = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
                (CILMetaDataLoaderWithCallbacks) new CILMetaDataLoaderThreadSafeConcurrentForFiles( callbacks: loaderCallbacks ) :
                new CILMetaDataLoaderNotThreadSafeForFiles( callbacks: loaderCallbacks ) )
             {
-               var fwMapper = parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ) ?
+               var fwMapper = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
                   (TargetFrameworkMapper) new TargetFrameworkMapperConcurrent() :
                   new TargetFrameworkMapperNotThreadSafe();
 
@@ -615,7 +665,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             try
             {
-               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasAnyParallelization(), genAssFilenames, fn =>
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( verifyInParallel, genAssFilenames, fn =>
                {
                   try
                   {
@@ -637,7 +687,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      Directory.CreateDirectory( path );
                   }
                   var genAssFilenamesArray = genAssFilenames.ToArray();
-                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasAnyParallelization(), 0, genAssFilenamesArray.Length, idx =>
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( copyInParallel, 0, genAssFilenamesArray.Length, idx =>
                   {
                      var kvp = genAssFilenamesArray[idx];
                      var fn = kvp.Value;

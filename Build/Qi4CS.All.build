@@ -23,6 +23,6 @@
    
   <Target Name="Build">
     <MSBuild Projects="@(Qi4CSCoreBuildFile)" Properties="Qi4CSCoreConfiguration=$(Qi4CSConfiguration);Qi4CSCorePlatform=$(Qi4CSPlatform);Qi4CSCoreKind=$(Qi4CSBuildKind);Qi4CSCorePlatformKind=$(Qi4CSBuildPlatformKind)" />
-    <MSBuild Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform);Qi4CSKind=${Qi4CSBuildKind);Qi4CSPlatformKind=$(Qi4CSBuildPlatformKind)" />    
+    <MSBuild Projects="@(Qi4CSProjectFile)" Targets="$(Qi4CSBuildTargets)" Properties="Configuration=$(Qi4CSConfiguration);Platform=$(Qi4CSPlatform);Qi4CSKind=$(Qi4CSBuildKind);Qi4CSPlatformKind=$(Qi4CSBuildPlatformKind);IsCommandLineBuild=True" />    
   </Target>
 </Project>
