@@ -251,7 +251,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-
+                           // If there is no .ToString() call, one will get type load exception, as MSBuildCodeGenerationParallelization enumeration is not loaded in the app domain of the caller of this task. 
                            this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelization: {0}.", parallelization.ToString() );
                            var sw = new Stopwatch();
                            sw.Start();
@@ -265,10 +265,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               assDir,
                               this.AssemblyInformation,
                               Path.GetDirectoryName( sourceAss ),
-                              (CodeGenerationParallelization) ( parallelization & MSBuildCodeGenerationParallelization.CodeGenMask ),
+                              parallelization,
                               this.PerformVerify,
-                              parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelVerification ),
-                              parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelTargetAssemblyCopying ),
                               this.WindowsSDKDir );
                            sw.Stop();
                            retVal = true;
@@ -524,10 +522,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
          String path,
          String assemblySNInfo,
          String qi4CSDir,
-         CodeGenerationParallelization parallelization,
+         MSBuildCodeGenerationParallelization parallelization,
          Boolean verify,
-         Boolean verifyInParallel,
-         Boolean copyInParallel,
          String winSDKDir
          )
       {
@@ -624,7 +620,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   new TargetFrameworkMapperNotThreadSafe();
 
                genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
-                  parallelization,
+                  (CodeGenerationParallelization) ( parallelization & MSBuildCodeGenerationParallelization.CodeGenMask ),
                   actualPath,
                   this.IsSilverlight,
                   ( nAss, gAss, eArgs ) =>
@@ -665,7 +661,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             try
             {
-               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( verifyInParallel, genAssFilenames, fn =>
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelVerification ), genAssFilenames, fn =>
                {
                   try
                   {
@@ -687,7 +683,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      Directory.CreateDirectory( path );
                   }
                   var genAssFilenamesArray = genAssFilenames.ToArray();
-                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( copyInParallel, 0, genAssFilenamesArray.Length, idx =>
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelTargetAssemblyCopying ), 0, genAssFilenamesArray.Length, idx =>
                   {
                      var kvp = genAssFilenamesArray[idx];
                      var fn = kvp.Value;
