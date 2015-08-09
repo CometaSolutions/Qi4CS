@@ -509,8 +509,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
       /// <param name="parallelization">Whether to paralellize code generation.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
-      /// <param name="verifyInParallel">If running PEVerify, then whether to run PEVerify in parallel.</param>
-      /// <param name="copyInParallel">If copying target assemblies to different folder, then whether to copy in parallel.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
       public IDictionary<String, String> GenerateAssemblies(
          String projectDir,
