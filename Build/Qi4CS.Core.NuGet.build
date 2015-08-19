@@ -22,14 +22,14 @@
     <!-- Compile CIL Tests assembly -->
     <MSBuild
       Projects="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
-      Properties="Configuration=Release;Qi4CSKind=SDK"
+      Properties="Configuration=Debug;Qi4CSKind=SDK;"
       />
       
     <!-- Call NUnit task -->
     <CommonBuildTools.NUnitTask
       Assemblies="Qi4CS.Tests.dll"
       NoShadowAssemblies="True"
-      WorkingDirectory="$(Qi4CSCoreBaseDir)/Source\Qi4CS.Tests\bin\Release\dotNET\SDK"
+      WorkingDirectory="$(Qi4CSCoreBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
       />
   </Target>
   
