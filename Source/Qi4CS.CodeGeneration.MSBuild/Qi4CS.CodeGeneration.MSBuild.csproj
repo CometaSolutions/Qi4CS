@@ -13,6 +13,11 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
+    <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
+    <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
+    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,11 +44,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Logical">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Logical.$(NuGetVersion_CAMLogical)\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Physical">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Physical.$(NuGetVersion_CAMPhysical)\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.Build.Framework" />
@@ -55,7 +60,7 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\portable-net40+win8\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\portable-net40+win8+wpa81\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -105,7 +110,7 @@
     <AssemblyInfoDescription>MSBuild task for generating Qi4CS assemblies.</AssemblyInfoDescription>
     <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
     <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
-    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CS.Core.Version.txt</AssemblyInfoVersionFilename>
     <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
     <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
     <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>

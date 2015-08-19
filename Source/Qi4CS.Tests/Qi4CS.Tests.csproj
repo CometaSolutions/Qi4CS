@@ -14,6 +14,12 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
+    <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
+    <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
+    <NuGetVersion_NUnit>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/NUnitVersion.txt))</NuGetVersion_NUnit>
+    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,19 +41,19 @@
   <ItemGroup>
     <Reference Include="nunit.framework">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.$(NuGetVersion_NUnit)\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\portable-net40+win8+wpa81\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\portable-net40+win8+wpa81\UtilPack.dll</HintPath>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Logical">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Logical.$(NuGetVersion_CAMLogical)\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Physical">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Physical.$(NuGetVersion_CAMPhysical)\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

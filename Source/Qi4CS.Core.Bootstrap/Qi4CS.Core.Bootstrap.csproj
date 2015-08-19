@@ -37,6 +37,7 @@
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
 
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -99,7 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

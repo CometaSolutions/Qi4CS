@@ -30,10 +30,12 @@
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">portable-net40+win8+wpa81</NuGetFrameworkString>
     <!-- Qi4CSPlatformKind: SL -->
     <!-- <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
-    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-sl50+wp81</NuGetFrameworkString> -->
+    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-net40+win8+sl50+wp80+wpa81</NuGetFrameworkString> -->
     
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
     
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -63,7 +65,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
     <Reference Include="Qi4CS.Core" Condition=" '$(IsCommandLineBuild)' != '' ">
       <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
@@ -121,7 +123,7 @@
     <AssemblyInfoDescription>Adds XML (de)serialization support for Qi4CS Configuration Extension.</AssemblyInfoDescription>
     <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
     <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
-    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CS.Extensions.Configuration.XML.Version.txt</AssemblyInfoVersionFilename>
     <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
     <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
     <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>

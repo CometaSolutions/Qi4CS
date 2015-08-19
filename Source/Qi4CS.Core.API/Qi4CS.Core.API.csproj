@@ -32,13 +32,15 @@
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">portable-net40+win8+wpa81</NuGetFrameworkString>
     <!-- Qi4CSPlatformKind: SL -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
-    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-sl50+wp81</NuGetFrameworkString>
+    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-net40+win8+sl50+wp80+wpa81</NuGetFrameworkString>
     
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
     
     <!-- Ignore "XML comment has cref attribute 'xxx' that could not be resolved" warnings on WPA build. -->
     <!-- <WarningsNotAsErrors Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">1574</WarningsNotAsErrors> -->
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -127,7 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

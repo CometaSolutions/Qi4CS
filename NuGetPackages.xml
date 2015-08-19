@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NuGetManagement>
+  <GlobalConfiguration>
+    <PackagesDirectory>Packages</PackagesDirectory>
+  </GlobalConfiguration>
+  <Packages>
+    <Package>
+      <ID>NUnit</ID>
+      <Versions>
+        <VersionFile>Dependencies/NUnitVersion.txt</VersionFile>
+      </Versions>
+    </Package>
+    <Package>
+      <ID>CILMerge.MSBuild</ID>
+      <Versions>
+        <VersionFile>Dependencies/CILMergeVersion.txt</VersionFile>
+      </Versions>
+    </Package>
+    <Package>
+      <ID>UtilPack</ID>
+      <Versions>
+        <VersionFile>Dependencies/UtilPackVersion.txt</VersionFile>
+      </Versions>
+    </Package>
+    <Package>
+      <ID>CAM.Physical</ID>
+      <Versions>
+        <VersionFile>Dependencies/CAMPhysicalVersion.txt</VersionFile>
+      </Versions>
+    </Package>
+    <Package>
+      <ID>CAM.Logical</ID>
+      <Versions>
+        <VersionFile>Dependencies/CAMLogicalVersion.txt</VersionFile>
+      </Versions>
+    </Package>
+  </Packages>
+</NuGetManagement>

@@ -34,10 +34,12 @@
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">portable-net40+win8+wpa81</NuGetFrameworkString>
     <!-- Qi4CSPlatformKind: SL -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
-    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-sl50+wp81</NuGetFrameworkString>
+    <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-net40+win8+sl50+wp80+wpa81</NuGetFrameworkString>
     
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
     
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -66,7 +68,7 @@
       <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
     </Reference>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -119,11 +121,11 @@
   <PropertyGroup>
     <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
     <AssemblyInfoDescription>Qi4CS Extension related to reading and writing configurations, with</AssemblyInfoDescription>
-    <AssemblyInfoDescription Condition=" '$(Configuration.EndsWith(`_SDK`))' != 'true' ">$(AssemblyInfoDescription)out</AssemblyInfoDescription>
+    <AssemblyInfoDescription Condition=" '$(Qi4CSKind)' != 'SDK' ">$(AssemblyInfoDescription)out</AssemblyInfoDescription>
     <AssemblyInfoDescription>$(AssemblyInfoDescription) code generation ability.</AssemblyInfoDescription>
     <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
     <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
-    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CS.Extensions.Configuration.Version.txt</AssemblyInfoVersionFilename>
     <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
     <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
     <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>

@@ -37,6 +37,9 @@
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
 
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
+    <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
+    <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -114,13 +117,13 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="CILAssemblyManipulator.Physical" Condition=" '$(Qi4CSKind)' == 'SDK' ">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Physical.1.0.0.0\lib\portable-net40+win8+sl50+wp81+wpa81\CILAssemblyManipulator.Physical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Physical.$(NuGetVersion_CAMPhysical)\lib\portable-net40+win8+sl50+wp80+wpa81\CILAssemblyManipulator.Physical.dll</HintPath>
     </Reference>
     <Reference Include="CILAssemblyManipulator.Logical" Condition=" '$(Qi4CSKind)' == 'SDK' ">
-      <HintPath>..\..\packages\CILAssemblyManipulator.Logical.1.0.0.0\lib\portable-net40+win8+sl50+wp81+wpa81\CILAssemblyManipulator.Logical.dll</HintPath>
+      <HintPath>..\..\packages\CAM.Logical.$(NuGetVersion_CAMLogical)\lib\portable-net40+win8+sl50+wp80+wpa81\CILAssemblyManipulator.Logical.dll</HintPath>
     </Reference>
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.1.0.0.0\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
