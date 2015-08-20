@@ -171,7 +171,7 @@
     <CILMerge.MSBuild.CILMergeTask
         InputAssemblies="$(MSBuildThisFileDirectory)$(OutputPath)Qi4CS.Core.*.dll"
         TargetAssemblyAttributeSource="$(MSBuildThisFileDirectory)$(OutputPath)$(AssemblyName).dll"
-        VersionFile="$(MSBuildProjectDirectory)/../Qi4CSVersion.txt"
+        VersionFile="$(MSBuildProjectDirectory)/../Qi4CS.Core.Version.txt"
         AllowWildCards="True"
         OutPath="$(MSBuildThisFileDirectory)$(OutputPath)Qi4CS.Core.dll"
         OutDir="$(MSBuildThisFileDirectory)$(OutputPath)"
