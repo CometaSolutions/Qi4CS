@@ -16,30 +16,24 @@
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DefaultLanguage>en-US</DefaultLanguage>
-    
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <!-- Possible values: Normal, SDK -->
     <Qi4CSKind>SDK</Qi4CSKind>
     <!-- Possible values: Normal, SL -->
     <Qi4CSPlatformKind>Normal</Qi4CSPlatformKind>
-    
     <DefineConstants Condition=" '$(Qi4CSKind)' == 'SDK' ">$(DefineConstants);QI4CS_SDK</DefineConstants>
     <DefineConstants Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">$(DefineConstants);SILVERLIGHT</DefineConstants>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    
     <!-- Qi4CSPlatformKind: Normal -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">Profile5</TargetFrameworkProfile>
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">portable-net40+win8+wpa81</NuGetFrameworkString>
     <!-- Qi4CSPlatformKind: SL -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-net40+win8+sl50+wp80+wpa81</NuGetFrameworkString>
-    
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
-    
     <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
-    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -88,9 +82,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
       <Project>{9a6623f3-5ffc-4a63-8c98-163a4302a5ea}</Project>
       <Name>Qi4CS.Core.API</Name>
@@ -104,9 +95,7 @@
       <Name>Qi4CS.Core.SPI</Name>
     </ProjectReference>
   </ItemGroup>
-  
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  
   <!-- Assembly signing info -->
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -115,7 +104,6 @@
   </PropertyGroup>
   <!-- Create .snk file if it doesn't exist to ensure smooth build -->
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
-  
   <!-- Assembly information -->
   <PropertyGroup>
     <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>

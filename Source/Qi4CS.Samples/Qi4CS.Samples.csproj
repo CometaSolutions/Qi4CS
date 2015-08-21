@@ -14,11 +14,9 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    
     <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
     <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
     <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
-    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -64,9 +62,6 @@
     <Compile Include="Qi4CSDocumentation\CILManipulatorCodeContent.cs" />
     <Compile Include="Qi4CSDocumentation\CodeContent.cs" />
     <Compile Include="Qi4CSDocumentation\ConceptualSamples.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qi4CS.CodeGeneration.DotNET\Qi4CS.CodeGeneration.DotNET.csproj">

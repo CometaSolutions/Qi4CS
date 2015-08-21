@@ -16,30 +16,24 @@
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <DefaultLanguage>en-US</DefaultLanguage>
-    
     <!-- Possible values: Normal, SDK -->
     <Qi4CSKind>SDK</Qi4CSKind>
     <!-- Possible values: Normal, SL -->
     <Qi4CSPlatformKind>Normal</Qi4CSPlatformKind>
-    
     <DefineConstants Condition=" '$(Qi4CSKind)' == 'SDK' ">$(DefineConstants);QI4CS_SDK</DefineConstants>
     <DefineConstants Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">$(DefineConstants);SILVERLIGHT</DefineConstants>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    
     <!-- Qi4CSPlatformKind: Normal -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">Profile5</TargetFrameworkProfile>
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'Normal' ">portable-net40+win8+wpa81</NuGetFrameworkString>
     <!-- Qi4CSPlatformKind: SL -->
     <TargetFrameworkProfile Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">Profile328</TargetFrameworkProfile>
     <NuGetFrameworkString Condition=" '$(Qi4CSPlatformKind)' == 'SL' ">portable-net40+win8+sl50+wp80+wpa81</NuGetFrameworkString>
-    
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(Qi4CSPlatformKind)\$(Qi4CSKind)\</IntermediateOutputPath>
-    
     <!-- Ignore "XML comment has cref attribute 'xxx' that could not be resolved" warnings on WPA build. -->
     <!-- <WarningsNotAsErrors Condition=" '$(Configuration)' == 'Debug_WP' or '$(Configuration)' == 'Release_WP' ">1574</WarningsNotAsErrors> -->
-    
     <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -132,12 +126,7 @@
       <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\$(NuGetFrameworkString)\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  
   <!-- Assembly signing info -->
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>

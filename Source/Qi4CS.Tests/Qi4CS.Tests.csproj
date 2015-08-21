@@ -163,9 +163,6 @@
     <Compile Include="Qi4CSTestUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="test_db_setup.xml">
       <SubType>Designer</SubType>
     </None>

@@ -14,11 +14,9 @@
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
-    
     <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
     <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
     <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
-    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -68,9 +66,6 @@
     <Compile Include="Extensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
       <Project>{9a6623f3-5ffc-4a63-8c98-163a4302a5ea}</Project>
       <Name>Qi4CS.Core.API</Name>
@@ -84,9 +79,7 @@
       <Name>Qi4CS.Core.SPI</Name>
     </ProjectReference>
   </ItemGroup>
-  
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-
   <!-- Assembly signing info -->
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -95,7 +88,6 @@
   </PropertyGroup>
   <!-- Create .snk file if it doesn't exist to ensure smooth build -->
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
-  
   <!-- Assembly information -->
   <PropertyGroup>
     <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
