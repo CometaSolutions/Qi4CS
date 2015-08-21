@@ -70,7 +70,7 @@ namespace Qi4CS.Tests.Core.Instance.Composite.Domain
 
       public override Int32 GetHashCode()
       {
-         return this._state.Value.GetHashCodeSafe();
+         return this._state.Value.GetHashCode();
       }
    }
 
@@ -113,7 +113,7 @@ namespace Qi4CS.Tests.Core.Instance.Composite.Domain
 
       public override Int32 GetHashCode()
       {
-         return this._state.Value.GetHashCodeSafe();
+         return this._state.Value.GetHashCode();
       }
    }
 

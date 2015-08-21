@@ -28,6 +28,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Services
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ActivatableServiceTest : AbstractSingletonInstanceTest
    {
       private static Boolean _isActive1;

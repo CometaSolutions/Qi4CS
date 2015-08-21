@@ -62,6 +62,7 @@ namespace Qi4CS.Tests.Core.Instance
    }
 
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class SameNamedCompositesInDifferentNamespaceTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

@@ -27,6 +27,7 @@ using Qi4CS.Core.API.Model;
 namespace Qi4CS.Tests.Core.Instance.Event
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public abstract class AbstractEventTest : AbstractSingletonInstanceTest
    {
       private static Boolean _genericEventInvoked = false;

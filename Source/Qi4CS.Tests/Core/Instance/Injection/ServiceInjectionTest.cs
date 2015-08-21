@@ -26,6 +26,7 @@ using System;
 namespace Qi4CS.Tests.Core.Instance.Injection
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ServiceInjectionTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

@@ -5,59 +5,18 @@
     <Qi4CSEConfConfiguration Condition=" '$(Qi4CSEConfConfiguration)' == '' ">Debug</Qi4CSEConfConfiguration>
     <Qi4CSEConfPlatform Condition=" '$(Qi4CSEConfPlatform)' == '' ">AnyCPU</Qi4CSEConfPlatform>
     <Qi4CSEConfBuildTargets Condition=" '$(Qi4CSEConfBuildTargets)' == '' ">Build</Qi4CSEConfBuildTargets>
-    <Qi4CSEConfBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSEConfBuildTargets)</Qi4CSEConfBuildTargets>
     <Qi4CSEConfBuildTargets>GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSEConfBuildTargets)</Qi4CSEConfBuildTargets>
-    
-    <Qi4CSCoreConfiguration Condition=" '$(Qi4CSCoreConfiguration)' == '' ">$(Qi4CSEConfConfiguration)</Qi4CSCoreConfiguration>
-    <Qi4CSCorePlatform Condition=" '$(Qi4CSCorePlatform)' == '' ">$(Qi4CSEConfPlatform)</Qi4CSCorePlatform>
+    <Qi4CSEConfKind Condition=" '$(Qi4CSEConfKind)' == '' ">Normal</Qi4CSEConfKind>
+    <Qi4CSEConfPlatformKind Condition=" '$(Qi4CSEConfPlatformKind)' == '' ">Normal</Qi4CSEConfPlatformKind>
+
   </PropertyGroup>
   
   <Target Name="Build">
+    
     <!-- Build Qi4CS Core -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=$(Qi4CSCoreConfiguration);Qi4CSCorePlatform=$(Qi4CSCorePlatform)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=$(Qi4CSEConfConfiguration);Qi4CSCorePlatform=$(Qi4CSEConfPlatform);Qi4CSCoreKind=$(Qi4CSEConfKind);Qi4CSCorePlatformKind=$(Qi4CSEConfPlatformKind)" />
     
     <!-- Build Qi4CS Extension: Configuration  -->
-    <MSBuild Projects="$(Qi4CSEConfBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" Targets="$(Qi4CSEConfBuildTargets)" Properties="Configuration=$(Qi4CSEConfConfiguration);Platform=$(Qi4CSEConfPlatform)" />
-  </Target>
- 
-  <Import Project="$(Qi4CSEConfBaseDir)/CommonBuildTools/CLR/MSBuild/NuSpec.targets" />
-  
-  <!-- <Import Project="$(Qi4CSEConfBaseDir)/CommonBuildtools/CLR/MSBuild/PEVerify.targets" /> -->
-  
-  <Target Name="InitializeNuSpecProperties" BeforeTargets="Qi4CSEConfNuSpec">
-    <!-- NuSpec file information -->
-    <PropertyGroup>
-      <Qi4CSEConfBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSEConfBaseDir)))</Qi4CSEConfBaseDirNuSpec>
-      <NuSpec_OutputPath>$(MSBuildThisFileDirectory)../NuSpec/Qi4CS.Extensions.Configuration.nuspec</NuSpec_OutputPath>
-      <NuSpec_ID>Qi4CS.Extensions.Configuration</NuSpec_ID>
-      <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
-      <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
-      <NuSpec_Description>Qi4CS Extension: Configuration is an extension of Qi4CS.Core that provides basic API for assembling composites that can be deserialized and serialized by ConfigurationManager, which is also provided by this extension. The configuration composites may have their location specified at assembling time or at runtime.</NuSpec_Description>
-      <NuSpec_Title>Qi4CS Extension: Configuration</NuSpec_Title>
-      <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
-      <NuSpec_CopyrightInceptionYear>2012</NuSpec_CopyrightInceptionYear>
-      <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
-      <NuSpec_ProjectURL>https://github.com/CometaSolutions/Qi4CS</NuSpec_ProjectURL>
-      <NuSpec_RequireLicenseAcceptance>false</NuSpec_RequireLicenseAcceptance>
-      <NuSpec_Summary>Qi4CS Extension: Configuration provides ways of mapping functionality from types of participants to object implementing such functionality.</NuSpec_Summary>
-      <NuSpec_Tags>qi4cs extension configuration dynamic load save</NuSpec_Tags>
-      <NuSpec_FilesXML><![CDATA[
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.dll" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Configuration.xml" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.dll" target="lib\wpa81\Qi4CS.Extensions.Configuration.dll" />
-      <file src="$(Qi4CSEConfBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Configuration.xml" target="lib\wpa81\Qi4CS.Extensions.Configuration.xml" />
-      ]]></NuSpec_FilesXML>
-      <NuSpec_DependenciesXML><![CDATA[
-      <group>
-        <dependency id="Qi4CS.Core" version="$([System.IO.File]::ReadAllText($(Qi4CSEConfBaseDir)/Source/Qi4CSVersion.txt))"/>
-      </group>
-      ]]></NuSpec_DependenciesXML>
-    </PropertyGroup>
-  </Target>
-  
-  <Target Name="Qi4CSEConfNuSpec">
-    <!-- Generate .nuspec file -->
-    <CallTarget Targets="GenerateNuSpecFile" />
-    
+    <MSBuild Projects="$(Qi4CSEConfBaseDir)/Source/Qi4CS.Extensions.Configuration/Qi4CS.Extensions.Configuration.csproj" Targets="$(Qi4CSEConfBuildTargets)" Properties="Configuration=$(Qi4CSEConfConfiguration);Platform=$(Qi4CSEConfPlatform);Qi4CSKind=$(Qi4CSEConfKind);Qi4CSPlatformKind=$(Qi4CSEConfPlatformKind);IsCommandLineBuild=True" />
   </Target>
 </Project>

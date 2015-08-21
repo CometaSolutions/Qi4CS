@@ -26,6 +26,7 @@ using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.Runtime.Instance;
+using Qi4CS.CodeGeneration;
 
 namespace Qi4CS.Tests
 {
@@ -38,9 +39,10 @@ namespace Qi4CS.Tests
 
    public class Qi4CSCodeGenHelper
    {
-      public static CILAssemblyManipulator.API.EmittingArguments EmittingArgumentsCallback(
+      public static void EmittingArgumentsCallback(
          Assembly original,
-         CILAssemblyManipulator.API.CILAssembly generated
+         CILAssemblyManipulator.Logical.CILAssembly generated,
+         CILAssemblyManipulator.Physical.EmittingArguments eArgs
          )
       {
          var keyDir = System.IO.Path.Combine(
@@ -54,11 +56,8 @@ namespace Qi4CS.Tests
             "Qi4CS.Tests.Generation.snk" :
             "Qi4CS.Extensions.Generation.snk" );
 
-         return CILAssemblyManipulator.API.EmittingArguments.CreateForEmittingDLL(
-            new CILAssemblyManipulator.API.StrongNameKeyPair( System.IO.File.ReadAllBytes( snPath ) ),
-               CILAssemblyManipulator.API.ImageFileMachine.I386,
-               CILAssemblyManipulator.API.TargetRuntime.Net_4_0
-            );
+         eArgs.StrongName = new CILAssemblyManipulator.Physical.StrongNameKeyPair( System.IO.File.ReadAllBytes( snPath ) );
+         eArgs.Headers.Machine = CILAssemblyManipulator.Physical.ImageFileMachine.I386;
       }
    }
 
@@ -82,9 +81,8 @@ namespace Qi4CS.Tests
          {
             ArchitectureType architecture = this.CreateArchitecture();
             this.SetUpArchitecture( architecture );
-            var ass = ReflectionHelper.QI4CS_ASSEMBLY;
             _model = this.CreateModel( architecture );
-            _model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
+            _model.GenerateAndSaveAssemblies( CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
             _application = _model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );
             _structureServices = this.GetStructureProvider( _application );
             _application.Activate();

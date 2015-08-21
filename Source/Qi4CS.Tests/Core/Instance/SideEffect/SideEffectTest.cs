@@ -24,6 +24,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.SideEffect
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class SideEffectTest : AbstractSingletonInstanceTest
    {
       public const String RETURN_VALUE = "ReturnValue";

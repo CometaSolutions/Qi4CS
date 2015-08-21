@@ -55,12 +55,12 @@ namespace Qi4CS.Tests
 
                if ( this._injErrors > 0 || this._structErrors > 0 || this._internalErrors > 0 )
                {
-                  Assert.Throws<InvalidApplicationModelException>( new TestDelegate( () => model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback ) ) );
+                  Assert.Throws<InvalidApplicationModelException>( new TestDelegate( () => model.GenerateAndSaveAssemblies( CodeGeneration.CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback ) ) );
                   Assert.Throws<InvalidApplicationModelException>( new TestDelegate( () => model.NewInstance( null, null, null ) ) );
                }
                else
                {
-                  model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
+                  model.GenerateAndSaveAssemblies( CodeGeneration.CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
                   model.NewInstance( null, null, null );
                }
             } );

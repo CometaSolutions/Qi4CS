@@ -32,7 +32,9 @@ namespace Qi4CS.Tests.Core.Instance.Performance
    {
       private const Int32 ITERATIONS = 1000000;
       private const Int32 LOOPS = 2;
+
       [Serializable]
+      [Category( "Qi4CS.Core" )]
       public class SingletonCompositeCreationPerformanceTest : AbstractSingletonInstanceTest
       {
 
@@ -55,6 +57,7 @@ namespace Qi4CS.Tests.Core.Instance.Performance
       }
 
       [Serializable]
+      [Category( "Qi4CS.Core" )]
       public class LayeredCompositeCreationPerformanceTest : AbstractLayeredArchitectureInstanceTest
       {
 

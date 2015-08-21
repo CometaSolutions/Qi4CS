@@ -24,7 +24,8 @@ using NUnit.Framework;
 
 namespace Qi4CS.Tests.Core.Instance.Property
 {
-   [Serializable, Category( "INSTANCE.PROPERTY" )]
+   [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class StructPropertyTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Assembler assembler )

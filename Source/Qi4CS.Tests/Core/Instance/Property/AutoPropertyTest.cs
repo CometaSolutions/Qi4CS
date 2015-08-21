@@ -25,6 +25,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Property
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class AutoPropertyTest : AbstractSingletonInstanceTest
    {
       private const String PROP_VALUE = "Value";

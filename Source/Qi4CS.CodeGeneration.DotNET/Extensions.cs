@@ -23,17 +23,39 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Xml.Linq;
-using CILAssemblyManipulator.API;
-using CILAssemblyManipulator.DotNET;
+using CILAssemblyManipulator.Logical;
 using CollectionsWithRoles.API;
-using Qi4CS.CodeGeneration.DotNET;
+using Qi4CS.CodeGeneration;
 using Qi4CS.Core.SPI.Common;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 using CommonUtils;
 using Qi4CS.Core.API.Model;
 using System.Text;
+using CILAssemblyManipulator.Physical;
 
+namespace Qi4CS.CodeGeneration
+{
+   /// <summary>
+   /// This enumeration controls the parallelization level of <see cref="E_Qi4CS_CodeGeneration.GenerateAndSaveAssemblies"/> method.
+   /// </summary>
+   [Flags]
+   public enum CodeGenerationParallelization
+   {
+      /// <summary>
+      /// No parallelization at all will be used, everything will be done in a single thread.
+      /// </summary>
+      NotParallel = 0,
+      /// <summary>
+      /// Emitting the <see cref="CILAssembly"/> and <see cref="CILMetaData"/> will be done in parallel.
+      /// </summary>
+      ParallelEmitting = 1,
+      /// <summary>
+      /// Saving the generated <see cref="CILMetaData"/>s to disk will be done in parallel.
+      /// </summary>
+      ParallelSaving = 2
+   }
+}
 /// <summary>
 /// Class containing extension methods to easily generate Qi4CS assemblies based on <see cref="ApplicationModel{T}"/>.
 /// </summary>
@@ -44,24 +66,27 @@ public static class E_Qi4CS_CodeGeneration
    /// </summary>
    /// <typeparam name="TInstance">The type of the Qi4CS application instance of <paramref name="model"/>.</typeparam>
    /// <param name="model">The <see cref="ApplicationModel{T}"/>.</param>
-   /// <param name="parallelize">Whether to parallelize the code generation.</param>
+   /// <param name="parallelization">How to parallelize the code generation.</param>
    /// <param name="path">The path where generated Qi4CS assemblies should reside. If <c>null</c>, value of <see cref="Environment.CurrentDirectory"/> will be used.</param>
    /// <param name="isSilverlight">Whether emit assemblies compatible with Silverlight 5+.</param>
-   /// <param name="emittingInfoCreator">
-   /// The callback to create an <see cref="EmittingArguments"/> for emitting an assembly.
-   /// It receives the existing <see cref="System.Reflection.Assembly"/> from which the Qi4CS assembly was generated, corresponding generated <see cref="CILAssembly"/>.
-   /// It should return <see cref="EmittingArguments"/> to be used to emit the Qi4CS assembly.
-   /// If the callback is <c>null</c> or returns <c>null</c>, the result of <see cref="EmittingArguments.CreateForEmittingDLL(StrongNameKeyPair, ImageFileMachine, TargetRuntime, ModuleFlags)"/> is used, with no strong name and <see cref="ImageFileMachine.I386"/> and <see cref="TargetRuntime.Net_4_0"/> as parameters.
+   /// <param name="logicalAssemblyProcessor">
+   /// The optional callback to process <see cref="CILAssembly"/> or <see cref="EmittingArguments"/> after generation of given <see cref="CILAssembly"/>.
+   /// The callback receives the existing <see cref="System.Reflection.Assembly"/> from which the Qi4CS assembly was generated, corresponding generated <see cref="CILAssembly"/>, and corresponding <see cref="EmittingArguments"/> that will be used to write the generated assembly.
+   /// </param>
+   /// <param name="physicalMDProcessor">
+   /// The optional callback to process physical <see cref="CILMetaData"/> before writing it to disk.
+   /// The callback receives the existing <see cref="System.Reflection.Assembly"/> from which the Qi4CS assembly was generated, corresponding generated <see cref="CILAssembly"/>, and the physical <see cref="CILMetaData"/> generated from the given <see cref="CILAssembly"/>.
    /// </param>
    /// <returns>
    /// The mapping from assembly used in Qi4CS model to the full path of corresponding generated Qi4CS assembly.
    /// </returns>
    public static IDictionary<System.Reflection.Assembly, String> GenerateAndSaveAssemblies<TInstance>(
       this ApplicationModel<TInstance> model,
-      Boolean parallelize,
+      CodeGenerationParallelization parallelization = CodeGenerationParallelization.NotParallel,
       String path = null,
       Boolean isSilverlight = false,
-      Func<System.Reflection.Assembly, CILAssembly, EmittingArguments> emittingInfoCreator = null
+      Action<System.Reflection.Assembly, CILAssembly, EmittingArguments> logicalAssemblyProcessor = null,
+      Action<System.Reflection.Assembly, CILAssembly, CILMetaData> physicalMDProcessor = null
       )
       where TInstance : ApplicationSPI
    {
@@ -84,9 +109,11 @@ public static class E_Qi4CS_CodeGeneration
 
 
       //var refDic = new ConcurrentDictionary<String, Tuple<CILAssemblyName, Boolean>[]>();
-      var fileNames = DotNETReflectionContext.UseDotNETContext( ctx =>
+      ConcurrentDictionary<System.Reflection.Assembly, String> resultDic;
+
+      using ( var ctx = DotNETReflectionContext.CreateDotNETContext( parallelization == CodeGenerationParallelization.NotParallel ? CILReflectionContextConcurrencySupport.NotThreadSafe : CILReflectionContextConcurrencySupport.ThreadSafe_WithConcurrentCollections ) )
       {
-         var genDic = model.GenerateCode( ctx, parallelize, isSilverlight );
+         var genDic = model.GenerateCode( ctx, parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ), isSilverlight );
          var eArgsDic = new Dictionary<CILAssembly, EmittingArguments>();
          // Before emitting, we must set the public keys of the generated assemblies, in order for cross-references to work properly.
          // Either CreateDefaultEmittingArguments or emittingInfoCreator should set the public key, if the strong name key pair is container name.
@@ -94,28 +121,37 @@ public static class E_Qi4CS_CodeGeneration
          {
             var genAss = kvp.Value;
             var nAss = kvp.Key;
-            EmittingArguments eArgs;
-            if ( emittingInfoCreator == null )
+            var eArgs = ctx.CreateDefaultEmittingArguments();
+            if ( logicalAssemblyProcessor != null )
             {
-               eArgs = CreateDefaultEmittingArguments();
+               logicalAssemblyProcessor( nAss, genAss, eArgs );
             }
-            else
-            {
-               eArgs = ( emittingInfoCreator( nAss, genAss ) ?? CreateDefaultEmittingArguments() );
-            }
-            if ( eArgs.StrongName != null && !eArgs.StrongName.KeyPair.IsNullOrEmpty() && genAss.Name.PublicKey.IsNullOrEmpty() )
+
+            if ( eArgs.StrongName != null && !eArgs.StrongName.KeyPair.IsNullOrEmpty() )
             {
                // Have to set the public key
-               genAss.Name.PublicKey = Utils.ExtractPublicKey( eArgs.StrongName.KeyPair.ToArray(), ( eArgs.SigningAlgorithm ?? AssemblyHashAlgorithm.SHA1 ) );
+               genAss.Name.PublicKey = ctx.DefaultCryptoCallbacks.CreatePublicKeyFromStrongName( eArgs.StrongName, eArgs.SigningAlgorithm );
                genAss.Name.Flags |= AssemblyFlags.PublicKey;
             }
             eArgsDic.Add( genAss, eArgs );
          }
 
-
-         var resultDic = new ConcurrentDictionary<System.Reflection.Assembly, String>();
+         // This has to check for ParallelEmitting flag, since CreatePhysicalRepresentation might require concurrent features from reflection context when run in parallel!
+         var physicalDic = new ConcurrentDictionary<CILAssembly, CILMetaData>();
          Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel(
-            parallelize,
+            parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ),
+            genDic,
+            kvp =>
+            {
+               var nAss = kvp.Key;
+               var genAss = genDic[nAss];
+               physicalDic.TryAdd( genAss, genAss.MainModule.CreatePhysicalRepresentation( false ) );
+            } );
+
+
+         resultDic = new ConcurrentDictionary<System.Reflection.Assembly, String>();
+         Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel(
+            parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ),
             genDic,
             kvp =>
             {
@@ -125,19 +161,44 @@ public static class E_Qi4CS_CodeGeneration
 
                   using ( var stream = File.Open( fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read ) )
                   {
-                     var eArgs = eArgsDic[kvp.Value];
-                     mod.EmitModule( stream, eArgs );
+                     var nAss = kvp.Key;
+                     var genAss = kvp.Value;
+                     var md = physicalDic[genAss];
+                     if ( physicalMDProcessor != null )
+                     {
+                        physicalMDProcessor( nAss, genAss, md );
+                     }
+                     md.OrderTablesAndRemoveDuplicates();
+                     md.WriteModule( stream, eArgsDic[genAss] );
                      stream.Flush();
-                     //refDic.TryAdd( fileName, eArgs.AssemblyRefs.Select( aRef => Tuple.Create( aRef, IsDotNETAssembly( aRef, portabilityHelper, eArgs.PCLProfile ) ) ).ToArray() );
-                     resultDic.TryAdd( kvp.Key, fileName );
+                     resultDic.TryAdd( nAss, fileName );
                   }
                }
             } );
 
-         return resultDic;
-      } );
+#if DEBUG
+         foreach ( var kvp in resultDic )
+         {
+            String peVerify, snVerify;
+            if ( Verification.RunPEVerify( null, kvp.Value, false, out peVerify, out snVerify ) )
+            {
+               throw new VerificationException( peVerify, snVerify );
+            }
+         }
+#endif
+      }
 
-      return fileNames;
+      return resultDic;
+   }
+
+   /// <summary>
+   /// Checks whether given <see cref="CodeGenerationParallelization"/> specifies that code generation should be parallelized in any way.
+   /// </summary>
+   /// <param name="parallelization">The <see cref="CodeGenerationParallelization"/>.</param>
+   /// <returns><c>true</c> if <paramref name="parallelization"/> is not <see cref="CodeGenerationParallelization.NotParallel"/>; <c>false</c> otherwise.</returns>
+   public static Boolean HasAnyParallelization( this CodeGenerationParallelization parallelization )
+   {
+      return parallelization != CodeGenerationParallelization.NotParallel;
    }
 
    private static String GetRelativePath( String folder, String filespec )
@@ -152,9 +213,13 @@ public static class E_Qi4CS_CodeGeneration
       return Uri.UnescapeDataString( folderUri.MakeRelativeUri( pathUri ).ToString().Replace( '/', Path.DirectorySeparatorChar ) );
    }
 
-   private static EmittingArguments CreateDefaultEmittingArguments()
+   private static EmittingArguments CreateDefaultEmittingArguments( this CILReflectionContext ctx )
    {
-      return EmittingArguments.CreateForEmittingDLL( null, ImageFileMachine.I386, TargetRuntime.Net_4_0 );
+      return new EmittingArguments()
+      {
+         CryptoCallbacks = ctx.DefaultCryptoCallbacks,
+         Headers = new HeadersData()
+      };
    }
 
 }

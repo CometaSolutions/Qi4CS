@@ -24,6 +24,7 @@ using System;
 namespace Qi4CS.Tests.Core.Instance
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class MultipleApplicationActivationsTest : AbstractSingletonInstanceTest
    {
       public interface TestComposite

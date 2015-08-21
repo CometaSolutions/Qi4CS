@@ -26,6 +26,7 @@ using NUnit.Framework;
 namespace Qi4CS.Tests.Core.Instance.Lifecycle
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ProtectedSpecialMethodTest : AbstractSingletonInstanceTest
    {
       private static Boolean _prototypeMethodInvoked = false;

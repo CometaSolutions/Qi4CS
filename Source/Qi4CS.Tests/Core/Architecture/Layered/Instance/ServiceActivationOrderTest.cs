@@ -26,6 +26,7 @@ using NUnit.Framework;
 namespace Qi4CS.Tests.Core.Architecture.Layered.Instance
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ServiceActivationOrderTest : AbstractLayeredArchitectureInstanceTest
    {
       private static readonly IList<String> ACTIVATIONS = new List<String>();

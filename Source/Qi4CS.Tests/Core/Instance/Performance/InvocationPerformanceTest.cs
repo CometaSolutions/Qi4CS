@@ -37,6 +37,7 @@ namespace Qi4CS.Tests.Core.Instance.Performance
       public const Int32 LOOPS = 3;
 
       [Serializable]
+      [Category( "Qi4CS.Core" )]
       public class SingletonInvocationPerformanceTest : AbstractSingletonInstanceTest
       {
 
@@ -57,6 +58,7 @@ namespace Qi4CS.Tests.Core.Instance.Performance
       }
 
       [Serializable]
+      [Category( "Qi4CS.Core" )]
       public class LayeredInvocationPerformanceTest : AbstractLayeredArchitectureInstanceTest
       {
 

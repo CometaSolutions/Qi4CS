@@ -32,6 +32,7 @@ namespace Qi4CS.Tests.Core.Architecture.Layered.Model
    }
 
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class CyclicLayerDependencyTestClass : LayerUsageTest
    {
       protected override ApplicationArchitecture<ApplicationModel<ApplicationSPI>> CreateApplicationArchitecture()
@@ -52,6 +53,7 @@ namespace Qi4CS.Tests.Core.Architecture.Layered.Model
    }
 
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class CyclicLayerDependencyTestWithOneLayerClass : LayerUsageTest
    {
       protected override ApplicationArchitecture<ApplicationModel<ApplicationSPI>> CreateApplicationArchitecture()

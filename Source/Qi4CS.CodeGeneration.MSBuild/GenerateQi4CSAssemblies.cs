@@ -25,16 +25,50 @@ using CommonUtils;
 using Qi4CS.Core.SPI.Instance;
 using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.Bootstrap.Model;
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
+using CILAssemblyManipulator.Physical;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Collections.Concurrent;
-using CILAssemblyManipulator.DotNET;
 
 namespace Qi4CS.CodeGeneration.MSBuild
 {
+   /// <summary>
+   /// This enumeration extends the <see cref="CodeGenerationParallelization"/> enumeration to provide addition parallelization customization.
+   /// </summary>
+   [Flags]
+   public enum MSBuildCodeGenerationParallelization
+   {
+      /// <summary>
+      /// No parallelization at all will be used, everything will be done in a single thread.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.NotParallel"/>
+      NotParallel = CodeGenerationParallelization.NotParallel,
+      /// <summary>
+      /// Emitting the <see cref="CILAssembly"/> and <see cref="CILMetaData"/> will be done in parallel.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.ParallelEmitting"/>
+      ParallelEmitting = CodeGenerationParallelization.ParallelEmitting,
+      /// <summary>
+      /// Saving the generated <see cref="CILMetaData"/>s to disk will be done in parallel.
+      /// </summary>
+      /// <seealso cref="CodeGenerationParallelization.ParallelSaving"/>
+      ParallelSaving = CodeGenerationParallelization.ParallelSaving,
+      /// <summary>
+      /// If verifying assemblies, it should be done in parallel.
+      /// </summary>
+      ParallelVerification = 4,
+      /// <summary>
+      /// If copying target assemblies to different folder, then whether to copy in parallel.
+      /// </summary>
+      ParallelTargetAssemblyCopying = 8,
+      /// <summary>
+      /// A mask for <see cref="CodeGenerationParallelization"/> values.
+      /// </summary>
+      CodeGenMask = 3,
+   }
    /// <summary>
    /// This task will generate the Qi4CS assemblies for the Qi4CS application model of the assembly being built.
    /// </summary>
@@ -132,7 +166,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <summary>
       /// Gets or sets whether code generation should be parallelized.
       /// </summary>
-      public Boolean Parallelize { get; set; }
+      /// <remarks>This should be stringified value from <see cref="CodeGenerationParallelization"/> enumeration.</remarks>
+      public String Parallelization { get; set; }
 
       /// <summary>
       /// Gets or sets the full file names of generated Qi4CS assemblies.
@@ -199,6 +234,14 @@ namespace Qi4CS.CodeGeneration.MSBuild
                   var oldCurDir = Environment.CurrentDirectory;
                   Environment.CurrentDirectory = Path.GetDirectoryName( sourceAss );
 
+                  var pStr = this.Parallelization;
+                  MSBuildCodeGenerationParallelization parallelization;
+                  if ( !Enum.TryParse<MSBuildCodeGenerationParallelization>( pStr, true, out parallelization ) )
+                  {
+                     this.Log.LogWarning( "Unsupported parallelization value: {0}, defaulting to not parallel.", pStr );
+                     parallelization = MSBuildCodeGenerationParallelization.NotParallel;
+                  }
+
                   try
                   {
                      var generator = new Qi4CSAssemblyGenerator( sourceAss, this.ModelFactory, this.ResolveSLRuntimeDir() );
@@ -208,7 +251,8 @@ namespace Qi4CS.CodeGeneration.MSBuild
                         //this.BuildEngine3.Yield();
                         try
                         {
-                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelize: {0}", this.Parallelize );
+                           // If there is no .ToString() call, one will get type load exception, as MSBuildCodeGenerationParallelization enumeration is not loaded in the app domain of the caller of this task. 
+                           this.Log.LogMessage( MessageImportance.High, "Starting Qi4CS code generation, parallelization: {0}.", parallelization.ToString() );
                            var sw = new Stopwatch();
                            sw.Start();
                            var fileNameDic = generator.GenerateAssemblies(
@@ -221,7 +265,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                               assDir,
                               this.AssemblyInformation,
                               Path.GetDirectoryName( sourceAss ),
-                              this.Parallelize,
+                              parallelization,
                               this.PerformVerify,
                               this.WindowsSDKDir );
                            sw.Stop();
@@ -316,8 +360,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       private const String X86 = "x86";
       private const String X64 = "x64";
 
-      // TODO parametrize this
-      private const String PCL_FW_NAME = FrameworkMonikerInfo.DEFAULT_PCL_FW_NAME;
+      private static readonly System.Reflection.ConstructorInfo TARGET_FW_ATTR_CTOR = typeof( System.Runtime.Versioning.TargetFrameworkAttribute ).LoadConstructorOrThrow( new[] { typeof( String ) } );
 
       private delegate Boolean ParsingDelegate<TIn, TOut>( TIn element, out TOut result );
 
@@ -464,7 +507,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
       /// <param name="path">The path where to store assemblies.</param>
       /// <param name="assemblySNInfo">The file containing strongname information about the assemblies to be emitted.</param>
       /// <param name="qi4CSDir">The directory where Qi4CS assemblies actually used by the application reside.</param>
-      /// <param name="parallelize">Whether to paralellize code generation.</param>
+      /// <param name="parallelization">Whether to paralellize code generation.</param>
       /// <param name="verify">Whether to run PEVerify on generated Qi4CS assemblies.</param>
       /// <param name="winSDKDir">The directory where the Windows SDK resides, needed to detect PEVerify executable.</param>
       public IDictionary<String, String> GenerateAssemblies(
@@ -477,7 +520,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
          String path,
          String assemblySNInfo,
          String qi4CSDir,
-         Boolean parallelize,
+         MSBuildCodeGenerationParallelization parallelization,
          Boolean verify,
          String winSDKDir
          )
@@ -499,26 +542,18 @@ namespace Qi4CS.CodeGeneration.MSBuild
          }
          Func<String, Stream> streamOpener = str => File.Open( str, FileMode.Open, FileAccess.Read, FileShare.Read );
 
-         referenceAssembliesDir = Path.Combine( referenceAssembliesDir, targetFWID, targetFWVersion );
-         if ( !String.IsNullOrEmpty( targetFWProfile ) )
-         {
-            referenceAssembliesDir = Path.Combine( referenceAssembliesDir, "Profile", targetFWProfile );
-         }
-
-         String msCorLibName; String fwDisplayName; String targetFWDir;
-         var thisFWMoniker = new FrameworkMonikerInfo( targetFWID, targetFWVersion, targetFWProfile, DotNETReflectionContext.ReadAssemblyInformationFromRedistXMLFile( Path.Combine( referenceAssembliesDir, "RedistList", "FrameworkList.xml" ), out msCorLibName, out fwDisplayName, out targetFWDir ), msCorLibName, fwDisplayName );
-
-         if ( !String.IsNullOrEmpty( targetFWDir ) )
-         {
-            referenceAssembliesDir = targetFWDir;
-         }
+         //referenceAssembliesDir = Path.Combine( referenceAssembliesDir, targetFWID, targetFWVersion );
+         //if ( !String.IsNullOrEmpty( targetFWProfile ) )
+         //{
+         //   referenceAssembliesDir = Path.Combine( referenceAssembliesDir, "Profile", targetFWProfile );
+         //}
 
          if ( !Directory.Exists( referenceAssembliesDir ) )
          {
             throw new Qi4CSBuildException( "The reference assemblies directory " + referenceAssembliesDir + " does not exist." );
          }
 
-         referenceAssembliesDir += Path.DirectorySeparatorChar;
+         //referenceAssembliesDir += Path.DirectorySeparatorChar;
 
          var isX86 = X86.Equals( targetPlatform, StringComparison.InvariantCultureIgnoreCase );
          var targetMachine = String.IsNullOrEmpty( targetPlatform ) || ANYCPU.Equals( targetPlatform, StringComparison.InvariantCultureIgnoreCase ) || isX86 ?
@@ -530,7 +565,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
             mFlags |= ModuleFlags.Required32Bit;
          }
 
-         var snDic = new ConcurrentDictionary<String, Tuple<StrongNameKeyPair, AssemblyHashAlgorithm>>();
+         var snDic = new ConcurrentDictionary<String, Tuple<StrongNameKeyPair, AssemblyHashAlgorithm?>>();
 
          if ( assemblyInfo != null )
          {
@@ -542,13 +577,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      var type = snElem.Attribute( "type" );
                      sn = "container".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ?
                         new StrongNameKeyPair( snElem.Value ) :
-                        new StrongNameKeyPair( "inline".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ? StringConversions.HexStr2ByteArray( snElem.Value ) : ReadAllBytes( projectDir, snElem.Value ) );
+                        new StrongNameKeyPair( "inline".Equals( type.Value, StringComparison.InvariantCultureIgnoreCase ) ? snElem.Value.CreateHexBytes() : ReadAllBytes( projectDir, snElem.Value ) );
                      return true;
                   }, null ),
-                  SubElementAttributeOrFallback( elem, "hashAlgorithm", ( String algoStr, out AssemblyHashAlgorithm algo ) =>
+                  SubElementAttributeOrFallback( elem, "hashAlgorithm", ( String algoStr, out AssemblyHashAlgorithm? algo ) =>
                   {
-                     return Enum.TryParse<AssemblyHashAlgorithm>( algoStr, out algo );
-                  }, AssemblyHashAlgorithm.SHA1 ) );
+                     AssemblyHashAlgorithm algoo;
+                     var retVal = Enum.TryParse<AssemblyHashAlgorithm>( algoStr, out algoo );
+                     algo = retVal ? algoo : (AssemblyHashAlgorithm?) null;
+                     return retVal;
+                  }, null ) );
             }
          }
 
@@ -568,24 +606,49 @@ namespace Qi4CS.CodeGeneration.MSBuild
          IDictionary<System.Reflection.Assembly, String> genAssFilenames;
          try
          {
-            genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
-            parallelize,
-            actualPath,
-            this.IsSilverlight,
-            ( nAss, gAss ) =>
+            var cryptoCallbacks = new CryptoCallbacksDotNET();
+            var loaderCallbacks = new CILMetaDataLoaderResourceCallbacksForFiles( referenceAssembliesDir, qi4CSDir );
+            var thisFWMoniker = new TargetFrameworkInfo( targetFWID, targetFWVersion, targetFWProfile );
+            using ( var loader = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
+               (CILMetaDataLoaderWithCallbacks) new CILMetaDataLoaderThreadSafeConcurrentForFiles( callbacks: loaderCallbacks ) :
+               new CILMetaDataLoaderNotThreadSafeForFiles( callbacks: loaderCallbacks ) )
             {
-               Tuple<StrongNameKeyPair, AssemblyHashAlgorithm> snTuple;
-               snDic.TryGetValue( nAss.GetName().Name, out snTuple );
-               var sn = snTuple == null ? null : snTuple.Item1;
-               var eArgs = EmittingArguments.CreateForEmittingWithMoniker( gAss.ReflectionContext, targetMachine, TargetRuntime.Net_4_0, ModuleKind.Dll, null, runtimeRootDir, referenceAssembliesDir, streamOpener, sn, thisFWMoniker, String.Equals( thisFWMoniker.FrameworkName, PCL_FW_NAME ), mFlags );
+               var fwMapper = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
+                  (TargetFrameworkMapper) new TargetFrameworkMapperConcurrent() :
+                  new TargetFrameworkMapperNotThreadSafe();
 
-               gAss.AddTargetFrameworkAttributeWithMonikerInfo( thisFWMoniker, eArgs.AssemblyMapper );
-               if ( snTuple != null )
-               {
-                  eArgs.SigningAlgorithm = snTuple.Item2;
-               }
-               return eArgs;
-            } );
+               genAssFilenames = this._modelFactory.Model.GenerateAndSaveAssemblies(
+                  (CodeGenerationParallelization) ( parallelization & MSBuildCodeGenerationParallelization.CodeGenMask ),
+                  actualPath,
+                  this.IsSilverlight,
+                  ( nAss, gAss, eArgs ) =>
+                  {
+                     // Add target framework information
+                     gAss.AddCustomAttribute(
+                        gAss.ReflectionContext.NewWrapper( TARGET_FW_ATTR_CTOR ),
+                        new[]
+                        {
+                           CILCustomAttributeFactory.NewTypedArgument( thisFWMoniker.ToString(), gAss.ReflectionContext )
+                        },
+                        null
+                        );
+
+                     eArgs.Headers.ModuleFlags = mFlags;
+                     eArgs.Headers.Machine = targetMachine;
+
+                     Tuple<StrongNameKeyPair, AssemblyHashAlgorithm?> snTuple;
+                     snDic.TryGetValue( nAss.GetName().Name, out snTuple );
+                     if ( snTuple != null )
+                     {
+                        eArgs.StrongName = snTuple.Item1;
+                        eArgs.SigningAlgorithm = snTuple.Item2;
+                     }
+                  },
+                  ( nAss, gAss, md ) =>
+                  {
+                     fwMapper.ChangeTargetFramework( md, loader, thisFWMoniker );
+                  } );
+            }
          }
          catch ( InvalidApplicationModelException apme )
          {
@@ -596,10 +659,16 @@ namespace Qi4CS.CodeGeneration.MSBuild
          {
             try
             {
-               winSDKDir = FindWinSDKBinPath( winSDKDir );
-               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, genAssFilenames, fn =>
+               Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelVerification ), genAssFilenames, fn =>
                {
-                  Verify( winSDKDir, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
+                  try
+                  {
+                     Verification.RunPEVerify( null, fn.Value, snDic != null && snDic.ContainsKey( fn.Key.GetName().Name ) );
+                  }
+                  catch ( Exception e )
+                  {
+                     throw new Qi4CSBuildException( "Verification failed for " + fn.Value + ":\n" + e.Message + "." );
+                  }
                } );
             }
             finally
@@ -612,7 +681,7 @@ namespace Qi4CS.CodeGeneration.MSBuild
                      Directory.CreateDirectory( path );
                   }
                   var genAssFilenamesArray = genAssFilenames.ToArray();
-                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelize, 0, genAssFilenamesArray.Length, idx =>
+                  Qi4CS.Core.Runtime.Model.CodeGenUtils.DoPotentiallyInParallel( parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelTargetAssemblyCopying ), 0, genAssFilenamesArray.Length, idx =>
                   {
                      var kvp = genAssFilenamesArray[idx];
                      var fn = kvp.Value;
@@ -684,96 +753,6 @@ namespace Qi4CS.CodeGeneration.MSBuild
             result = fallback;
          }
          return result;
-      }
-
-      private static String FindWinSDKBinPath( String winSDKDir )
-      {
-         String binPath;
-         if ( !String.IsNullOrEmpty( winSDKDir ) && Directory.Exists( winSDKDir ) )
-         {
-            binPath = Path.Combine( winSDKDir, "bin" );
-            if ( Directory.Exists( winSDKDir ) )
-            {
-               // The PEVerify may be right here, in v7.1A and older, or it may reside in subdirectory, in v8.0A or newer
-               // The directly found PEVerify might be using too old runtime, so prefer the one in subdirectory
-               binPath = Directory.EnumerateDirectories( binPath ).FirstOrDefault( bp => File.Exists( Path.Combine( bp, PEVERIFY_EXE ) ) );
-               if ( binPath == null )
-               {
-                  if ( !File.Exists( Path.Combine( binPath, PEVERIFY_EXE ) ) )
-                  {
-                     throw new Qi4CSBuildException( "Failed to detect path to PEVerify based on Windows SDK directory " + winSDKDir + "." );
-                  }
-               }
-            }
-            else
-            {
-               throw new Qi4CSBuildException( "The 'bin' subdirectory did not exist in " + binPath + "." );
-            }
-         }
-         else
-         {
-            throw new Qi4CSBuildException( "The verification of generated assemblies is on, but " +
-               ( String.IsNullOrEmpty( winSDKDir ) ? "no path to Windows SDK was specified" : ( "the specified path " + winSDKDir + " does not exist" ) ) +
-               ". Make sure there is Windows SDK installed on the machine." );
-         }
-         return binPath;
-      }
-
-
-
-      private static void Verify( String winSDKBinDir, String fileName, Boolean verifyStrongName )
-      {
-         fileName = Path.GetFullPath( fileName );
-         var peVerifyPath = Path.Combine( winSDKBinDir, PEVERIFY_EXE );
-
-         var validationPath = Path.GetDirectoryName( fileName );
-
-         // Call PEVerify
-         var startInfo = new ProcessStartInfo();
-         startInfo.FileName = peVerifyPath;
-         // Ignore loading direct pointer to delegate ctors.
-         startInfo.Arguments = "/IL /MD /VERBOSE /NOLOGO /HRESULT /IGNORE=0x80131861" + " \"" + fileName + "\"";
-         startInfo.CreateNoWindow = true;
-         startInfo.WorkingDirectory = validationPath;
-         startInfo.RedirectStandardOutput = true;
-         startInfo.RedirectStandardError = true;
-         startInfo.UseShellExecute = false;
-         var process = Process.Start( startInfo );
-
-         // First 'read to end', only then wait for exit.
-         // Otherwise, might get stuck (forgot the link to StackOverflow which explained this).
-         var results = process.StandardOutput.ReadToEnd();
-         process.WaitForExit();
-
-         if ( !results.StartsWith( "All Classes and Methods in " + fileName + " Verified." ) )
-         {
-            throw new Qi4CSBuildException( "PEVerify detected the following errors in " + fileName + ":\n" + results );
-         }
-
-         if ( verifyStrongName )
-         {
-            startInfo.FileName = Path.Combine( winSDKBinDir, "sn.exe" );
-            if ( File.Exists( startInfo.FileName ) )
-            {
-               startInfo.Arguments = "-vf \"" + fileName + "\"";
-               process = Process.Start( startInfo );
-
-               results = process.StandardOutput.ReadToEnd();
-               process.WaitForExit();
-
-               var lines = results.Split( new Char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries );
-
-               if ( !( lines.Length == 3 && String.Equals( lines[2], "Assembly '" + fileName + "' is valid" ) ) )
-               {
-                  throw new Qi4CSBuildException( "Strong name validation detected the following errors in " + fileName + ":\n" + results );
-               }
-
-            }
-            else
-            {
-               throw new Qi4CSBuildException( "The strong name utility sn.exe is not in same path as " + PEVERIFY_EXE + "." );
-            }
-         }
       }
 
       private static Byte[] ReadAllBytes( String projectDir, String path )

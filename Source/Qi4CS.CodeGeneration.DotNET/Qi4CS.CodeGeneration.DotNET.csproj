@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="DeleteTargetFrameworkFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="GenerateKeyFile;GenerateAssemblyInfoFile;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -14,83 +14,50 @@
     <FileAlignment>512</FileAlignment>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    
+    <NuGetVersion_UtilPack>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/UtilPackVersion.txt))</NuGetVersion_UtilPack>
+    <NuGetVersion_CAMPhysical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMPhysicalVersion.txt))</NuGetVersion_CAMPhysical>
+    <NuGetVersion_CAMLogical>$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)../../Dependencies/CAMLogicalVersion.txt))</NuGetVersion_CAMLogical>
+    
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\Output\Debug\dotNET\SDK\</OutputPath>
+    <OutputPath>..\..\Output\$(Configuration)\Normal\SDK\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_SDK|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Output\Release\dotNET\SDK\</OutputPath>
+    <OutputPath>..\..\Output\$(Configuration)\Normal\SDK\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
-    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
-    <Optimize>true</Optimize>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LOAD_ONLY</DefineConstants>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_WP|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Output\Debug\dotNET\Normal\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;LOAD_ONLY</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_WP|AnyCPU'">
-    <OutputPath>..\..\Output\Release\dotNET\Normal\</OutputPath>
-    <DefineConstants>TRACE;LOAD_ONLY</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Qi4CSMonoBuild)' == '' ">
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CILAssemblyManipulator.DotNET">
-      <HintPath>..\..\packages\CILAssemblyManipulator.DotNET.0.9.7.1\lib\net40-client\CILAssemblyManipulator.DotNET.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Logical">
+      <HintPath>..\..\packages\CAM.Logical.$(NuGetVersion_CAMLogical)\lib\net40-client\CILAssemblyManipulator.Logical.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="CILAssemblyManipulator.Portable">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\CILAssemblyManipulator.Portable.0.9.7.1\lib\portable-net40+win8\CILAssemblyManipulator.Portable.dll</HintPath>
+    <Reference Include="CILAssemblyManipulator.Physical">
+      <HintPath>..\..\packages\CAM.Physical.$(NuGetVersion_CAMPhysical)\lib\net40-client\CILAssemblyManipulator.Physical.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="Qi4CS.Core" />
+    <Reference Include="Qi4CS.Core" Condition=" '$(IsCommandLineBuild)' != '' ">
+      <HintPath>$(OutputPath)Qi4CS.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UtilPack">
-      <HintPath>..\..\packages\UtilPack.0.9.6.2\lib\portable-net40+win\UtilPack.dll</HintPath>
+      <HintPath>..\..\packages\UtilPack.$(NuGetVersion_UtilPack)\lib\portable-net40+win8+wpa81\UtilPack.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -103,27 +70,39 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Qi4CS.Core.API\Qi4CS.Core.API.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{9a6623f3-5ffc-4a63-8c98-163a4302a5ea}</Project>
+      <Name>Qi4CS.Core.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.Runtime\Qi4CS.Core.Runtime.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{5c2d448e-749e-4564-8bd4-7a5c5e1fbc55}</Project>
+      <Name>Qi4CS.Core.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Qi4CS.Core.SPI\Qi4CS.Core.SPI.csproj" Condition=" '$(IsCommandLineBuild)' == '' ">
+      <Project>{7de287e8-2277-48e0-bdbe-047a7fc79b21}</Project>
+      <Name>Qi4CS.Core.SPI</Name>
+    </ProjectReference>
+  </ItemGroup>
+  
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- These are here because the above .targets file defines TargetFrameworkIdentifier property -->
+
+  <!-- Assembly signing info -->
   <PropertyGroup>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' == '' "></DeleteTargetFrameworkFileCondition>
-    <DeleteTargetFrameworkFileCondition Condition=" '$(Qi4CSMonoBuild)' != '' ">true</DeleteTargetFrameworkFileCondition>
-  </PropertyGroup>
-  <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/TargetFramework.targets" />
-  <!-- This is after Import since ProjectDir is set there -->
-  <PropertyGroup>
-    <KeyFilePath>$(ProjectDir)..\..\Keys\Qi4CS.CodeGen.snk</KeyFilePath>
+    <SignAssembly>true</SignAssembly>
+    <KeyFilePath>$(MSBuildThisFileDirectory)..\..\Keys\Qi4CS.CodeGen.snk</KeyFilePath>
     <AssemblyOriginatorKeyFile>$(KeyFilePath)</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <!-- Create .snk file if it doesn't exist to ensure smooth build -->
   <Import Project="$(MSBuildThisFileDirectory)../../CommonBuildTools/CLR/MSBuild/CreateKeyFileIfNeeded.targets" />
+  
   <!-- Assembly information -->
   <PropertyGroup>
     <AssemblyInfoOutputFile>$(MSBuildProjectDirectory)/../AssemblyInfo/$(AssemblyName).cs</AssemblyInfoOutputFile>
     <AssemblyInfoDescription>Assembly containing helper method for generating Qi4CS assemblies.</AssemblyInfoDescription>
     <AssemblyInfoCompany>Cometa Solutions Ltd</AssemblyInfoCompany>
     <AssemblyInfoTrademark>Qi4CS</AssemblyInfoTrademark>
-    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CSVersion.txt</AssemblyInfoVersionFilename>
+    <AssemblyInfoVersionFilename>$(MSBuildProjectDirectory)/../Qi4CS.Core.Version.txt</AssemblyInfoVersionFilename>
     <AssemblyInfoCLSCompliant>true</AssemblyInfoCLSCompliant>
     <AssemblyInfoCopyrightAuthors>Stanislav Muhametsin</AssemblyInfoCopyrightAuthors>
     <AssemblyInfoAppendAssemblyCopyrightYears>true</AssemblyInfoAppendAssemblyCopyrightYears>

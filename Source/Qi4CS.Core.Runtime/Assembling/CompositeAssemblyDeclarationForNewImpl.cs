@@ -102,7 +102,7 @@ namespace Qi4CS.Core.Runtime.Assembling
                this._info.Types.Add( type );
             }
          }
-         var mainType = types.FirstOrDefault(type => !ReflectionHelper.QI4CS_ASSEMBLY.Equals(type.GetAssembly()));
+         var mainType = types.FirstOrDefault( type => !ReflectionHelper.IsQi4CSAssembly( type.GetAssembly() ) );
          if ( mainType != null )
          {
             this._info.MainCodeGenerationType = mainType;

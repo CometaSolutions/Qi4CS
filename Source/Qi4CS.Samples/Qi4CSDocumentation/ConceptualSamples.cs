@@ -28,6 +28,7 @@ using Qi4CS.Core.SPI.Model;
 using Qi4CS.Core.SPI.Instance;
 using System.Runtime.CompilerServices;
 using Qi4CS.Core.Bootstrap.Instance;
+using Qi4CS.CodeGeneration;
 
 #pragma warning disable 1700
 #region InternalsVisibleToCode
@@ -94,7 +95,7 @@ namespace Qi4CS.Samples.Qi4CSDocumentation
             var bootstrapper = new MyQi4CSAppBootstrapper();
             bootstrapper.Model
                // Include reference to Qi4CS.CodeGeneration.DotNET.dll to use this method
-               .GenerateAndSaveAssemblies();
+               .GenerateAndSaveAssemblies( CodeGenerationParallelization.NotParallel );
             // Create instance of Qi4CS application
             var qApp = bootstrapper.Model.NewInstance( "My Qi4CS application", "My application mode", "0.1" );
             // After creating the Qi4CS application, it must be activated

@@ -26,6 +26,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.SideEffect
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class GenericSideEffectTest : AbstractSingletonInstanceTest
    {
 

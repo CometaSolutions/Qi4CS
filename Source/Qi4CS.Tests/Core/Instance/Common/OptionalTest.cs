@@ -29,6 +29,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Common
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class OptionalTest : AbstractSingletonInstanceTest
    {
       public const String RESULT = "Stuff";

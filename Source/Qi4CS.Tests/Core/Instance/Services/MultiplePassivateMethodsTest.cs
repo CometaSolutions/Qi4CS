@@ -27,6 +27,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Services
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class MultiplePassivateMethodsTest : AbstractSingletonInstanceTest
    {
       private static Boolean _firstTriggered;

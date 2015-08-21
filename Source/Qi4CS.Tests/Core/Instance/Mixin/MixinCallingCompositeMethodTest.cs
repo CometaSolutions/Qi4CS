@@ -24,6 +24,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Mixin
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class MixinCallingCompositeMethodTest : AbstractSingletonInstanceTest
    {
       private static Boolean _mixinAInvoked = false;

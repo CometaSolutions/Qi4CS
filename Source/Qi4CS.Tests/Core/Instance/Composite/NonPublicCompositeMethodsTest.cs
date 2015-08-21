@@ -25,6 +25,7 @@ using System.Text;
 namespace Qi4CS.Tests.Core.Instance.Composite
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class NonPublicCompositeMethodsTest : AbstractSingletonInstanceTest
    {
       private static Boolean _methodCalled;
@@ -104,6 +105,7 @@ namespace Qi4CS.Tests.Core.Instance.Composite
    }
 
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class DefaultCompositeMethodVisiblityTest : AbstractSingletonInstanceTest
    {
       private static Boolean _methodCalled;

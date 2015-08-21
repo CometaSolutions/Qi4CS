@@ -28,6 +28,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Services
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class PassivatableTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

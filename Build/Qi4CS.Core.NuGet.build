@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project
+  DefaultTargets="Qi4CSCore_CheckVariables;;Qi4CSCore_Compile;Qi4CSCore_PEVerify;Qi4CSCore_NuGet"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  >
+  <PropertyGroup>
+    <Qi4CSCoreBaseDir Condition=" '$(Qi4CSCoreBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSCoreBaseDir>
+  </PropertyGroup>
+  
+  <Target Name="Qi4CSCore_CheckVariables">
+    <!-- Must specify release notes -->
+    <Error Condition="'$(Qi4CSCoreReleaseNotes)' == ''" Text="Please specify release notes in Qi4CSCoreReleaseNotes property." />
+  </Target>
+  
+  <Target Name="Qi4CSCore_Tests">
+    <!-- NuGet restore (NUnit package) -->
+    <CommonBuildTools.NuGetTaskRestore
+      NuGetExecutable="$(Qi4CSCoreNuGetExecutable)"
+      NuGetManagementFile="$(Qi4CSCoreBaseDir)/NuGetPackages.xml"
+      />
+      
+    <!-- Compile CIL Tests assembly -->
+    <MSBuild
+      Projects="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
+      Properties="Configuration=Debug;Qi4CSKind=SDK;"
+      />
+      
+    <!-- Call NUnit task -->
+    <CommonBuildTools.NUnitTask
+      Assemblies="Qi4CS.Tests.dll"
+      NoShadowAssemblies="True"
+      IncludeCategories="Qi4CS.Core"
+      WorkingDirectory="$(Qi4CSCoreBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
+      />
+  </Target>
+  
+  <Target Name="Qi4CSCore_Compile">   
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=Release;Qi4CSCoreKind=Normal;Qi4CSCorePlatformKind=SL" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=Release;Qi4CSCoreKind=Normal;Qi4CSCorePlatformKind=Normal" />
+    
+    <!-- Build SDK, since its files will be in build directory of NuGet package -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.SDK.build" Properties="Qi4CSSDKConfiguration=Release;Qi4CSSDKPlatformKind=Normal" />
+  </Target>
+   
+  <Target Name="Qi4CSCore_PEVerify">
+    <!-- First, delete all files that won't be included in the NuGet package. -->
+    <ItemGroup>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.xml"/>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/SL/Normal/UtilPack.dll"/>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.xml"/>
+      <Qi4CSCoreFilesToPersist Include="$(Qi4CSCoreBaseDir)/Output/Release/Normal/Normal/UtilPack.dll"/>
+      
+      <Qi4CSCoreFilesToDelete Include="$(Qi4CSCoreBaseDir)/Output/Release/SL/Normal/*.*"/>
+      <Qi4CSCoreFilesToDelete Include="$(Qi4CSCoreBaseDir)/Output/Release/Normal/Normal/*.*"/>
+      <Qi4CSCoreFilesToDelete Remove="@(Qi4CSCoreFilesToPersist)"/>
+    </ItemGroup>
+    <Delete
+      Files="@(Qi4CSCoreFilesToDelete)"
+    />
+    
+    <!-- Files for PEVerify -->
+    <ItemGroup>
+      <PEVerifyFiles Include="$(Qi4CSCoreBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.dll" />
+      <PEVerifyFiles Include="$(Qi4CSCoreBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.dll" />
+    </ItemGroup>
+    
+    <!-- Verify all .dll files exist -->
+    <PropertyGroup>
+      <PEVerifyFilesCount>@(PEVerifyFiles->Count())</PEVerifyFilesCount>
+      <PEVerifyFilesExpectedCount>2</PEVerifyFilesExpectedCount>
+    </PropertyGroup>
+    <Error Condition=" '$(PEVerifyFilesCount)' != '$(PEVerifyFilesExpectedCount)' " Text="Not all required files for PEVerify are present ($(PEVerifyFilesCount))." />
+
+    <!-- Call PEVerify -->
+    <CommonBuildTools.PEVerifyTask
+      FileToVerify="%(PEVerifyFiles.Identity)"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSCore_NuGet">
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <!-- Common -->
+      <Qi4CSCoreBaseDirNuGet>$(Qi4CSCoreBaseDir)/NuGet</Qi4CSCoreBaseDirNuGet>
+    
+      <!-- NuGet Spec -->
+      <Qi4CSCoreNuSpecVersionFilename Condition=" '$(Qi4CSCoreNuSpecVersion)' == '' ">$(Qi4CSCoreBaseDir)/Source/Qi4CS.Core.Version.txt</Qi4CSCoreNuSpecVersionFilename>
+      <Qi4CSCoreNuSpecFilePath>$(Qi4CSCoreBaseDirNuGet)/Qi4CS.Core.nuspec</Qi4CSCoreNuSpecFilePath>
+      
+      <Qi4CSCoreUtilPackVersion>$([System.IO.File]::ReadAllText($(Qi4CSCoreBaseDir)/Dependencies/UtilPackVersion.txt))</Qi4CSCoreUtilPackVersion>
+      <Qi4CSCoreCAMPhysicalVersion>$([System.IO.File]::ReadAllText($(Qi4CSCoreBaseDir)/Dependencies/CAMPhysicalVersion.txt))</Qi4CSCoreCAMPhysicalVersion>
+      <Qi4CSCoreCAMLogicalVersion>$([System.IO.File]::ReadAllText($(Qi4CSCoreBaseDir)/Dependencies/CAMLogicalVersion.txt))</Qi4CSCoreCAMLogicalVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <Qi4CSCoreNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Core.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Core.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Core.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Core.xml</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Core.dll">
+        <TargetFilePath>lib/portable-net40+win8/Qi4CS.Core.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Core.xml">
+        <TargetFilePath>lib/portable-net40+win8/Qi4CS.Core.xml</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.targets">
+        <TargetFilePath>build/Qi4CS.Core.targets</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Packages/UtilPack.$(Qi4CSCoreUtilPackVersion)/lib/portable-net40+win8+wpa81/UtilPack.dll">
+        <TargetFilePath>build/UtilPack.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Packages/CAM.Physical.$(Qi4CSCoreCAMPhysicalVersion)/lib/net40-client/CILAssemblyManipulator.Physical.dll">
+        <TargetFilePath>build/CILAssemblyManipulator.Physical.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Packages/CAM.Logical.$(Qi4CSCoreCAMLogicalVersion)/lib/net40-client/CILAssemblyManipulator.Logical.dll">
+        <TargetFilePath>build/CILAssemblyManipulator.Logical.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Core.dll">
+        <TargetFilePath>build/Qi4CS.Core.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.dll">
+        <TargetFilePath>build/Qi4CS.CodeGeneration.DotNET.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.CodeGeneration.MSBuild.dll">
+        <TargetFilePath>build/Qi4CS.CodeGeneration.MSBuild.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.dll">
+        <TargetFilePath>build/Qi4CS.Extensions.Functional.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.dll">
+        <TargetFilePath>build/Qi4CS.Extensions.Configuration.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.dll">
+        <TargetFilePath>build/Qi4CS.Extensions.Configuration.XML.dll</TargetFilePath>
+      </Qi4CSCoreNuGetFile>
+      
+      <Qi4CSCoreNuGetDependency Include="UtilPack">
+        <Version>$(Qi4CSCoreUtilPackVersion)</Version>
+      </Qi4CSCoreNuGetDependency>
+      
+    </ItemGroup>
+    
+    <!-- Generate .nuspec file -->
+    <CommonBuildTools.NuGetTaskNuSpec
+      VersionFile="$(Qi4CSCoreNuSpecVersionFilename)"
+      VersionContents="$(Qi4CSCoreNuSpecVersion)"
+      Copyright_InceptionYear="2011"
+      PackageID="Qi4CS.Core"
+      Authors="Stanislav Muhametsin"
+      Description="Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the core package required for all projects using Qi4CS."
+      Title="Qi4CS Core"
+      ReleaseNotes="$(Qi4CSCoreReleaseNotes)"
+      Tags="qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity"
+      Summary="Qi4CS Core provides the minimal functionality required for COP, AOP and DI -oriented programming."
+      ProjectURL="https://github.com/CometaSolutions/Qi4CS"
+      LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
+      RequireLicenseAcceptance="False"
+      Files="@(Qi4CSCoreNuGetFile)"
+      Dependencies="@(Qi4CSCoreNuGetDependency)"
+      OutputPath="$(Qi4CSCoreNuSpecFilePath)"
+      >
+      <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSCoreNuSpecVersionGenerated" />
+    </CommonBuildTools.NuGetTaskNuSpec>
+
+    <!-- Generate the .nupkg file -->
+    <CommonBuildTools.NuGetTaskPackage
+      NuSpecFile="$(Qi4CSCoreNuSpecFilePath)"
+      OutputDirectory="$(Qi4CSCoreBaseDir)/NuGet"
+      BasePath="$(Qi4CSCoreBaseDir)"
+      MinClientVersion="2.5"
+    />
+    
+    <!-- Push if API-key or config file property specified -->
+    <CommonBuildTools.NuGetTaskPush
+      Condition=" '$(Qi4CSCoreNuGetPushAPIKey)' != '' or '$(Qi4CSCoreNuGetPushConfigFile)' != '' "
+      PackageFilePath="$(Qi4CSCoreBaseDirNuGet)/Qi4CSCore.$(Qi4CSCoreNuSpecVersionGenerated).nupkg"
+      APIKey="$(Qi4CSCoreNuGetPushAPIKey)"
+      Source="$(Qi4CSCoreNuGetPushSource)"
+      ConfigFile="$(Qi4CSCoreNuGetPushConfigFile)"
+      />
+  </Target>
+  
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/NuGetTasks.targets" />
+  
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/PEVerify.targets" />
+    
+  <Import Project="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/MSBuild/NUnit.targets" />
+  
+</Project>

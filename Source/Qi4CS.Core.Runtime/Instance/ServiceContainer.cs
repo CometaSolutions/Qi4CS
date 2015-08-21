@@ -52,13 +52,9 @@ namespace Qi4CS.Core.Runtime.Instance
 
       public ServiceCompositeInstance GetService( CompositeInstanceStructureOwner structureOwner, CompositeModel model, IEnumerable<Type> serviceTypes, UsesContainerQuery usesContainer, String serviceID )
       {
-#if SILVERLIGHT
-         lock ( this._services )
-         {
-#endif
          return this._services.
 #if SILVERLIGHT
-GetOrAdd_NotThreadSafe(
+GetOrAdd_WithLock(
 #else
 GetOrAdd(
 #endif
@@ -69,9 +65,6 @@ GetOrAdd(
                var instance = new ServiceCompositeInstanceImpl( structureOwner, model, serviceTypes, builderUses.Query, serviceID, new MainCompositeConstructorArguments() );
                return instance;
             } );
-#if SILVERLIGHT
-         }
-#endif
       }
 
       public IEnumerable<ServiceCompositeInstance> ExistingServices

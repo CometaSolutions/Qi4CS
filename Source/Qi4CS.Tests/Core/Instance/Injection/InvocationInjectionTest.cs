@@ -32,6 +32,7 @@ using Qi4CS.Core.API.Instance;
 namespace Qi4CS.Tests.Core.Instance.Injection
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class InvocationInjectionTest : AbstractSingletonInstanceTest
    {
       public const String FIRST_TEST_STRING = "1";

@@ -24,7 +24,8 @@ using Qi4CS.Core.SPI.Model;
 using Qi4CS.Extensions.Functional.Assembling;
 
 #if QI4CS_SDK
-using CILAssemblyManipulator.API;
+using CILAssemblyManipulator.Logical;
+using CILAssemblyManipulator.Physical;
 #endif
 
 namespace Qi4CS.Extensions.Functional.Model
@@ -110,10 +111,9 @@ namespace Qi4CS.Extensions.Functional.Model
 
                tb.AddDefaultConstructor( MethodAttributes.Public | MethodAttributes.HideBySig );
                var ctx = tb.ReflectionContext;
-               var invocationHandlerMethod = INVOCATION_HANDLER_METHOD.NewWrapper( ctx );
+               var invocationHandlerMethod = ctx.NewWrapper( INVOCATION_HANDLER_METHOD );
                tb.SetParentType( invocationHandlerMethod.DeclaringType );
-               var mb = tb.AddMethod( invocationHandlerMethod.Name, MethodAttributesUtils.EXPLICIT_IMPLEMENTATION_ATTRIBUTES, CallingConventions.Standard );
-               mb.ReturnParameter.ParameterType = invocationHandlerMethod.GetReturnType();
+               var mb = tb.AddMethodWithReturnType( invocationHandlerMethod.Name, AbstractCompositeModelTypeCodeGenerator.EXPLICIT_IMPLEMENTATION_ATTRIBUTES, CallingConventions.Standard, invocationHandlerMethod.GetReturnType() );
                mb.AddOverriddenMethods( invocationHandlerMethod );
                foreach ( var p in invocationHandlerMethod.Parameters )
                {
@@ -123,7 +123,7 @@ namespace Qi4CS.Extensions.Functional.Model
                var il = mb.MethodIL;
                // return ((<composite type>)composite).<method>((<first param type>)args[0], (<second param type>)args[1], ...);
                var arrayElementType = mb.Parameters[1].ParameterType.GetElementType();
-               var eSMethod = sMethod.NewWrapper( ctx );
+               var eSMethod = ctx.NewWrapper( sMethod );
                var localsArray = new LocalBuilder[eSMethod.Parameters.Count];
                for ( var i = 0; i < localsArray.Length; ++i )
                {
@@ -139,7 +139,7 @@ namespace Qi4CS.Extensions.Functional.Model
                }
 
                il.EmitLoadArg( 1 );
-               il.EmitCastToType( mb.Parameters[0].ParameterType, sMethod.DeclaringType.NewWrapper( ctx ) );
+               il.EmitCastToType( mb.Parameters[0].ParameterType, ctx.NewWrapper( sMethod.DeclaringType ) );
                foreach ( var param in eSMethod.Parameters )
                {
                   if ( localsArray[param.Position] == null )
@@ -155,7 +155,7 @@ namespace Qi4CS.Extensions.Functional.Model
                      il.EmitLoadLocalAddress( localsArray[param.Position] );
                   }
                }
-               il.EmitCall( sMethod.NewWrapper( ctx ) );
+               il.EmitCall( ctx.NewWrapper( sMethod ) );
 
                for ( var i = 0; i < localsArray.Length; ++i )
                {
@@ -168,18 +168,18 @@ namespace Qi4CS.Extensions.Functional.Model
                   }
                }
 
-               if ( typeof( void ).Equals( sMethod.ReturnType ) )
+               if ( Equals( typeof( void ), sMethod.ReturnType ) )
                {
                   il.EmitLoadNull();
                }
                else
                {
-                  il.EmitCastToType( sMethod.ReturnType.NewWrapper( ctx ), mb.GetReturnType() );
+                  il.EmitCastToType( ctx.NewWrapper( sMethod.ReturnType ), mb.GetReturnType() );
                }
                il.EmitReturn();
 
                // Add attribute to the assembly
-               var attrCtor = TYPE_INFO_ATTRIBUTE_CTOR.NewWrapper( ctx );
+               var attrCtor = ctx.NewWrapper( TYPE_INFO_ATTRIBUTE_CTOR );
                curModule.Assembly.AddNewCustomAttributeTypedParams(
                   attrCtor,
                   CILCustomAttributeFactory.NewTypedArgument( cModel.CompositeModelID, ctx ),

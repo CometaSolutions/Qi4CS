@@ -23,6 +23,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Transients
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class EqualsHashCodeTest : AbstractSingletonInstanceTest
    {
       private static Boolean _publicCompositeEqualsCalled = false;

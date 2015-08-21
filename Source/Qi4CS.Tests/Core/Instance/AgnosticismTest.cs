@@ -74,7 +74,7 @@ namespace Qi4CS.Tests.Core.Instance
             architecture.AttributeProcessingEvent += new EventHandler<AttributeProcessingArgs>( architecture_AttributeProcessingEvent );
 
             var model = architecture.CreateModel();
-            model.GenerateAndSaveAssemblies( emittingInfoCreator: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
+            model.GenerateAndSaveAssemblies( CodeGeneration.CodeGenerationParallelization.NotParallel, logicalAssemblyProcessor: Qi4CSCodeGenHelper.EmittingArgumentsCallback );
             var application = model.NewInstance( TestConstants.APPLICATION_NAME, TestConstants.APPLICATION_MODE, TestConstants.APPLICATION_VERSION );
             application.Activate();
             try

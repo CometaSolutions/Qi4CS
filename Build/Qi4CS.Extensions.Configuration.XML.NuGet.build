@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project
+  DefaultTargets="Qi4CSEConfXML_CheckVariables;Qi4CSEConfXML_Tests;Qi4CSEConfXML_Compile;Qi4CSEConfXML_PEVerify;Qi4CSEConfXML_NuGet"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  >
+  <PropertyGroup>
+    <Qi4CSEConfXMLBaseDir Condition=" '$(Qi4CSEConfXMLBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSEConfXMLBaseDir>
+  </PropertyGroup>
+  
+  <Target Name="Qi4CSEConfXML_CheckVariables">
+    <!-- Must specify release notes -->
+    <Error Condition="'$(Qi4CSEConfXMLReleaseNotes)' == ''" Text="Please specify release notes in Qi4CSEConfXMLReleaseNotes property." />
+  </Target>
+  
+  <Target Name="Qi4CSEConfXML_Tests">
+    <!-- NuGet restore (NUnit package) -->
+    <CommonBuildTools.NuGetTaskRestore
+      NuGetExecutable="$(Qi4CSEConfXMLNuGetExecutable)"
+      NuGetManagementFile="$(Qi4CSEConfXMLBaseDir)/NuGetPackages.xml"
+      />
+      
+    <!-- Compile CIL Tests assembly -->
+    <MSBuild
+      Projects="$(Qi4CSEConfXMLBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
+      Properties="Configuration=Debug"
+      />
+      
+    <!-- Call NUnit task -->
+    <CommonBuildTools.NUnitTask
+      Assemblies="Qi4CS.Tests.dll"
+      NoShadowAssemblies="True"
+      IncludeCategories="Qi4CS.Extensions.Configuration.XML"
+      WorkingDirectory="$(Qi4CSEConfXMLBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
+      />
+  </Target>
+  
+  <Target Name="Qi4CSEConfXML_Compile">   
+    <!-- <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.XML.build" Properties="Qi4CSEConfXMLConfiguration=Release;Qi4CSEConfXMLPlatformKind=SL" /> -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.XML.build" Properties="Qi4CSEConfXMLConfiguration=Release;Qi4CSEConfXMLPlatformKind=Normal" />
+  </Target>
+   
+  <Target Name="Qi4CSEConfXML_PEVerify">
+    <!-- First, delete all files that won't be included in the NuGet package. -->
+    <ItemGroup>
+      <!-- <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.XML.dll" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.XML.xml" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/UtilPack.dll"/> -->
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.XML.dll" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.XML.xml" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEConfXMLFilesToPersist Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/UtilPack.dll"/>
+      
+      <!-- <Qi4CSEConfXMLFilesToDelete Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/SL/Normal/*.*"/> -->
+      <Qi4CSEConfXMLFilesToDelete Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/*.*"/>
+      <Qi4CSEConfXMLFilesToDelete Remove="@(Qi4CSEConfXMLFilesToPersist)"/>
+    </ItemGroup>
+    <Delete
+      Files="@(Qi4CSEConfXMLFilesToDelete)"
+    />
+    
+    <!-- Files for PEVerify -->
+    <ItemGroup>
+      <Qi4CSEConfXMLPEVerifyFiles Include="$(Qi4CSEConfXMLBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.XML.dll" />
+    </ItemGroup>
+    
+    <!-- Verify all .dll files exist -->
+    <PropertyGroup>
+      <Qi4CSEConfXMLPEVerifyFilesCount>@(Qi4CSEConfXMLPEVerifyFiles->Count())</Qi4CSEConfXMLPEVerifyFilesCount>
+      <Qi4CSEConfXMLPEVerifyFilesExpectedCount>1</Qi4CSEConfXMLPEVerifyFilesExpectedCount>
+    </PropertyGroup>
+    <Error Condition=" '$(Qi4CSEConfXMLPEVerifyFilesCount)' != '$(Qi4CSEConfXMLPEVerifyFilesExpectedCount)' " Text="Not all required files for PEVerify are present ($(Qi4CSEConfXMLPEVerifyFilesCount))." />
+
+    <!-- Call PEVerify -->
+    <CommonBuildTools.PEVerifyTask
+      FileToVerify="%(Qi4CSEConfXMLPEVerifyFiles.Identity)"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSEConfXML_NuGet">
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <!-- Common -->
+      <Qi4CSEConfXMLBaseDirNuGet>$(Qi4CSEConfXMLBaseDir)/NuGet</Qi4CSEConfXMLBaseDirNuGet>
+    
+      <!-- NuGet Spec -->
+      <Qi4CSEConfXMLNuSpecVersionFilename Condition=" '$(Qi4CSEConfXMLNuSpecVersion)' == '' ">$(Qi4CSEConfXMLBaseDir)/Source/Qi4CS.Extensions.Configuration.XML.Version.txt</Qi4CSEConfXMLNuSpecVersionFilename>
+      <Qi4CSEConfXMLNuSpecFilePath>$(Qi4CSEConfXMLBaseDirNuGet)/Qi4CS.Extensions.Configuration.XML.nuspec</Qi4CSEConfXMLNuSpecFilePath>
+      
+      <Qi4CSEConfXMLQEConfVersion Condition=" '$(Qi4CSEConfXMLQEConfVersion)' == '' ">$([System.IO.File]::ReadAllText($(Qi4CSEConfXMLBaseDir)/Source/Qi4CS.Extensions.Configuration.Version.txt))</Qi4CSEConfXMLQEConfVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <Qi4CSEConfXMLNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.XML.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.XML.dll</TargetFilePath>
+      </Qi4CSEConfXMLNuGetFile>
+      <Qi4CSEConfXMLNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.XML.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.XML.xml</TargetFilePath>
+      </Qi4CSEConfXMLNuGetFile>
+      
+      <Qi4CSEConfXMLNuGetDependency Include="Qi4CS.Extensions.Configuration">
+        <Version>$(Qi4CSEConfXMLQEConfVersion)</Version>
+      </Qi4CSEConfXMLNuGetDependency>
+    </ItemGroup>
+    
+    <!-- Generate .nuspec file -->
+    <CommonBuildTools.NuGetTaskNuSpec
+      VersionFile="$(Qi4CSEConfXMLNuSpecVersionFilename)"
+      VersionContents="$(Qi4CSEConfXMLNuSpecVersion)"
+      Copyright_InceptionYear="2014"
+      PackageID="Qi4CS.Extensions.Configuration.XML"
+      Authors="Stanislav Muhametsin"
+      Description="Qi4CS Extension: Configuration (XML) is an extension of Qi4CS.Core that further augments Qi4CS.Extensions.Configuration by adding customizable XML (de)serialization support for configuration composites."
+      Title="Qi4CS Extension: Configuration (XML)"
+      ReleaseNotes="$(Qi4CSEConfXMLReleaseNotes)"
+      Tags="qi4cs extension configuration dynamic load save xml"
+      Summary="Qi4CS Extension: Configuration (XML) provides XML serialization capability to Qi4CS.Extension.Configuration."
+      ProjectURL="https://github.com/CometaSolutions/Qi4CS"
+      LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
+      RequireLicenseAcceptance="False"
+      Files="@(Qi4CSEConfXMLNuGetFile)"
+      Dependencies="@(Qi4CSEConfXMLNuGetDependency)"
+      OutputPath="$(Qi4CSEConfXMLNuSpecFilePath)"
+      >
+      <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSEConfXMLNuSpecVersionGenerated" />
+    </CommonBuildTools.NuGetTaskNuSpec>
+
+    <!-- Generate the .nupkg file -->
+    <CommonBuildTools.NuGetTaskPackage
+      NuSpecFile="$(Qi4CSEConfXMLNuSpecFilePath)"
+      OutputDirectory="$(Qi4CSEConfXMLBaseDir)/NuGet"
+      BasePath="$(Qi4CSEConfXMLBaseDir)"
+      MinClientVersion="2.5"
+    />
+    
+    <!-- Push if API-key or config file property specified -->
+    <CommonBuildTools.NuGetTaskPush
+      Condition=" '$(Qi4CSEConfXMLNuGetPushAPIKey)' != '' or '$(Qi4CSEConfXMLNuGetPushConfigFile)' != '' "
+      PackageFilePath="$(Qi4CSEConfXMLBaseDirNuGet)/Qi4CS.Extensions.Configuration.XML.$(Qi4CSEConfXMLNuSpecVersionGenerated).nupkg"
+      APIKey="$(Qi4CSEConfXMLNuGetPushAPIKey)"
+      Source="$(Qi4CSEConfXMLNuGetPushSource)"
+      ConfigFile="$(Qi4CSEConfXMLNuGetPushConfigFile)"
+      />
+  </Target>
+  
+  <Import Project="$(Qi4CSEConfXMLBaseDir)/CommonBuildTools/CLR/MSBuild/NuGetTasks.targets" />
+  
+  <Import Project="$(Qi4CSEConfXMLBaseDir)/CommonBuildTools/CLR/MSBuild/PEVerify.targets" />
+    
+  <Import Project="$(Qi4CSEConfXMLBaseDir)/CommonBuildTools/CLR/MSBuild/NUnit.targets" />
+  
+</Project>

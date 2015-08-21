@@ -27,6 +27,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.AppliesTo
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class AppliesToMultipleFiltersTest : AbstractSingletonInstanceTest
    {
       public const String TEST_METHOD_RESULT = "TestMethodResult";

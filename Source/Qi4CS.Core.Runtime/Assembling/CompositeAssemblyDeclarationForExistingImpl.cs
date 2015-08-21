@@ -84,7 +84,7 @@ namespace Qi4CS.Core.Runtime.Assembling
       {
          types = types.FilterNulls();
          this._affectedTypes.UnionWith( types );
-         var mainType = types.FirstOrDefault(type => !ReflectionHelper.QI4CS_ASSEMBLY.Equals(type.GetAssembly()));
+         var mainType = types.FirstOrDefault( type => !ReflectionHelper.IsQi4CSAssembly( type.GetAssembly() ) );
          if ( mainType != null )
          {
             this.ForEachInfo( info =>

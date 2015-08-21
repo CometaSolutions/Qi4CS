@@ -130,7 +130,8 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly LocalBuilderInfo LB_INVOCATION_INFO;
       protected static readonly LocalBuilderInfo LB_CONCERN_INDEX;
 
-      protected const CILAssemblyManipulator.API.MethodAttributes NORMAL_IMPLEMENTATION_ATTRIBUTES = CILAssemblyManipulator.API.MethodAttributes.Public | CILAssemblyManipulator.API.MethodAttributes.HideBySig | CILAssemblyManipulator.API.MethodAttributes.Virtual;
+      protected const CILAssemblyManipulator.Physical.MethodAttributes NORMAL_IMPLEMENTATION_ATTRIBUTES = CILAssemblyManipulator.Physical.MethodAttributes.Public | CILAssemblyManipulator.Physical.MethodAttributes.HideBySig | CILAssemblyManipulator.Physical.MethodAttributes.Virtual;
+      public const CILAssemblyManipulator.Physical.MethodAttributes EXPLICIT_IMPLEMENTATION_ATTRIBUTES = CILAssemblyManipulator.Physical.MethodAttributes.Private | CILAssemblyManipulator.Physical.MethodAttributes.HideBySig | CILAssemblyManipulator.Physical.MethodAttributes.NewSlot | CILAssemblyManipulator.Physical.MethodAttributes.Virtual | CILAssemblyManipulator.Physical.MethodAttributes.Final;
 
       protected static readonly Type COMPOSITE_CTOR_PROPERTIES_PARAM_TYPE_NATIVE = typeof( CollectionAdditionOnly<CompositeProperty> );
       protected static readonly Type COMPOSITE_CTOR_EVENTS_PARAM_TYPE_NATIVE = typeof( CollectionAdditionOnly<CompositeEvent> );

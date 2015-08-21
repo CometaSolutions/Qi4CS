@@ -27,6 +27,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Property
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class CompositePropertyTest : AbstractSingletonInstanceTest
    {
       private static Int32 _activatedCount;

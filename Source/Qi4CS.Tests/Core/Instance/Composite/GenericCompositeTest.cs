@@ -26,6 +26,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Composite
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class GenericCompositeTest : AbstractSingletonInstanceTest
    {
 

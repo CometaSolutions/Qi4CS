@@ -33,9 +33,11 @@ using Qi4CS.Core.Runtime.Instance;
 using Qi4CS.Core.Runtime.Model;
 
 #if QI4CS_SDK
-using CILAssemblyManipulator.API;
-using System.Collections.Concurrent;
+using CILAssemblyManipulator.Logical;
 using System.Threading.Tasks;
+#if !SILVERLIGHT
+using System.Collections.Concurrent;
+#endif
 #endif
 
 namespace Qi4CS.Core.Runtime.Model
@@ -119,7 +121,7 @@ namespace Qi4CS.Core.Runtime.Model
 
          CheckValidation( validationResult, "Tried to create new application instance from model with validation errors." );
          var assDic = this.AffectedAssemblies
-            .Where( a => !ReflectionHelper.QI4CS_ASSEMBLY.Equals( a ) )
+            .Where( a => !ReflectionHelper.IsQi4CSAssembly( a ) )
             .ToDictionary( a => a, a => this.LoadQi4CSGeneratedAssembly( a ) );
          var attrDic = assDic.Values
             .SelectMany( a => a.GetCustomAttributes().OfType<CompositeTypesAttribute>() )
@@ -157,11 +159,11 @@ namespace Qi4CS.Core.Runtime.Model
 
          if ( !args.PublicKey.IsNullOrEmpty() )
          {
-            an += ", PublicKey=" + StringConversions.ByteArray2HexStr( args.PublicKey );
+            an += ", PublicKey=" + args.PublicKey.CreateHexString();
          }
          else if ( !args.PublicKeyToken.IsNullOrEmpty() )
          {
-            an += ", PublicKeyToken=" + StringConversions.ByteArray2HexStr( args.PublicKeyToken );
+            an += ", PublicKeyToken=" + args.PublicKeyToken.CreateHexString();
          }
 
          return Assembly.Load(
@@ -299,7 +301,7 @@ namespace Qi4CS.Core.Runtime.Model
 
       public event EventHandler<ApplicationCodeGenerationArgs> ApplicationCodeGenerationEvent;
 
-      public DictionaryQuery<Assembly, CILAssemblyManipulator.API.CILAssembly> GenerateCode(
+      public DictionaryQuery<Assembly, CILAssemblyManipulator.Logical.CILAssembly> GenerateCode(
          CILReflectionContext reflectionContext,
          Boolean parallelize,
          Boolean isSilverlight
@@ -338,7 +340,13 @@ namespace Qi4CS.Core.Runtime.Model
          var assembliesArray = this._affectedAssemblies.Value.ToArray();
          var models = this._models.CQ.Values.ToArray();
          var supports = this._compositeModelTypeSupport;
-         var cResults = new ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType[]>>();
+         var cResults = new
+#if SILVERLIGHT
+         Dictionary<CompositeModel, IDictionary<Assembly, CILType[]>>()
+#else
+ ConcurrentDictionary<CompositeModel, IDictionary<Assembly, CILType[]>>()
+#endif
+;
          cResultsOut = cResults;
          var codeGens = models
             .Select( muudel => supports[muudel.ModelType] )
@@ -348,21 +356,21 @@ namespace Qi4CS.Core.Runtime.Model
          var assemblyDic = new Dictionary<Assembly, CILModule>();
          foreach ( var currentAssembly in assembliesArray )
          {
-            if ( !ReflectionHelper.QI4CS_ASSEMBLY.Equals( currentAssembly ) )
+            if ( !ReflectionHelper.IsQi4CSAssembly( currentAssembly ) )
             {
                var assemblyBareFileName = Qi4CSGeneratedAssemblyAttribute.GetGeneratedAssemblyName( currentAssembly );
 
                var ass = reflectionContext.NewBlankAssembly( assemblyBareFileName );
-               var eAss = currentAssembly.NewWrapper( reflectionContext );
+               var eAss = reflectionContext.NewWrapper( currentAssembly );
                ass.Name.MajorVersion = eAss.Name.MajorVersion;
                ass.Name.MinorVersion = eAss.Name.MinorVersion;
                ass.Name.BuildNumber = eAss.Name.BuildNumber;
                ass.Name.Revision = eAss.Name.Revision;
                ass.Name.Culture = eAss.Name.Culture;
 
-               ass.AddNewCustomAttributeTypedParams( ASS_TITLE_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
-               ass.AddNewCustomAttributeTypedParams( ASS_DESCRIPTION_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
-               ass.AddNewCustomAttributeTypedParams( QI4CS_GENERATED_ATTRIBUTE_CTOR.NewWrapper( reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( ASS_TITLE_ATTRIBUTE_CTOR ), CILCustomAttributeFactory.NewTypedArgument( assemblyBareFileName, reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( ASS_DESCRIPTION_ATTRIBUTE_CTOR ), CILCustomAttributeFactory.NewTypedArgument( ( assemblyBareFileName + " Enhanced by Qi4CS." ), reflectionContext ) );
+               ass.AddNewCustomAttributeTypedParams( reflectionContext.NewWrapper( QI4CS_GENERATED_ATTRIBUTE_CTOR ) );
 
                var mod = ass.AddModule( assemblyBareFileName + ".dll" );
                assemblyDic.Add( currentAssembly, mod );
@@ -380,11 +388,18 @@ namespace Qi4CS.Core.Runtime.Model
                // Also, assemblies not part of this model will not be visible
                var thisAssemblyDicCopy = typeModel.GetAllCodeGenerationRelatedAssemblies( model )
                  .Distinct()
-                 .Except( ReflectionHelper.QI4CS_ASSEMBLY.Singleton() )
+                 .Where( a => !ReflectionHelper.IsQi4CSAssembly( a ) )
                  .ToDictionary( a => a, a => assemblyDic[a] );
 
                // Perform emitting
+#if SILVERLIGHT
+               lock( cResults )
+               {
+#endif
                cResults[model] = codeGens[model.ModelType].EmitCodeForCompositeModel( new CompositeModelEmittingArgs( model, typeModel, thisAssemblyDicCopy ) );
+#if SILVERLIGHT
+               }
+#endif
             } );
 
          return assemblyDic;
@@ -406,10 +421,18 @@ namespace Qi4CS.Core.Runtime.Model
       // ParallelHelper.ForEachWithThreadLocal
       // ParallelHelper.ForEachWithThreadLocalAndPartitioner
       // ParallelHelper.ForEachGeneric <- all parameters can be specified
-      public static Boolean DoPotentiallyInParallel<T>( Boolean parallelize, IEnumerable<T> enumerable, Action<T> action, Func<Partitioner<T>> partitionerCreator = null )
+      public static Boolean DoPotentiallyInParallel<T>( Boolean parallelize, IEnumerable<T> enumerable, Action<T> action
+#if !SILVERLIGHT
+, Func<Partitioner<T>> partitionerCreator = null
+#endif
+ )
       {
          if ( parallelize )
          {
+#if SILVERLIGHT
+            // No Parallel in SL
+            Task.WaitAll( enumerable.Select( item => Task.Factory.StartNew( () => action( item ) ) ).ToArray() );
+#else
             Partitioner<T> partitioner;
             if ( partitionerCreator == null )
             {
@@ -421,6 +444,7 @@ namespace Qi4CS.Core.Runtime.Model
             }
 
             Parallel.ForEach( partitioner, action );
+#endif
          }
          else
          {
@@ -436,7 +460,13 @@ namespace Qi4CS.Core.Runtime.Model
       {
          if ( parallelize )
          {
+
+#if SILVERLIGHT
+            // No Parallel in SL
+            Task.WaitAll( Enumerable.Range( fromInclusive, toExclusive - fromInclusive ).Select( idx => Task.Factory.StartNew( () => action( idx ) ) ).ToArray() );
+#else
             Parallel.For( fromInclusive, toExclusive, action );
+#endif
          }
          else
          {

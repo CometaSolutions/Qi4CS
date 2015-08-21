@@ -24,6 +24,7 @@ using System;
 namespace Qi4CS.Tests.Core.Instance.Structures
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ServiceFinderTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

@@ -7,57 +7,16 @@
     <Qi4CSEFuncBuildTargets Condition=" '$(Qi4CSEFuncBuildTargets)' == '' ">Build</Qi4CSEFuncBuildTargets>
     <Qi4CSEFuncBuildTargets Condition=" '$(MonoBuild)' != '' ">DeleteTargetFrameworkFile;$(Qi4CSEFuncBuildTargets)</Qi4CSEFuncBuildTargets>
     <Qi4CSEFuncBuildTargets>GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSEFuncBuildTargets)</Qi4CSEFuncBuildTargets>
-    
-    <Qi4CSCoreConfiguration Condition=" '$(Qi4CSCoreConfiguration)' == '' ">$(Qi4CSEFuncConfiguration)</Qi4CSCoreConfiguration>
-    <Qi4CSCorePlatform Condition=" '$(Qi4CSCorePlatform)' == '' ">$(Qi4CSEFuncPlatform)</Qi4CSCorePlatform>
+    <Qi4CSEFuncKind Condition=" '$(Qi4CSEFuncKind)' == '' ">Normal</Qi4CSEFuncKind>
+    <Qi4CSEFuncPlatformKind Condition=" '$(Qi4CSEFuncPlatformKind)' == '' ">Normal</Qi4CSEFuncPlatformKind>
   </PropertyGroup>
    
   <Target Name="Build">
     <!-- Build Qi4CS Core -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=$(Qi4CSCoreConfiguration);Qi4CSCorePlatform=$(Qi4CSCorePlatform)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=$(Qi4CSEFuncConfiguration);Qi4CSCorePlatform=$(Qi4CSEFuncPlatform);Qi4CSCoreKind=$(Qi4CSEFuncKind);Qi4CSCorePlatformKind=$(Qi4CSEFuncPlatformKind)" />
     
     <!-- Build Qi4CS Extension: Functional  -->
-    <MSBuild Projects="$(Qi4CSEFuncBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" Targets="$(Qi4CSEFuncBuildTargets)" Properties="Configuration=$(Qi4CSEFuncConfiguration);Platform=$(Qi4CSEFuncPlatform)" />
+    <MSBuild Projects="$(Qi4CSEFuncBaseDir)/Source/Qi4CS.Extensions.Functional/Qi4CS.Extensions.Functional.csproj" Targets="$(Qi4CSEFuncBuildTargets)" Properties="Configuration=$(Qi4CSEFuncConfiguration);Platform=$(Qi4CSEFuncPlatform);Qi4CSKind=$(Qi4CSEFuncKind);Qi4CSPlatformKind=$(Qi4CSEFuncPlatformKind);IsCommandLineBuild=True" />
   </Target>
 
-  <Import Project="$(Qi4CSEFuncBaseDir)/CommonBuildTools/CLR/MSBuild/NuSpec.targets" />
-  
-  <!-- <Import Project="$(Qi4CSEFuncBaseDir)/CommonBuildtools/CLR/MSBuild/PEVerify.targets" /> -->
-  
-  <Target Name="InitializeNuSpecProperties" BeforeTargets="Qi4CSEFuncNuSpec">
-    <!-- NuSpec file information -->
-    <PropertyGroup>
-      <Qi4CSEFuncBaseDirNuSpec>$([System.IO.Path]::GetFullPath($(Qi4CSEFuncBaseDir)))</Qi4CSEFuncBaseDirNuSpec>
-      <NuSpec_OutputPath>$(MSBuildThisFileDirectory)../NuSpec/Qi4CS.Extensions.Functional.nuspec</NuSpec_OutputPath>
-      <NuSpec_ID>Qi4CS.Extensions.Functional</NuSpec_ID>
-      <NuSpec_VersionFilename>$(MSBuildThisFileDirectory)../Source/Qi4CSVersion.txt</NuSpec_VersionFilename>
-      <NuSpec_Authors>Stanislav Muhametsin</NuSpec_Authors>
-      <NuSpec_Description>Qi4CS Extension: Functional is an extension of Qi4CS.Core that allows ways to parametrize some functionality, which is not part of original API of objects, based on types of such objects. This mapping information can be specified during assembly time and also modified during runtime.</NuSpec_Description>
-      <NuSpec_Title>Qi4CS Extension: Functional</NuSpec_Title>
-      <NuSpec_AutoCopyright>true</NuSpec_AutoCopyright>
-      <NuSpec_CopyrightInceptionYear>2012</NuSpec_CopyrightInceptionYear>
-      <NuSpec_LicenseURL>http://www.apache.org/licenses/LICENSE-2.0</NuSpec_LicenseURL>
-      <NuSpec_ProjectURL>https://github.com/CometaSolutions/Qi4CS</NuSpec_ProjectURL>
-      <NuSpec_RequireLicenseAcceptance>false</NuSpec_RequireLicenseAcceptance>
-      <NuSpec_Summary>Qi4CS Extension: Functional provides ways of mapping functionality from types of participants to object implementing such functionality.</NuSpec_Summary>
-      <NuSpec_Tags>qi4cs extension functional map method api type</NuSpec_Tags>
-      <NuSpec_FilesXML><![CDATA[
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.dll" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.dll" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\dotNET\Normal\Qi4CS.Extensions.Functional.xml" target="lib\portable-net40+win\Qi4CS.Extensions.Functional.xml" />
-      <!-- <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.dll" target="lib\wpa81\Qi4CS.Extensions.Functional.dll" />
-      <file src="$(Qi4CSEFuncBaseDirNuSpec)\Output\Release\WP\Normal\Qi4CS.Extensions.Functional.xml" target="lib\wpa81\Qi4CS.Extensions.Functional.xml" /> -->
-      ]]></NuSpec_FilesXML>
-      <NuSpec_DependenciesXML><![CDATA[
-      <group>
-        <dependency id="Qi4CS.Core" version="$([System.IO.File]::ReadAllText($(Qi4CSEFuncBaseDir)/Source/Qi4CSVersion.txt))"/>
-      </group>
-      ]]></NuSpec_DependenciesXML>
-    </PropertyGroup>
-  </Target>
-  
-  <Target Name="Qi4CSEFuncNuSpec">
-    <!-- Generate .nuspec file -->
-    <CallTarget Targets="GenerateNuSpecFile" />
-    
-  </Target>
 </Project>
