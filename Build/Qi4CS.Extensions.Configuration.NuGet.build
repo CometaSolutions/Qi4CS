@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project
+  DefaultTargets="Qi4CSEConf_CheckVariables;Qi4CSEConf_Tests;Qi4CSEConf_Compile;Qi4CSEConf_PEVerify;Qi4CSEConf_NuGet"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  >
+  <PropertyGroup>
+    <Qi4CSEConfBaseDir Condition=" '$(Qi4CSEConfBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSEConfBaseDir>
+  </PropertyGroup>
+  
+  <Target Name="Qi4CSEConf_CheckVariables">
+    <!-- Must specify release notes -->
+    <Error Condition="'$(Qi4CSEConfReleaseNotes)' == ''" Text="Please specify release notes in Qi4CSEConfReleaseNotes property." />
+  </Target>
+  
+  <Target Name="Qi4CSEConf_Tests">
+    <!-- NuGet restore (NUnit package) -->
+    <CommonBuildTools.NuGetTaskRestore
+      NuGetExecutable="$(Qi4CSEConfNuGetExecutable)"
+      NuGetManagementFile="$(Qi4CSEConfBaseDir)/NuGetPackages.xml"
+      />
+      
+    <!-- Compile CIL Tests assembly -->
+    <MSBuild
+      Projects="$(Qi4CSEConfBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
+      Properties="Configuration=Debug"
+      />
+      
+    <!-- Call NUnit task -->
+    <CommonBuildTools.NUnitTask
+      Assemblies="Qi4CS.Tests.dll"
+      NoShadowAssemblies="True"
+      IncludeCategories="Qi4CS.Extensions.Configuration"
+      WorkingDirectory="$(Qi4CSEConfBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
+      />
+  </Target>
+  
+  <Target Name="Qi4CSEConf_Compile">   
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.build" Properties="Qi4CSEConfConfiguration=Release;Qi4CSEConfPlatformKind=SL" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.build" Properties="Qi4CSEConfConfiguration=Release;Qi4CSEConfPlatformKind=Normal" />
+  </Target>
+   
+  <Target Name="Qi4CSEConf_PEVerify">
+    <!-- First, delete all files that won't be included in the NuGet package. -->
+    <ItemGroup>
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.xml" />
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/UtilPack.dll"/>
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.xml" />
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEConfFilesToPersist Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/UtilPack.dll"/>
+      
+      <Qi4CSEConfFilesToDelete Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/*.*"/>
+      <Qi4CSEConfFilesToDelete Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/*.*"/>
+      <Qi4CSEConfFilesToDelete Remove="@(Qi4CSEConfFilesToPersist)"/>
+    </ItemGroup>
+    <Delete
+      Files="@(Qi4CSEConfFilesToDelete)"
+    />
+    
+    <!-- Files for PEVerify -->
+    <ItemGroup>
+      <PEVerifyFiles Include="$(Qi4CSEConfBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.dll" />
+      <PEVerifyFiles Include="$(Qi4CSEConfBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Configuration.dll" />
+    </ItemGroup>
+    
+    <!-- Verify all .dll files exist -->
+    <PropertyGroup>
+      <PEVerifyFilesCount>@(PEVerifyFiles->Count())</PEVerifyFilesCount>
+      <PEVerifyFilesExpectedCount>2</PEVerifyFilesExpectedCount>
+    </PropertyGroup>
+    <Error Condition=" '$(PEVerifyFilesCount)' != '$(PEVerifyFilesExpectedCount)' " Text="Not all required files for PEVerify are present ($(PEVerifyFilesCount))." />
+
+    <!-- Call PEVerify -->
+    <CommonBuildTools.PEVerifyTask
+      FileToVerify="%(PEVerifyFiles.Identity)"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSEConf_NuGet">
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <!-- Common -->
+      <Qi4CSEConfBaseDirNuGet>$(Qi4CSEConfBaseDir)/NuGet</Qi4CSEConfBaseDirNuGet>
+    
+      <!-- NuGet Spec -->
+      <Qi4CSEConfNuSpecVersionFilename Condition=" '$(Qi4CSEConfNuSpecVersion)' == '' ">$(Qi4CSEConfBaseDir)/Source/Qi4CS.Extensions.Configuration.Version.txt</Qi4CSEConfNuSpecVersionFilename>
+      <Qi4CSEConfNuSpecFilePath>$(Qi4CSEConfBaseDirNuGet)/Qi4CS.Extensions.Configuration.nuspec</Qi4CSEConfNuSpecFilePath>
+      
+      <Qi4CSEConfQCoreVersion Condition=" '$(Qi4CSEConfQCoreVersion)' == '' ">$([System.IO.File]::ReadAllText($(Qi4CSEConfBaseDir)/Source/Qi4CS.Core.Version.txt))</Qi4CSEConfQCoreVersion>
+    </PropertyGroup>
+    <ItemGroup>     
+      <Qi4CSEConfNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Configuration.dll</TargetFilePath>
+      </Qi4CSEConfNuGetFile>
+      <Qi4CSEConfNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Extensions.Configuration.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Configuration.xml</TargetFilePath>
+      </Qi4CSEConfNuGetFile>
+      
+      <Qi4CSEConfNuGetDependency Include="Qi4CS.Core">
+        <Version>$(Qi4CSEConfQCoreVersion)</Version>
+      </Qi4CSEConfNuGetDependency>
+      
+    </ItemGroup>
+    
+    <!-- Generate .nuspec file -->
+    <CommonBuildTools.NuGetTaskNuSpec
+      VersionFile="$(Qi4CSEConfNuSpecVersionFilename)"
+      VersionContents="$(Qi4CSEConfNuSpecVersion)"
+      Copyright_InceptionYear="2012"
+      PackageID="Qi4CS.Extensions.Configuration"
+      Authors="Stanislav Muhametsin"
+      Description="Qi4CS Extension: Configuration is an extension of Qi4CS.Core that provides basic API for assembling composites that can be deserialized and serialized by ConfigurationManager, which is also provided by this extension. The configuration composites may have their location specified at assembling time or at runtime."
+      Title="Qi4CS Extension: Configuration"
+      ReleaseNotes="$(Qi4CSEConfReleaseNotes)"
+      Tags="qi4cs extension configuration dynamic load save"
+      Summary="Qi4CS Extension: Configuration is an extension of Qi4CS.Core that provides basic API for assembling composites that can be deserialized and serialized by ConfigurationManager, which is also provided by this extension."
+      ProjectURL="https://github.com/CometaSolutions/Qi4CS"
+      LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
+      RequireLicenseAcceptance="False"
+      Files="@(Qi4CSEConfNuGetFile)"
+      Dependencies="@(Qi4CSEConfNuGetDependency)"
+      OutputPath="$(Qi4CSEConfNuSpecFilePath)"
+      >
+      <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSEConfNuSpecVersionGenerated" />
+    </CommonBuildTools.NuGetTaskNuSpec>
+
+    <!-- Generate the .nupkg file -->
+    <CommonBuildTools.NuGetTaskPackage
+      NuSpecFile="$(Qi4CSEConfNuSpecFilePath)"
+      OutputDirectory="$(Qi4CSEConfBaseDir)/NuGet"
+      BasePath="$(Qi4CSEConfBaseDir)"
+      MinClientVersion="2.5"
+    />
+    
+    <!-- Push if API-key or config file property specified -->
+    <CommonBuildTools.NuGetTaskPush
+      Condition=" '$(Qi4CSEConfNuGetPushAPIKey)' != '' or '$(Qi4CSEConfNuGetPushConfigFile)' != '' "
+      PackageFilePath="$(Qi4CSEConfBaseDirNuGet)/Qi4CS.Extensions.Configuration.$(Qi4CSEConfNuSpecVersionGenerated).nupkg"
+      APIKey="$(Qi4CSEConfNuGetPushAPIKey)"
+      Source="$(Qi4CSEConfNuGetPushSource)"
+      ConfigFile="$(Qi4CSEConfNuGetPushConfigFile)"
+      />
+  </Target>
+  
+  <Import Project="$(Qi4CSEConfBaseDir)/CommonBuildTools/CLR/MSBuild/NuGetTasks.targets" />
+  
+  <Import Project="$(Qi4CSEConfBaseDir)/CommonBuildTools/CLR/MSBuild/PEVerify.targets" />
+    
+  <Import Project="$(Qi4CSEConfBaseDir)/CommonBuildTools/CLR/MSBuild/NUnit.targets" />
+  
+</Project>

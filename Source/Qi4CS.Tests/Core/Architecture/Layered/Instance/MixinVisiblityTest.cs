@@ -34,6 +34,7 @@ using Qi4CS.Core.Architectures.Assembling;
 namespace Qi4CS.Tests.Core.Architecture.Layered.Instance
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public abstract class MixinVisiblityTest
    {
       public const String TEST_1_OK = "OK";

@@ -30,6 +30,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Constraint
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ConstraintTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Assembler assembler )

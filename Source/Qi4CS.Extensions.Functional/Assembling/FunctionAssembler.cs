@@ -169,7 +169,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
             var type = obj.GetType();
             if ( type.Assembly.GetCustomAttributes( true ).OfType<Qi4CSGeneratedAssemblyAttribute>().Any() )
             {
-               if ( typeof( Object ).Equals( type.BaseType ) )
+               if ( Equals( typeof( Object ), type.BaseType ) )
                {
                   result = type.GetImplementedInterfaces().GetBottomTypes();
                }

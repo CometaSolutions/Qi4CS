@@ -23,6 +23,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Injection
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ParameterInjectionTest : AbstractSingletonInstanceTest
    {
 

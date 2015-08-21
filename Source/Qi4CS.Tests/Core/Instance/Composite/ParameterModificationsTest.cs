@@ -25,6 +25,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Composite
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ParameterModificationsTest : AbstractSingletonInstanceTest
    {
       private const Int32 REF_PARAM_CORRECT_VALUE = 345;

@@ -26,8 +26,8 @@ using Qi4CS.Core.API.Instance;
 
 namespace Qi4CS.Tests.Core.Instance.Services
 {
-   [Category( "INSTANCE.SERVICES" )]
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class QualifierTest : AbstractSingletonInstanceTest
    {
       private const String SPECIFIC_SERVICE_ID = "SpecificTestServiceID";

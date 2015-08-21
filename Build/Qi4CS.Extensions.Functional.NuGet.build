@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project
+  DefaultTargets="Qi4CSEFunc_CheckVariables;Qi4CSEFunc_Tests;Qi4CSEFunc_Compile;Qi4CSEFunc_PEVerify;Qi4CSEFunc_NuGet"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  >
+  <PropertyGroup>
+    <Qi4CSEFuncBaseDir Condition=" '$(Qi4CSEFuncBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSEFuncBaseDir>
+  </PropertyGroup>
+  
+  <Target Name="Qi4CSEFunc_CheckVariables">
+    <!-- Must specify release notes -->
+    <Error Condition="'$(Qi4CSEFuncReleaseNotes)' == ''" Text="Please specify release notes in Qi4CSEFuncReleaseNotes property." />
+  </Target>
+  
+  <Target Name="Qi4CSEFunc_Tests">
+    <!-- NuGet restore (NUnit package) -->
+    <CommonBuildTools.NuGetTaskRestore
+      NuGetExecutable="$(Qi4CSEFuncNuGetExecutable)"
+      NuGetManagementFile="$(Qi4CSEFuncBaseDir)/NuGetPackages.xml"
+      />
+      
+    <!-- Compile CIL Tests assembly -->
+    <MSBuild
+      Projects="$(Qi4CSEFuncBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
+      Properties="Configuration=Debug"
+      />
+      
+    <!-- Call NUnit task -->
+    <CommonBuildTools.NUnitTask
+      Assemblies="Qi4CS.Tests.dll"
+      NoShadowAssemblies="True"
+      IncludeCategories="Qi4CS.Extensions.Functional"
+      WorkingDirectory="$(Qi4CSEFuncBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
+      />
+  </Target>
+  
+  <Target Name="Qi4CSEFunc_Compile">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Functional.build" Properties="Qi4CSEFuncConfiguration=Release;Qi4CSEFuncPlatformKind=SL" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Functional.build" Properties="Qi4CSEFuncConfiguration=Release;Qi4CSEFuncPlatformKind=Normal" />
+  </Target>
+   
+  <Target Name="Qi4CSEFunc_PEVerify">
+    <!-- First, delete all files that won't be included in the NuGet package. -->
+    <ItemGroup>
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Functional.dll" />
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Functional.xml" />
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/UtilPack.dll"/>
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Functional.dll" />
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Functional.xml" />
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/Qi4CS.Core.dll"/>
+      <Qi4CSEFuncFilesToPersist Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/UtilPack.dll"/>
+      
+      <Qi4CSEFuncFilesToDelete Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/*.*"/>
+      <Qi4CSEFuncFilesToDelete Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/*.*"/>
+      <Qi4CSEFuncFilesToDelete Remove="@(Qi4CSEFuncFilesToPersist)"/>
+    </ItemGroup>
+    <Delete
+      Files="@(Qi4CSEFuncFilesToDelete)"
+    />
+    
+    <!-- Files for PEVerify -->
+    <ItemGroup>
+      <Qi4CSEFuncPEVerifyFiles Include="$(Qi4CSEFuncBaseDir)/Output/Release/SL/Normal/Qi4CS.Extensions.Functional.dll" />
+      <Qi4CSEFuncPEVerifyFiles Include="$(Qi4CSEFuncBaseDir)/Output/Release/Normal/Normal/Qi4CS.Extensions.Functional.dll" />
+    </ItemGroup>
+    
+    <!-- Verify all .dll files exist -->
+    <PropertyGroup>
+      <Qi4CSEFuncPEVerifyFilesCount>@(Qi4CSEFuncPEVerifyFiles->Count())</Qi4CSEFuncPEVerifyFilesCount>
+      <Qi4CSEFuncPEVerifyFilesExpectedCount>2</Qi4CSEFuncPEVerifyFilesExpectedCount>
+    </PropertyGroup>
+    <Error Condition=" '$(Qi4CSEFuncPEVerifyFilesCount)' != '$(Qi4CSEFuncPEVerifyFilesExpectedCount)' " Text="Not all required files for PEVerify are present ($(Qi4CSEFuncPEVerifyFilesCount))." />
+
+    <!-- Call PEVerify -->
+    <CommonBuildTools.PEVerifyTask
+      FileToVerify="%(Qi4CSEFuncPEVerifyFiles.Identity)"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSEFunc_NuGet">
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <!-- Common -->
+      <Qi4CSEFuncBaseDirNuGet>$(Qi4CSEFuncBaseDir)/NuGet</Qi4CSEFuncBaseDirNuGet>
+    
+      <!-- NuGet Spec -->
+      <Qi4CSEFuncNuSpecVersionFilename Condition=" '$(Qi4CSEFuncNuSpecVersion)' == '' ">$(Qi4CSEFuncBaseDir)/Source/Qi4CS.Extensions.Functional.Version.txt</Qi4CSEFuncNuSpecVersionFilename>
+      <Qi4CSEFuncNuSpecFilePath>$(Qi4CSEFuncBaseDirNuGet)/Qi4CS.Extensions.Functional.nuspec</Qi4CSEFuncNuSpecFilePath>
+      
+      <Qi4CSEFuncQCoreVersion Condition=" '$(Qi4CSEFuncQCoreVersion)' == '' ">$([System.IO.File]::ReadAllText($(Qi4CSEFuncBaseDir)/Source/Qi4CS.Core.Version.txt))</Qi4CSEFuncQCoreVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <Qi4CSEFuncNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Extensions.Functional.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Functional.dll</TargetFilePath>
+      </Qi4CSEFuncNuGetFile>
+      <Qi4CSEFuncNuGetFile Include="Output/Release/SL/Normal/Qi4CS.Extensions.Functional.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Functional.xml</TargetFilePath>
+      </Qi4CSEFuncNuGetFile>
+      <Qi4CSEFuncNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Extensions.Functional.dll">
+        <TargetFilePath>lib/portable-net40+win8/Qi4CS.Extensions.Functional.dll</TargetFilePath>
+      </Qi4CSEFuncNuGetFile>
+      <Qi4CSEFuncNuGetFile Include="Output/Release/Normal/Normal/Qi4CS.Extensions.Functional.xml">
+        <TargetFilePath>lib/portable-net40+win8/Qi4CS.Extensions.Functional.xml</TargetFilePath>
+      </Qi4CSEFuncNuGetFile>
+      
+      <Qi4CSEFuncNuGetDependency Include="Qi4CS.Core">
+        <Version>$(Qi4CSEFuncQCoreVersion)</Version>
+      </Qi4CSEFuncNuGetDependency>
+      
+    </ItemGroup>
+    
+    <!-- Generate .nuspec file -->
+    <CommonBuildTools.NuGetTaskNuSpec
+      VersionFile="$(Qi4CSEFuncNuSpecVersionFilename)"
+      VersionContents="$(Qi4CSEFuncNuSpecVersion)"
+      Copyright_InceptionYear="2012"
+      PackageID="Qi4CS.Extensions.Functional"
+      Authors="Stanislav Muhametsin"
+      Description="Qi4CS Extension: Functional is an extension of Qi4CS.Core that allows ways to parametrize some functionality, which is not part of original API of objects, based on types of such objects. This mapping information can be specified during assembly time and also modified during runtime."
+      Title="Qi4CS Extension: Functional"
+      ReleaseNotes="$(Qi4CSEFuncReleaseNotes)"
+      Tags="qi4cs extension functional map method api type"
+      Summary="Qi4CS Extension: Functional provides ways of mapping functionality from types of participants to object implementing such functionality."
+      ProjectURL="https://github.com/CometaSolutions/Qi4CS"
+      LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
+      RequireLicenseAcceptance="False"
+      Files="@(Qi4CSEFuncNuGetFile)"
+      Dependencies="@(Qi4CSEFuncNuGetDependency)"
+      OutputPath="$(Qi4CSEFuncNuSpecFilePath)"
+      >
+      <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSEFuncNuSpecVersionGenerated" />
+    </CommonBuildTools.NuGetTaskNuSpec>
+
+    <!-- Generate the .nupkg file -->
+    <CommonBuildTools.NuGetTaskPackage
+      NuSpecFile="$(Qi4CSEFuncNuSpecFilePath)"
+      OutputDirectory="$(Qi4CSEFuncBaseDir)/NuGet"
+      BasePath="$(Qi4CSEFuncBaseDir)"
+      MinClientVersion="2.5"
+    />
+    
+    <!-- Push if API-key or config file property specified -->
+    <CommonBuildTools.NuGetTaskPush
+      Condition=" '$(Qi4CSEFuncNuGetPushAPIKey)' != '' or '$(Qi4CSEFuncNuGetPushConfigFile)' != '' "
+      PackageFilePath="$(Qi4CSEFuncBaseDirNuGet)/Qi4CS.Extensions.Functional.$(Qi4CSEFuncNuSpecVersionGenerated).nupkg"
+      APIKey="$(Qi4CSEFuncNuGetPushAPIKey)"
+      Source="$(Qi4CSEFuncNuGetPushSource)"
+      ConfigFile="$(Qi4CSEFuncNuGetPushConfigFile)"
+      />
+  </Target>
+  
+  <Import Project="$(Qi4CSEFuncBaseDir)/CommonBuildTools/CLR/MSBuild/NuGetTasks.targets" />
+  
+  <Import Project="$(Qi4CSEFuncBaseDir)/CommonBuildTools/CLR/MSBuild/PEVerify.targets" />
+    
+  <Import Project="$(Qi4CSEFuncBaseDir)/CommonBuildTools/CLR/MSBuild/NUnit.targets" />
+  
+</Project>

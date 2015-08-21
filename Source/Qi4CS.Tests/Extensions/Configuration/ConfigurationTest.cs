@@ -37,7 +37,8 @@ using Qi4CS.Extensions.Configuration.XML;
 
 namespace Qi4CS.Tests.Extensions.Configuration
 {
-   [Serializable, Category( "EXTENSIONS.CONFIG" )]
+   [Serializable]
+   [Category( "Qi4CS.Extensions.Configuration.XML" )]
    public class ConfigurationTest
    {
       private const String CONFIG_FILE_NAME = @"..\..\..\..\test_db_setup.xml";

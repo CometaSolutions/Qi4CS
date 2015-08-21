@@ -5,7 +5,6 @@
     <Qi4CSCoreConfiguration Condition=" '$(Qi4CSCoreConfiguration)' == '' ">Debug</Qi4CSCoreConfiguration>
     <Qi4CSCorePlatform Condition=" '$(Qi4CSCorePlatform)' == '' ">AnyCPU</Qi4CSCorePlatform>
     <Qi4CSCoreBuildTargets Condition=" '$(Qi4CSCoreBuildTargets)' == '' ">Build</Qi4CSCoreBuildTargets>
-    <Qi4CSCoreFinalAssemblyTargets Condition=" '$(Qi4CSCoreFinalAssemblyTargets)' == '' ">GenerateKeyFile;GenerateAssemblyInfoFile;$(Qi4CSCoreBuildTargets)</Qi4CSCoreFinalAssemblyTargets>
     <Qi4CSCoreKind Condition=" '$(Qi4CSCoreKind)' == '' ">Normal</Qi4CSCoreKind>
     <Qi4CSCorePlatformKind Condition=" '$(Qi4CSCorePlatformKind)' == '' ">Normal</Qi4CSCorePlatformKind>
     
@@ -17,12 +16,10 @@
   <ItemGroup>
     <Qi4CSCoreProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.Core.Architectures/Qi4CS.Core.Architectures.csproj" />
     
-    <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.DotNET/Qi4CS.CodeGeneration.DotNET.csproj" />
     <Qi4CSSDKProject Include="$(Qi4CSCoreBaseDir)/Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.csproj" />
   </ItemGroup>
 
   <Target Name="Build">
-  
     <!-- Build build tools -->
     <MSBuild Projects="$(Qi4CSCoreBaseDir)/CommonBuildTools/CLR/Build/CommonBuildTools.build" />
     

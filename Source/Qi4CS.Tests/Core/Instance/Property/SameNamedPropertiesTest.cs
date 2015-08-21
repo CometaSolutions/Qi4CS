@@ -24,6 +24,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Property
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class SameNamedPropertiesTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

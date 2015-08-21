@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project
+  DefaultTargets="Qi4CSSDK_CheckVariables;;Qi4CSSDK_Compile;Qi4CSSDK_PEVerify;Qi4CSSDK_NuGet"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  >
+  <PropertyGroup>
+    <Qi4CSSDKBaseDir Condition=" '$(Qi4CSSDKBaseDir)' == '' ">$(MSBuildThisFileDirectory)..</Qi4CSSDKBaseDir>
+  </PropertyGroup>
+  
+  <Target Name="Qi4CSSDK_CheckVariables">
+    <!-- Must specify release notes -->
+    <Error Condition="'$(Qi4CSSDKReleaseNotes)' == ''" Text="Please specify release notes in Qi4CSSDKReleaseNotes property." />
+  </Target>
+  
+  <Target Name="Qi4CSSDK_Tests">
+    <!-- NuGet restore (NUnit package) -->
+    <CommonBuildTools.NuGetTaskRestore
+      NuGetExecutable="$(Qi4CSSDKNuGetExecutable)"
+      NuGetManagementFile="$(Qi4CSSDKBaseDir)/NuGetPackages.xml"
+      />
+      
+    <!-- Compile CIL Tests assembly -->
+    <MSBuild
+      Projects="$(Qi4CSSDKBaseDir)/Source/Qi4CS.Tests/Qi4CS.Tests.csproj"
+      Properties="Configuration=Release"
+      />
+      
+    <!-- Call NUnit task -->
+    <CommonBuildTools.NUnitTask
+      Assemblies="Qi4CS.Tests.dll"
+      NoShadowAssemblies="True"
+      WorkingDirectory="$(Qi4CSSDKBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
+      />
+  </Target>
+  
+  <Target Name="Qi4CSSDK_Compile">   
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.SDK.build" Properties="Qi4CSSDKConfiguration=Release;Qi4CSDKPlatformKind=SL" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.SDK.build" Properties="Qi4CSSDKConfiguration=Release;Qi4CSDKPlatformKind=Normal" />
+    
+    <PropertyGroup>
+      <Qi4CSSDKUtilPackVersion>$([System.IO.File]::ReadAllText($(Qi4CSSDKBaseDir)/Dependencies/UtilPackVersion.txt))</Qi4CSSDKUtilPackVersion>
+      <Qi4CSSDKCAMPhysicalVersion>$([System.IO.File]::ReadAllText($(Qi4CSSDKBaseDir)/Dependencies/CAMPhysicalVersion.txt))</Qi4CSSDKCAMPhysicalVersion>
+      <Qi4CSSDKCAMLogicalVersion>$([System.IO.File]::ReadAllText($(Qi4CSSDKBaseDir)/Dependencies/CAMLogicalVersion.txt))</Qi4CSSDKCAMLogicalVersion>
+    </PropertyGroup>
+    
+    <!-- Copy .NET versions of CAM manually, since copy local for those references is disabled, because it causes trouble in other builds -->
+    <Copy
+      SourceFiles="$(Qi4CSSDKBaseDir)/Packages/CAM.Physical.$(Qi4CSSDKCAMPhysicalVersion)/lib/net40-client/CILAssemblyManipulator.Physical.dll;$(Qi4CSSDKBaseDir)/Packages/CAM.Logical.$(Qi4CSSDKCAMLogicalVersion)/lib/net40-client/CILAssemblyManipulator.Logical.dll"
+      DestinationFolder="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSSDK_PEVerify">
+    <!-- First, delete all files that won't be included in the NuGet package. -->
+    <ItemGroup>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.XML.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.XML.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Functional.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Functional.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Core.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Core.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/CILAssemblyManipulator.Logical.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/CILAssemblyManipulator.Physical.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/UtilPack.dll"/>
+      
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Core.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Core.xml"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/CILAssemblyManipulator.Logical.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/CILAssemblyManipulator.Physical.dll"/>
+      <Qi4CSSDKFilesToPersist Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/UtilPack.dll"/>
+      
+      <Qi4CSSDKFilesToDelete Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/Normal/*.*"/>
+      <Qi4CSSDKFilesToDelete Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/Normal/*.*"/>
+      <Qi4CSSDKFilesToDelete Remove="@(Qi4CSSDKFilesToPersist)"/>
+    </ItemGroup>
+    <Delete
+      Files="@(Qi4CSSDKFilesToDelete)"
+    />
+    
+    <!-- Files for PEVerify -->
+    <ItemGroup>
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Extensions.Functional.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/SL/SDK/Qi4CS.Core.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.dll" />
+      <Qi4CSSDKPEVerifyFiles Include="$(Qi4CSSDKBaseDir)/Output/Release/Normal/SDK/Qi4CS.Core.dll" />
+    </ItemGroup>
+    
+    <!-- Verify all .dll files exist -->
+    <PropertyGroup>
+      <Qi4CSSDKPEVerifyFilesCount>@(Qi4CSSDKPEVerifyFiles->Count())</Qi4CSSDKPEVerifyFilesCount>
+      <Qi4CSSDKPEVerifyFilesExpectedCount>8</Qi4CSSDKPEVerifyFilesExpectedCount>
+    </PropertyGroup>
+    <Error Condition=" '$(Qi4CSSDKPEVerifyFilesCount)' != '$(Qi4CSSDKPEVerifyFilesExpectedCount)' " Text="Not all required files for PEVerify are present ($(Qi4CSSDKPEVerifyFilesCount))." />
+
+    <!-- Call PEVerify -->
+    <CommonBuildTools.PEVerifyTask
+      FileToVerify="%(Qi4CSSDKPEVerifyFiles.Identity)"
+      />
+  </Target>
+   
+  <Target Name="Qi4CSSDK_NuGet">
+    <!-- NuSpec file information -->
+    <PropertyGroup>
+      <!-- Common -->
+      <Qi4CSSDKBaseDirNuGet>$(Qi4CSSDKBaseDir)/NuGet</Qi4CSSDKBaseDirNuGet>
+    
+      <!-- NuGet Spec -->
+      <Qi4CSSDKNuSpecVersionFilename Condition=" '$(Qi4CSSDKNuSpecVersion)' == '' ">$(Qi4CSSDKBaseDir)/Source/Qi4CS.SDK.Version.txt</Qi4CSSDKNuSpecVersionFilename>
+      <Qi4CSSDKNuSpecFilePath>$(Qi4CSSDKBaseDirNuGet)/Qi4CS.SDK.nuspec</Qi4CSSDKNuSpecFilePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Configuration.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Extensions.Configuration.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Configuration.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Extensions.Functional.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Functional.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Extensions.Functional.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Extensions.Functional.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Core.dll">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Core.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/SL/SDK/Qi4CS.Core.xml">
+        <TargetFilePath>lib/portable-net40+win8+sl50+wp80+wpa81/Qi4CS.Core.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.XML.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.XML.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.XML.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Configuration.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Configuration.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Functional.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Extensions.Functional.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.Extensions.Functional.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.CodeGeneration.DotNET.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.CodeGeneration.DotNET.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.CodeGeneration.DotNET.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Core.dll">
+        <TargetFilePath>lib/net40-client/Qi4CS.Core.dll</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      <Qi4CSSDKNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Core.xml">
+        <TargetFilePath>lib/net40-client/Qi4CS.Core.xml</TargetFilePath>
+      </Qi4CSSDKNuGetFile>
+      
+      <Qi4CSSDKDependency Include="CAM.Logical">
+        <Version>$(Qi4CSSDKCAMLogicalVersion)</Version>
+      </Qi4CSSDKDependency>
+    </ItemGroup>
+    
+    <!-- Generate .nuspec file -->
+    <CommonBuildTools.NuGetTaskNuSpec
+      VersionFile="$(Qi4CSSDKNuSpecVersionFilename)"
+      VersionContents="$(Qi4CSSDKNuSpecVersion)"
+      Copyright_InceptionYear="2014"
+      PackageID="Qi4CS.SDK"
+      Authors="Stanislav Muhametsin"
+      Description="Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the SDK package allowing generating Qi4CS assemblies at runtime."
+      Title="Qi4CS SDK"
+      ReleaseNotes="$(Qi4CSSDKReleaseNotes)"
+      Tags="qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity cil generation dynamic runtime"
+      Summary="Qi4CS SDK allows programmatically generate Qi4CS assemblies."
+      ProjectURL="https://github.com/CometaSolutions/Qi4CS"
+      LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
+      RequireLicenseAcceptance="False"
+      Files="@(Qi4CSSDKNuGetFile)"
+      Dependencies="@(Qi4CSSDKDependency)"
+      OutputPath="$(Qi4CSSDKNuSpecFilePath)"
+      >
+      <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSSDKNuSpecVersionGenerated" />
+    </CommonBuildTools.NuGetTaskNuSpec>
+
+    <!-- Generate the .nupkg file -->
+    <CommonBuildTools.NuGetTaskPackage
+      NuSpecFile="$(Qi4CSSDKNuSpecFilePath)"
+      OutputDirectory="$(Qi4CSSDKBaseDir)/NuGet"
+      BasePath="$(Qi4CSSDKBaseDir)"
+      MinClientVersion="2.5"
+    />
+    
+    <!-- Push if API-key or config file property specified -->
+    <CommonBuildTools.NuGetTaskPush
+      Condition=" '$(Qi4CSSDKNuGetPushAPIKey)' != '' or '$(Qi4CSSDKNuGetPushConfigFile)' != '' "
+      PackageFilePath="$(Qi4CSSDKBaseDirNuGet)/Qi4CS.SDK.$(Qi4CSSDKNuSpecVersionGenerated).nupkg"
+      APIKey="$(Qi4CSSDKNuGetPushAPIKey)"
+      Source="$(Qi4CSSDKNuGetPushSource)"
+      ConfigFile="$(Qi4CSSDKNuGetPushConfigFile)"
+      />
+  </Target>
+  
+  <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildTools/CLR/MSBuild/NuGetTasks.targets" />
+  
+  <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildTools/CLR/MSBuild/PEVerify.targets" />
+    
+  <Import Project="$(Qi4CSSDKBaseDir)/CommonBuildTools/CLR/MSBuild/NUnit.targets" />
+  
+</Project>

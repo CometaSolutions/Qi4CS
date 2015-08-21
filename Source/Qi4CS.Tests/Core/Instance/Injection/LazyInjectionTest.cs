@@ -28,6 +28,7 @@ using Qi4CS.Core.SPI.Model;
 namespace Qi4CS.Tests.Core.Instance.Injection
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class LazyInjectionTest : AbstractSingletonInstanceTest
    {
       private const String STR_VAL = "StrVal";

@@ -24,6 +24,7 @@ using System;
 namespace Qi4CS.Tests.Core.Instance.Composite
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class MultipleComplexCompositesTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

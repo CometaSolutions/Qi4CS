@@ -26,6 +26,7 @@ using Qi4CS.Core.SPI.Model;
 namespace Qi4CS.Tests.Core.Architecture.Layered.Model
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ServiceInjectionVisibilityTest : AbstractLayeredArchitectureModelTest
    {
       public const String LAYER_NAME = "Layer";

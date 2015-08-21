@@ -25,6 +25,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.CodeGen
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class InternalFragmentTest : AbstractSingletonInstanceTest
    {
       private static Boolean _mixinTriggered = false;

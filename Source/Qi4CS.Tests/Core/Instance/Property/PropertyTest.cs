@@ -22,6 +22,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Property
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class PropertyTest : AbstractSingletonInstanceTest
    {
       private const String GETTER_ONLY_PROP = "GetterOnly";

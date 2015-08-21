@@ -157,7 +157,7 @@ namespace Qi4CS.Extensions.Functional.Model
 
       private void SetType( Type role, Object key, Object obj )
       {
-         if ( role != null && !typeof( Object ).Equals( role ) )
+         if ( role != null && !Equals( typeof( Object ), role ) )
          {
             IDictionary<Object, Object> map = null;
             if ( !this._rolemap.TryGetValue( role, out map ) )

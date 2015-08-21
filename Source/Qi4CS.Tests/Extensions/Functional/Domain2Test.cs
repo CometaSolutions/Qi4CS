@@ -30,6 +30,7 @@ using Qi4CS.Extensions.Functional.Assembling;
 namespace Qi4CS.Tests.Extensions.Functional
 {
    [Serializable]
+   [Category( "Qi4CS.Extensions.Functional" )]
    public class Domain2Test : AbstractSingletonInstanceTest
    {
 

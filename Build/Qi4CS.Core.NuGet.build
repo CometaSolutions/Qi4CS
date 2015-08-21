@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project
-  DefaultTargets="Qi4CSCore_CheckVariables;Qi4CSCore_Tests;Qi4CSCore_Compile;Qi4CSCore_PEVerify;Qi4CSCore_NuGet"
+  DefaultTargets="Qi4CSCore_CheckVariables;;Qi4CSCore_Compile;Qi4CSCore_PEVerify;Qi4CSCore_NuGet"
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
   >
   <PropertyGroup>
@@ -29,6 +29,7 @@
     <CommonBuildTools.NUnitTask
       Assemblies="Qi4CS.Tests.dll"
       NoShadowAssemblies="True"
+      IncludeCategories="Qi4CS.Core"
       WorkingDirectory="$(Qi4CSCoreBaseDir)/Source\Qi4CS.Tests\bin\Debug\dotNET\SDK"
       />
   </Target>
@@ -38,8 +39,7 @@
     <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Core.build" Properties="Qi4CSCoreConfiguration=Release;Qi4CSCoreKind=Normal;Qi4CSCorePlatformKind=Normal" />
     
     <!-- Build SDK, since its files will be in build directory of NuGet package -->
-    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Functional.build" Properties="Qi4CSEFuncConfiguration=Release;Qi4CSEFuncKind=SDK;Qi4CSEFuncPlatformKind=Normal" />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.Extensions.Configuration.XML.build" Properties="Qi4CSEConfXMLConfiguration=Release;Qi4CSEConfXMLKind=SDK;Qi4CSEConfXMLPlatformKind=Normal" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)Qi4CS.SDK.build" Properties="Qi4CSSDKConfiguration=Release;Qi4CSSDKPlatformKind=Normal" />
   </Target>
    
   <Target Name="Qi4CSCore_PEVerify">
@@ -109,13 +109,13 @@
       <Qi4CSCoreNuGetFile Include="Source/Qi4CS.CodeGeneration.MSBuild/Qi4CS.CodeGeneration.MSBuild.targets">
         <TargetFilePath>build/Qi4CS.Core.targets</TargetFilePath>
       </Qi4CSCoreNuGetFile>
-      <Qi4CSCoreNuGetFile Include="$(Qi4CSCoreBaseDir)/Packages/UtilPack.$(Qi4CSCoreUtilPackVersion)/lib/portable-net40+win8+wpa81/UtilPack.dll">
+      <Qi4CSCoreNuGetFile Include="Packages/UtilPack.$(Qi4CSCoreUtilPackVersion)/lib/portable-net40+win8+wpa81/UtilPack.dll">
         <TargetFilePath>build/UtilPack.dll</TargetFilePath>
       </Qi4CSCoreNuGetFile>
-      <Qi4CSCoreNuGetFile Include="$(Qi4CSCoreBaseDir)/Packages/CAM.Physical.$(Qi4CSCoreCAMPhysicalVersion)/lib/net40-client/CILAssemblyManipulator.Physical.dll">
+      <Qi4CSCoreNuGetFile Include="Packages/CAM.Physical.$(Qi4CSCoreCAMPhysicalVersion)/lib/net40-client/CILAssemblyManipulator.Physical.dll">
         <TargetFilePath>build/CILAssemblyManipulator.Physical.dll</TargetFilePath>
       </Qi4CSCoreNuGetFile>
-      <Qi4CSCoreNuGetFile Include="$(Qi4CSCoreBaseDir)/Packages/CAM.Logical.$(Qi4CSCoreCAMLogicalVersion)/lib/net40-client/CILAssemblyManipulator.Logical.dll">
+      <Qi4CSCoreNuGetFile Include="Packages/CAM.Logical.$(Qi4CSCoreCAMLogicalVersion)/lib/net40-client/CILAssemblyManipulator.Logical.dll">
         <TargetFilePath>build/CILAssemblyManipulator.Logical.dll</TargetFilePath>
       </Qi4CSCoreNuGetFile>
       <Qi4CSCoreNuGetFile Include="Output/Release/Normal/SDK/Qi4CS.Core.dll">
@@ -151,15 +151,15 @@
       PackageID="Qi4CS.Core"
       Authors="Stanislav Muhametsin"
       Description="Qi4CS is aimed to increase coding efficiency and productivity by introducing easily adaptive features from Aspect Oriented Programming (AOP), Composite Oriented Programming (COP), and Dependency Injection (DI). This is the core package required for all projects using Qi4CS."
-      Title="[NUGET_TITLE]"
+      Title="Qi4CS Core"
       ReleaseNotes="$(Qi4CSCoreReleaseNotes)"
       Tags="qi4cs qi4j aop cop di injection aspect maintainability efficiency productivity"
-      Summary="Qi4CS Core provides the minimal functionality required for COP, AOP and DI -oriented programming.."
+      Summary="Qi4CS Core provides the minimal functionality required for COP, AOP and DI -oriented programming."
       ProjectURL="https://github.com/CometaSolutions/Qi4CS"
       LicenseURL="http://www.apache.org/licenses/LICENSE-2.0"
-      IconURL="[NUGET_ICON_URL]"
       RequireLicenseAcceptance="False"
       Files="@(Qi4CSCoreNuGetFile)"
+      Dependencies="@(Qi4CSCoreNuGetDependency)"
       OutputPath="$(Qi4CSCoreNuSpecFilePath)"
       >
       <Output TaskParameter="GeneratedNuSpecVersion" PropertyName="Qi4CSCoreNuSpecVersionGenerated" />

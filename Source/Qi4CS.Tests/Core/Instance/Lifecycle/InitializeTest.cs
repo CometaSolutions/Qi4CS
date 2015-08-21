@@ -23,6 +23,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Lifecycle
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class InitializeTest : AbstractSingletonInstanceTest
    {
       private static Boolean _subMethodCalled = false;

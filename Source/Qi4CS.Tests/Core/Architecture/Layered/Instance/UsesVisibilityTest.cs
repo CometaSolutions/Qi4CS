@@ -25,6 +25,7 @@ using Qi4CS.Core.Bootstrap.Model;
 namespace Qi4CS.Tests.Core.Architecture.Layered.Instance
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class UsesVisibilityTest : AbstractLayeredArchitectureInstanceTest
    {
       protected override void Assemble( LayeredCompositeAssembler assembler )

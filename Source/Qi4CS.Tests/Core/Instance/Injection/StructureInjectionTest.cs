@@ -29,6 +29,7 @@ using Qi4CS.Core.SPI.Common;
 namespace Qi4CS.Tests.Core.Instance.Injection
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class StructureInjectionTest : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Qi4CS.Core.Bootstrap.Assembling.Assembler assembler )

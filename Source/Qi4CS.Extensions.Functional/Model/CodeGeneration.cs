@@ -168,7 +168,7 @@ namespace Qi4CS.Extensions.Functional.Model
                   }
                }
 
-               if ( typeof( void ).Equals( sMethod.ReturnType ) )
+               if ( Equals( typeof( void ), sMethod.ReturnType ) )
                {
                   il.EmitLoadNull();
                }

@@ -28,6 +28,7 @@ using Qi4CS.Core.API.Common;
 namespace Qi4CS.Tests.Core.Instance.Composite
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class GenericCompositeTestWithArrayTypes : AbstractSingletonInstanceTest
    {
       protected override void Assemble( Assembler assembler )

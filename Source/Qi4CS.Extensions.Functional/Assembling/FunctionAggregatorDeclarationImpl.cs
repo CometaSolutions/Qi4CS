@@ -86,7 +86,7 @@ namespace Qi4CS.Extensions.Functional.Assembling
                if ( assemblyDeclaration.AffectedCompositeIDs.Contains( args.CompositeID ) &&
                    args.ReflectionElement is System.Reflection.ParameterInfo &&
                    ( (System.Reflection.ParameterInfo) args.ReflectionElement ).Member.Equals( method ) &&
-                   typeof( RoleAttribute ).Equals( args.OldAttribute.GetType() )
+                   Equals( typeof( RoleAttribute ), args.OldAttribute.GetType() )
                   )
                {
                   args.NewAttribute = new RoleParameterAttribute( ( (RoleAttribute) args.OldAttribute ).Name );

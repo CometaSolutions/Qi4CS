@@ -24,6 +24,7 @@ using Qi4CS.Core.Bootstrap.Assembling;
 namespace Qi4CS.Tests.Core.Instance.Constraint
 {
    [Serializable]
+   [Category( "Qi4CS.Core" )]
    public class ConstraintOnReadOnlyPropertyTest : AbstractSingletonInstanceTest
    {
       private static Boolean _constraintCalled = false;
