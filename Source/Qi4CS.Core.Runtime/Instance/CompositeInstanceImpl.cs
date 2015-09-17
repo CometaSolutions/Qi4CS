@@ -32,6 +32,11 @@ using Qi4CS.Core.SPI.Model;
 
 namespace Qi4CS.Core.Runtime.Instance
 {
+   using TThreadLocal =
+#if !SILVERLIGHT
+ System.Threading.
+#endif
+ThreadLocal<Stack<InvocationInfo>>;
 
    public class InvocationInfoImpl : InvocationInfo
    {
@@ -188,7 +193,7 @@ namespace Qi4CS.Core.Runtime.Instance
       private readonly DictionaryQuery<Type, ListQuery<FragmentConstructorInfo>> _constructorsForFragments;
       private readonly CompositeState _state;
       private readonly UsesContainerQuery _usesContainer;
-      private readonly Lazy<ThreadLocal<Stack<InvocationInfo>>> _invocationInfos;
+      private readonly Lazy<TThreadLocal> _invocationInfos;
       private readonly Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>> _checkStateFunc;
       private readonly Type[] _gArgs;
       private readonly Lazy<MethodInfo[]> _compositeMethods;
@@ -229,7 +234,11 @@ namespace Qi4CS.Core.Runtime.Instance
          this._usesContainer = usesContainer;
 
          this._isPrototype = (Int32) PrototypeState.PROTOTYPE;
-         this._invocationInfos = new Lazy<ThreadLocal<Stack<InvocationInfo>>>( () => new ThreadLocal<Stack<InvocationInfo>>( () => new Stack<InvocationInfo>() ), LazyThreadSafetyMode.PublicationOnly );
+         this._invocationInfos = new Lazy<TThreadLocal>( () => new
+#if !SILVERLIGHT
+ System.Threading.
+#endif
+ThreadLocal<Stack<InvocationInfo>>( () => new Stack<InvocationInfo>() ), LazyThreadSafetyMode.PublicationOnly );
 
          var composites = application.CollectionsFactory.NewDictionaryProxy<Type, Object>();
          var cProps = application.CollectionsFactory.NewListProxy( new List<CompositeProperty>( model.Methods.Count * 2 ) );
@@ -283,6 +292,10 @@ namespace Qi4CS.Core.Runtime.Instance
                this._prototypeAction = (Action) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 1];
                this._checkStateFunc = (Action<IDictionary<QualifiedName, IList<ConstraintViolationInfo>>>) publicCtorArgs[COMPOSITE_CTOR_FIRST_ADDITIONAL_PARAM_IDX + 2];
                this._compositeMethods = new Lazy<MethodInfo[]>( () => ( (CompositeCallbacks) publicComposite ).GetCompositeMethods(), LazyThreadSafetyMode.ExecutionAndPublication );
+
+#if DEBUG
+               var dummy = this._compositeMethods.Value;
+#endif
             }
          }
 

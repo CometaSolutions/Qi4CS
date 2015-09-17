@@ -111,7 +111,7 @@ public static class E_Qi4CS_CodeGeneration
       //var refDic = new ConcurrentDictionary<String, Tuple<CILAssemblyName, Boolean>[]>();
       ConcurrentDictionary<System.Reflection.Assembly, String> resultDic;
 
-      using ( var ctx = DotNETReflectionContext.CreateDotNETContext( parallelization == CodeGenerationParallelization.NotParallel ? CILReflectionContextConcurrencySupport.NotThreadSafe : CILReflectionContextConcurrencySupport.ThreadSafe_WithConcurrentCollections ) )
+      using ( var ctx = CILReflectionContextFactory.NewContext( parallelization == CodeGenerationParallelization.NotParallel ? CILReflectionContextConcurrencySupport.NotThreadSafe : CILReflectionContextConcurrencySupport.ThreadSafe_WithConcurrentCollections ) )
       {
          var genDic = model.GenerateCode( ctx, parallelization.HasFlag( CodeGenerationParallelization.ParallelEmitting ), isSilverlight );
          var eArgsDic = new Dictionary<CILAssembly, EmittingArguments>();

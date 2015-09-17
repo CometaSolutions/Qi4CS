@@ -102,7 +102,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected readonly CILMethod METHOD_INFO_GET_GARGS_METHOD;
       protected readonly CILMethod MAKE_GENERIC_METHOD_METHOD;
       protected readonly CILMethod INVOKE_METHOD_METHOD;
-      protected readonly CILMethod GET_METHDO_GDEF;
+      //protected readonly CILMethod GET_METHDO_GDEF;
       protected readonly CILMethod GET_CTOR_INDEX_METHOD;
       protected readonly CILConstructor APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR;
       protected readonly CILMethod GET_CONSTRAINT_INSTANCE_POOL_METHOD;
@@ -331,7 +331,7 @@ namespace Qi4CS.Core.Runtime.Model
          this.METHOD_INFO_GET_GARGS_METHOD = ctx.NewWrapper( METHOD_INFO_GET_GARGS_METHOD_NATIVE );
          this.MAKE_GENERIC_METHOD_METHOD = ctx.NewWrapper( MAKE_GENERIC_METHOD_METHOD_NATIVE );
          this.INVOKE_METHOD_METHOD = ctx.NewWrapper( INVOKE_METHOD_METHOD_NATIVE );
-         this.GET_METHDO_GDEF = ctx.NewWrapper( GET_METHDO_GDEF_NATIVE );
+         //this.GET_METHDO_GDEF = ctx.NewWrapper( GET_METHDO_GDEF_NATIVE );
          this.GET_CTOR_INDEX_METHOD = ctx.NewWrapper( GET_CTOR_INDEX_METHOD_NATIVE );
          this.APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR = ctx.NewWrapper( APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE );
          this.GET_CONSTRAINT_INSTANCE_POOL_METHOD = ctx.NewWrapper( GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE );

@@ -214,7 +214,7 @@ namespace Qi4CS.Core.Runtime.Model
       protected static readonly MethodInfo METHOD_INFO_GET_GARGS_METHOD_NATIVE;
       protected static readonly MethodInfo MAKE_GENERIC_METHOD_METHOD_NATIVE;
       protected static readonly MethodInfo INVOKE_METHOD_METHOD_NATIVE;
-      protected static readonly MethodInfo GET_METHDO_GDEF_NATIVE;
+      //protected static readonly MethodInfo GET_METHDO_GDEF_NATIVE;
       protected static readonly MethodInfo GET_CTOR_INDEX_METHOD_NATIVE;
       protected static readonly ConstructorInfo APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE;
       protected static readonly MethodInfo GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE;
@@ -398,7 +398,7 @@ namespace Qi4CS.Core.Runtime.Model
          METHOD_INFO_GET_GARGS_METHOD_NATIVE = typeof( MethodBase ).LoadMethodOrThrow( "GetGenericArguments", null );
          MAKE_GENERIC_METHOD_METHOD_NATIVE = typeof( MethodInfo ).LoadMethodOrThrow( "MakeGenericMethod", null );
          INVOKE_METHOD_METHOD_NATIVE = typeof( MethodBase ).LoadMethodOrThrow( "Invoke", 2 );
-         GET_METHDO_GDEF_NATIVE = typeof( MethodInfo ).LoadMethodOrThrow( "GetGenericMethodDefinition", null );
+         //GET_METHDO_GDEF_NATIVE = typeof( MethodInfo ).LoadMethodOrThrow( "GetGenericMethodDefinition", null );
          GET_CTOR_INDEX_METHOD_NATIVE = typeof( CompositeInstanceImpl ).LoadMethodOrThrow( "GetConstructorIndex", null );
          APPLICATION_NOT_ACTIVE_EXCEPTION_CONSTRUCTOR_NATIVE = typeof( ApplicationNotActiveException ).LoadConstructorOrThrow( 0 );
          GET_CONSTRAINT_INSTANCE_POOL_METHOD_NATIVE = typeof( ApplicationSPI ).LoadMethodOrThrow( "GetConstraintInstancePool", null );
