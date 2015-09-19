@@ -3027,22 +3027,19 @@ namespace Qi4CS.Core.Runtime.Model
             il.EmitLoadThisField( thisGenInfo.CompositeField )
               .EmitStoreLocal( cInstanceB );
 
-            var thisGArgs = thisGenInfo.GenericArguments.ToArray();
-            if ( !thisGArgs.Any() )
-            {
-               thisGArgs = null;
-            }
+            var thisGArgs = thisGenInfo.GenericArguments.Count > 0 ? thisGenInfo.GenericArguments.ToArray() : null;
 
             foreach ( var genInfo in suitableGenInfos )
             {
                var curType = thisGArgs == null ? genInfo.Builder : genInfo.Builder.MakeGenericType( thisGArgs );
+               var ppMethod = genInfo.PrePrototypeMethod.Builder.ChangeDeclaringType( thisGArgs );
                il
                   .EmitLoadLocal( cInstanceB )
                   .EmitCall( COMPOSITES_GETTER )
                   .EmitReflectionObjectOf( curType )
                   .EmitCall( COMPOSITES_GETTER_INDEXER )
                   .EmitCastToType( COMPOSITES_GETTER_INDEXER.GetReturnType(), curType )
-                  .EmitCall( genInfo.PrePrototypeMethod.Builder );
+                  .EmitCall( ppMethod );
             }
 
             il.EmitReturn();
@@ -3957,10 +3954,6 @@ namespace Qi4CS.Core.Runtime.Model
       {
          var il = methodGenInfo.IL;
          var mgBuilders = methodGenInfo.GenericArguments.ToArray();
-         if ( actualCompositeMethod.DeclaringType.IsGenericTypeDefinition() )
-         {
-
-         }
          var compositeMethodDeclaringType = actualCompositeMethod.DeclaringType;
          // ((<composite runtime type>)this._composite.Composites[<composite runtime bottom type>]).<composite method>(<args>);
          il.EmitLoadThisField( compositeField )
@@ -4404,11 +4397,6 @@ namespace Qi4CS.Core.Runtime.Model
                           il.EmitLoadLocal( fInstanceLB )
                             .EmitCall( FRAGMENT_GETTER )
                             .EmitCastToType( FRAGMENT_GETTER.GetReturnType(), methodToCall.DeclaringType );
-
-                          if ( methodToCall.DeclaringType.IsGenericTypeDefinition() )
-                          {
-
-                          }
 
                           var fragmentMethodGenInfo = fragmentTypeGenInfo.NormalMethodBuilders[this.ctx.NewWrapper( nextModel.NativeInfo )];
                           this.EmitLoadParametersFromObjectArray( thisInfo, methodGenInfo, fragmentMethodGenInfo, compositeMethodModel.MethodIndex, 0, il, () => il.EmitLoadArg( 3 ) );

@@ -609,11 +609,11 @@ namespace Qi4CS.CodeGeneration.MSBuild
             var cryptoCallbacks = new CryptoCallbacksDotNET();
             var loaderCallbacks = new CILMetaDataLoaderResourceCallbacksForFiles( referenceAssembliesDir, qi4CSDir );
             var thisFWMoniker = new TargetFrameworkInfo( targetFWID, targetFWVersion, targetFWProfile );
-            using ( var loader = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
+            using ( var loader = parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelSaving ) ?
                (CILMetaDataLoaderWithCallbacks) new CILMetaDataLoaderThreadSafeConcurrentForFiles( callbacks: loaderCallbacks ) :
                new CILMetaDataLoaderNotThreadSafeForFiles( callbacks: loaderCallbacks ) )
             {
-               var fwMapper = parallelization.HasFlag( CodeGenerationParallelization.ParallelSaving ) ?
+               var fwMapper = parallelization.HasFlag( MSBuildCodeGenerationParallelization.ParallelSaving ) ?
                   (TargetFrameworkMapper) new TargetFrameworkMapperConcurrent() :
                   new TargetFrameworkMapperNotThreadSafe();
 
