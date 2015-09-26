@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project
-  DefaultTargets="Qi4CSCore_CheckVariables;;Qi4CSCore_Compile;Qi4CSCore_PEVerify;Qi4CSCore_NuGet"
+  DefaultTargets="Qi4CSCore_CheckVariables;Qi4CSCore_Tests;Qi4CSCore_Compile;Qi4CSCore_PEVerify;Qi4CSCore_NuGet"
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
   >
   <PropertyGroup>
